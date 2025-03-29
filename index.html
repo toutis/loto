@@ -163,7 +163,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           <label for="myMillonCheckbox">
             Option My Millon
             <span class="info-icon"
-              title="L'option My Millon : Chaque mardi en France, environ 7 millions de grilles sont jouées, et 10 millions le vendredi.
+              title="L'option My Millon : Chaque mardi, environ 7 millions de grilles sont jouées, et 10 millions le vendredi.
 À chaque tirage, un numéro aléatoire est attribué parmi l'ensemble des grilles jouées.
 
 Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 000 000 € !"
@@ -555,13 +555,50 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
         draw = generateDraw();
         
         // Si l'option My Millon est activée, on affecte un numéro à chaque ticket et au tirage
-        if (document.getElementById("myMillonCheckbox").checked) {
-          let possibilities = (count % 2 === 0) ? 7000000 : 10000000;
-          tickets.forEach(ticket => {
-            ticket.myMillon = Math.floor(Math.random() * possibilities) + 1;
-          });
-          draw.myMillon = Math.floor(Math.random() * possibilities) + 1;
-        }
+		if (document.getElementById("myMillonCheckbox").checked) {
+		  // Choix du nombre de possibilités (7M ou 10M) selon le tirage
+		  let possibilities = (count % 2 === 0) ? 7000000 : 10000000;
+		  // Tableau pour stocker les plages déjà attribuées et éviter les conflits
+		  let assignedRanges = [];
+		  tickets.forEach(ticket => {
+			let n = ticket.numbers.length;
+			let s = ticket.stars.length;
+			let numGrilles = combination(n, 5) * combination(s, 2);
+			if (numGrilles > 1) {
+			  // Pour les grilles multiples, on génère une plage unique de numéros My Millon
+			  let baseNumber;
+			  let attempt = 0;
+			  const maxAttempts = 100;
+			  do {
+				baseNumber = Math.floor(Math.random() * (possibilities - numGrilles + 1)) + 1;
+				attempt++;
+				// Vérification : la plage [baseNumber, baseNumber + numGrilles - 1] ne doit pas chevaucher une plage déjà attribuée
+				var conflict = assignedRanges.some(range =>
+				  baseNumber <= range.end && (baseNumber + numGrilles - 1) >= range.start
+				);
+			  } while (conflict && attempt < maxAttempts);
+			  let rangeEnd = baseNumber + numGrilles - 1;
+			  assignedRanges.push({ start: baseNumber, end: rangeEnd });
+			  ticket.myMillon = baseNumber + " à " + rangeEnd;
+			} else {
+			  // Pour une grille simple, générer un numéro unique
+			  let candidate;
+			  let attempt = 0;
+			  const maxAttempts = 100;
+			  do {
+				candidate = Math.floor(Math.random() * possibilities) + 1;
+				attempt++;
+				var conflict = assignedRanges.some(range =>
+				  candidate >= range.start && candidate <= range.end
+				);
+			  } while (conflict && attempt < maxAttempts);
+			  assignedRanges.push({ start: candidate, end: candidate });
+			  ticket.myMillon = candidate;
+			}
+		  });
+		  // Pour le tirage, on génère un numéro My Millon classique (pas besoin d'unicité par rapport aux tickets)
+		  draw.myMillon = Math.floor(Math.random() * possibilities) + 1;
+		}
         
         let foundWinningTicket = false;
         let winningTicket = null;
