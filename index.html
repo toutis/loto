@@ -119,11 +119,11 @@
         </div>
         <div class="form-group">
           <label for="stopNumbers">Stopper si au moins X numéros corrects :</label>
-          <input type="number" id="stopNumbers" value="5" min="1" max="5">
+          <input type="number" id="stopNumbers" value="5" min="0" max="5">
         </div>
         <div class="form-group">
           <label for="stopStars">Stopper si au moins Y étoiles correctes :</label>
-          <input type="number" id="stopStars" value="2" min="1" max="2">
+          <input type="number" id="stopStars" value="2" min="0" max="2">
         </div>
         <div class="form-group">
           <input type="checkbox" id="stopAfterYearsCheckbox">
@@ -196,9 +196,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
         <!-- La ligne My Millon sera ajoutée ci-dessous si l'option est activée -->
       </div>
       <div class="compteur" id="counter">Tirages : 0</div>
-      <!-- Affichage du temps écoulé -->
       <div class="compteur" id="timePassed">Temps écoulé : 0 jour</div>
-      <!-- Affichage du gain net -->
+      <div class="compteur" id="grillesPlayed">Grilles jouées : 0</div>
       <div class="compteur" id="gainDisplay">Gain net : 0 €</div>
       <div class="section display" id="ticketsContainer"></div>
       <!-- Statistiques de combinaisons -->
@@ -245,6 +244,9 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
     let balance = 0;       // Gain net
     const ticketCost = 2.5; // Coût d'une grille simple en €
 
+    // Variable pour accumuler le nombre total de grilles jouées
+    let totalGrillesJouees = 0;
+
     // Mapping des gains (valeurs approximatives)
     const prizeMapping = {
       "5_2": 45000000,
@@ -282,7 +284,6 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
     function costOfTicket(ticket) {
       const n = ticket.numbers.length;
       const s = ticket.stars.length;
-      // Coût = C(n,5) * C(s,2) * ticketCost.
       let cost = combination(n, 5) * combination(s, 2) * ticketCost;
       return cost;
     }
@@ -381,8 +382,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
         }
       }
       const numTickets = mode === "flash" ? (parseInt(document.getElementById("numTickets").value) || 1) : 1;
-      const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 5;
-      const stopStars = parseInt(document.getElementById("stopStars").value) || 2;
+      const stopNumbers = parseInt(document.getElementById("stopNumbers").value) ?? 5;
+      const stopStars = parseInt(document.getElementById("stopStars").value) ?? 2;
 
       function computeChance(numCount, starCount, stopNumbers, stopStars) {
         let probNum = 0;
@@ -457,11 +458,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
     // Gestion de l'affichage des champs multichance en fonction du mode
     document.getElementById("multichanceCheckbox").addEventListener("change", function() {
       const partsContainer = document.getElementById("multichancePartsContainer");
-      if (this.checked) {
-        partsContainer.style.display = "block";
-      } else {
-        partsContainer.style.display = "none";
-      }
+      partsContainer.style.display = this.checked ? "block" : "none";
     });
 
     document.getElementById("modeSelect").addEventListener("change", function() {
@@ -471,16 +468,13 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
         document.getElementById("customSettings").style.display = "none";
         document.getElementById("ticketsCountGroup").style.display = "block";
         document.getElementById("batchSizeGroup").style.display = "block";
-        // Afficher l'option multichance en mode flash
         document.getElementById("multichanceGroup").style.display = "block";
-        // Afficher ou masquer les paramètres en fonction de la case cochée
         document.getElementById("multichancePartsContainer").style.display = document.getElementById("multichanceCheckbox").checked ? "block" : "none";
       } else {
         document.getElementById("flashSettings").style.display = "none";
         document.getElementById("customSettings").style.display = "block";
         document.getElementById("ticketsCountGroup").style.display = "none";
         document.getElementById("batchSizeGroup").style.display = "block";
-        // Masquer l'option multichance en mode personnalisé
         document.getElementById("multichanceGroup").style.display = "none";
         document.getElementById("multichancePartsContainer").style.display = "none";
       }
@@ -511,6 +505,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
         const customGridsText = document.getElementById("customGrids").value;
         customTickets = parseCustomGrids(customGridsText);
       }
+      // Ces paramètres sont lus au début de chaque boucle runLoop.
       const numCount = mode === "flash"
         ? (parseInt(document.getElementById("ticketNumbersCount").value) || 5)
         : (customTickets.length > 0 ? customTickets[0].numbers.length : 5);
@@ -520,8 +515,12 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
       const numTickets = mode === "flash"
         ? (parseInt(document.getElementById("numTickets").value) || 1)
         : (customTickets.length > 0 ? customTickets.length : 1);
-      const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 5;
-      const stopStars = parseInt(document.getElementById("stopStars").value) || 2;
+      
+      // Calcul du nombre de grilles simples pour un ticket
+      const simpleGridsPerTicket = combination(numCount, 5) * combination(starCount, 2);
+      
+      const stopNumbers = parseInt(document.getElementById("stopNumbers").value) ?? 5;
+      const stopStars = parseInt(document.getElementById("stopStars").value) ?? 2;
       const speed = parseInt(document.getElementById("speed").value) || 0;
       const batchSize = parseInt(document.getElementById("batchSize").value) || 1000;
       const stopAfterYearsChecked = document.getElementById("stopAfterYearsCheckbox").checked;
@@ -529,6 +528,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
 
       for (let i = 0; i < batchSize; i++) {
         count++;
+        // Ajout du nombre de grilles jouées pour ce tirage
+        totalGrillesJouees += numTickets * simpleGridsPerTicket;
         tickets = [];
         for (let j = 0; j < numTickets; j++) {
           if (mode === "flash") {
@@ -540,11 +541,11 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
             }
           }
         }
-        // Déduction du coût des tickets pour ce tirage
+        // Déduction du coût des tickets
         if (mode === "flash") {
           let costPerTicket = combination(numCount, 5) * combination(starCount, 2) * ticketCost;
-          if (mode === "flash" && document.getElementById("multichanceCheckbox").checked) {
-            costPerTicket = costPerTicket * multichanceRatio;
+          if (document.getElementById("multichanceCheckbox").checked) {
+            costPerTicket *= multichanceRatio;
           }
           balance -= numTickets * costPerTicket;
         } else {
@@ -554,51 +555,45 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
         }
         draw = generateDraw();
         
-        // Si l'option My Millon est activée, on affecte un numéro à chaque ticket et au tirage
-		if (document.getElementById("myMillonCheckbox").checked) {
-		  // Choix du nombre de possibilités (7M ou 10M) selon le tirage
-		  let possibilities = (count % 2 === 0) ? 7000000 : 10000000;
-		  // Tableau pour stocker les plages déjà attribuées et éviter les conflits
-		  let assignedRanges = [];
-		  tickets.forEach(ticket => {
-			let n = ticket.numbers.length;
-			let s = ticket.stars.length;
-			let numGrilles = combination(n, 5) * combination(s, 2);
-			if (numGrilles > 1) {
-			  // Pour les grilles multiples, on génère une plage unique de numéros My Millon
-			  let baseNumber;
-			  let attempt = 0;
-			  const maxAttempts = 100;
-			  do {
-				baseNumber = Math.floor(Math.random() * (possibilities - numGrilles + 1)) + 1;
-				attempt++;
-				// Vérification : la plage [baseNumber, baseNumber + numGrilles - 1] ne doit pas chevaucher une plage déjà attribuée
-				var conflict = assignedRanges.some(range =>
-				  baseNumber <= range.end && (baseNumber + numGrilles - 1) >= range.start
-				);
-			  } while (conflict && attempt < maxAttempts);
-			  let rangeEnd = baseNumber + numGrilles - 1;
-			  assignedRanges.push({ start: baseNumber, end: rangeEnd });
-			  ticket.myMillon = baseNumber + " à " + rangeEnd;
-			} else {
-			  // Pour une grille simple, générer un numéro unique
-			  let candidate;
-			  let attempt = 0;
-			  const maxAttempts = 100;
-			  do {
-				candidate = Math.floor(Math.random() * possibilities) + 1;
-				attempt++;
-				var conflict = assignedRanges.some(range =>
-				  candidate >= range.start && candidate <= range.end
-				);
-			  } while (conflict && attempt < maxAttempts);
-			  assignedRanges.push({ start: candidate, end: candidate });
-			  ticket.myMillon = candidate;
-			}
-		  });
-		  // Pour le tirage, on génère un numéro My Millon classique (pas besoin d'unicité par rapport aux tickets)
-		  draw.myMillon = Math.floor(Math.random() * possibilities) + 1;
-		}
+        // Gestion de l'option My Millon
+        if (document.getElementById("myMillonCheckbox").checked) {
+          let possibilities = (count % 2 === 0) ? 7000000 : 10000000;
+          let assignedRanges = [];
+          tickets.forEach(ticket => {
+            let n = ticket.numbers.length;
+            let s = ticket.stars.length;
+            let numGrilles = combination(n, 5) * combination(s, 2);
+            if (numGrilles > 1) {
+              let baseNumber;
+              let attempt = 0;
+              const maxAttempts = 100;
+              do {
+                baseNumber = Math.floor(Math.random() * (possibilities - numGrilles + 1)) + 1;
+                attempt++;
+                var conflict = assignedRanges.some(range =>
+                  baseNumber <= range.end && (baseNumber + numGrilles - 1) >= range.start
+                );
+              } while (conflict && attempt < maxAttempts);
+              let rangeEnd = baseNumber + numGrilles - 1;
+              assignedRanges.push({ start: baseNumber, end: rangeEnd });
+              ticket.myMillon = baseNumber + " à " + rangeEnd;
+            } else {
+              let candidate;
+              let attempt = 0;
+              const maxAttempts = 100;
+              do {
+                candidate = Math.floor(Math.random() * possibilities) + 1;
+                attempt++;
+                var conflict = assignedRanges.some(range =>
+                  candidate >= range.start && candidate <= range.end
+                );
+              } while (conflict && attempt < maxAttempts);
+              assignedRanges.push({ start: candidate, end: candidate });
+              ticket.myMillon = candidate;
+            }
+          });
+          draw.myMillon = Math.floor(Math.random() * possibilities) + 1;
+        }
         
         let foundWinningTicket = false;
         let winningTicket = null;
@@ -610,8 +605,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
             stats[key]++;
           }
           let prize = prizeMapping[key] || 0;
-          if (mode === "flash" && document.getElementById("multichanceCheckbox").checked) {
-            prize = prize * multichanceRatio;
+          if (document.getElementById("multichanceCheckbox").checked) {
+            prize *= multichanceRatio;
           }
           balance += prize;
           
@@ -621,26 +616,28 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
           }
         });
 
-        // Vérification de l'option My Millon : si au moins un ticket possède le même numéro que le tirage, on arrête
+        // Vérification de l'option My Millon
         if (document.getElementById("myMillonCheckbox").checked) {
           let myMillonWin = tickets.some(ticket => ticket.myMillon === draw.myMillon);
           if (myMillonWin) {
-            // Ajout de 1 000 000€ au gain net
             balance += 1000000;
             alert("Option My Millon gagnée !\nTirage My Million : " + draw.myMillon);
             stopFlag = true;
             document.getElementById("startBtn").style.display = "block";
-            // Affichage des tickets avec le numéro My Million
             document.getElementById("ticketsContainer").innerHTML = "";
             tickets.forEach((ticket, index) => {
               const div = document.createElement("div");
               div.className = "ticket";
               const highlightedNums = highlightMatches(ticket.numbers, draw.numbers);
               const highlightedStars = highlightMatches(ticket.stars, draw.stars);
+              let myMillionDisplay = ticket.myMillon;
+              if(ticket.myMillon === draw.myMillon) {
+                myMillionDisplay = `<span style="color: green; font-weight: bold;">${ticket.myMillon}</span>`;
+              }
               div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
                                Numéros : ${highlightedNums}<br>
                                Étoiles : ${highlightedStars}<br>
-                               My Million : ${ticket.myMillon}`;
+                               My Million : ${myMillionDisplay}`;
               document.getElementById("ticketsContainer").appendChild(div);
             });
             document.getElementById("resultat").innerHTML =
@@ -648,6 +645,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
                Numéros : ${draw.numbers.join(", ")}<br>
                Étoiles : ${draw.stars.join(", ")}<br>
                My Million : ${draw.myMillon}`;
+            document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+            document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
             updateTimePassed(count);
             updateStatsDisplay();
             updateGainDisplay();
@@ -664,6 +663,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
                Numéros : ${draw.numbers.join(", ")}<br>
                Étoiles : ${draw.stars.join(", ")}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + draw.myMillon : ""}`;
             document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+            document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
             updateTimePassed(count);
             updateStatsDisplay();
             updateGainDisplay();
@@ -694,6 +694,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
              Numéros : ${draw.numbers.join(", ")}<br>
              Étoiles : ${draw.stars.join(", ")}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + draw.myMillon : ""}`;
           document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+          document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
           updateTimePassed(count);
           updateStatsDisplay();
           updateGainDisplay();
@@ -706,6 +707,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
           return;
         }
       }
+      // Mise à jour des affichages après le batch de tirages
       document.getElementById("ticketsContainer").innerHTML = "";
       tickets.forEach((ticket, index) => {
         const div = document.createElement("div");
@@ -722,6 +724,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
          Numéros : ${draw.numbers.join(", ")}<br>
          Étoiles : ${draw.stars.join(", ")}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + draw.myMillon : ""}`;
       document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+      document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
       updateTimePassed(count);
       updateStatsDisplay();
       updateGainDisplay();
@@ -741,10 +744,12 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
       count = 0;
       stopFlag = false;
       balance = 0;
+      totalGrillesJouees = 0;  // Réinitialisation du compteur de grilles jouées
       for (let combo in stats) {
         stats[combo] = 0;
       }
       document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+      document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
       document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
       document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Gain net : 0,00 €</span>";
       document.getElementById("ticketsContainer").innerHTML = "";
@@ -776,11 +781,13 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
       stopFlag = true;
       clearTimeout(loopTimeout);
       count = 0;
+      totalGrillesJouees = 0; // Réinitialisation du compteur de grilles jouées
       for (let combo in stats) {
         stats[combo] = 0;
       }
       updateStatsDisplay();
       document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+      document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
       document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
       document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Gain net : 0,00 €</span>";
       document.getElementById("ticketsContainer").innerHTML = "";
