@@ -639,14 +639,19 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
 			}
 		  });
 		  if (myMillonWin) {
-			balance += 1000000;
-			alert("Option My Millon gagnée !\nTirage My Million : " + draw.myMillon);
+			let myMillonPrize = 1000000;
+			if (document.getElementById("multichanceCheckbox").checked) {
+			  const totalParts = parseInt(document.getElementById("totalParts").value) || 1;
+			  const yourParts = parseInt(document.getElementById("yourParts").value) || 1;
+			  myMillonPrize = 1000000 * (yourParts / totalParts);
+			}
+			balance += myMillonPrize;
+			alert("Option My Millon gagnée !\nTirage My Million : " + draw.myMillon + "\nGain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
 			stopFlag = true;
 			document.getElementById("startBtn").style.display = "block";
 			document.getElementById("ticketsContainer").innerHTML = "";
 			tickets.forEach((ticket, index) => {
 			  const div = document.createElement("div");
-			  // Vérification si ce ticket est gagnant My Million
 			  let isWinning = false;
 			  if (typeof ticket.myMillon === "string" && ticket.myMillon.includes(" à ")) {
 				let [start, end] = ticket.myMillon.split(" à ").map(Number);
@@ -682,8 +687,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
 			return;
 		  }
 		}
-
-        
+				
         // Vérification de l'option Stopper si on dépasse X années
         if (stopAfterYearsChecked) {
           const currentYears = (count * 3.5) / 365;
@@ -706,38 +710,50 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         }
         
         // Vérification si un ticket gagnant a été trouvé
-        if (foundWinningTicket) {
-          document.getElementById("ticketsContainer").innerHTML = "";
-          tickets.forEach((ticket, index) => {
-            const div = document.createElement("div");
-            div.className = "ticket";
-            const highlightedNums = highlightMatches(ticket.numbers, draw.numbers);
-            const highlightedStars = highlightMatches(ticket.stars, draw.stars);
-            div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
-                             Numéros : ${highlightedNums}<br>
-                             Étoiles : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + ticket.myMillon : ""}`;
-            if (ticket === winningTicket) {
-              div.classList.add("winning");
-            }
-            document.getElementById("ticketsContainer").appendChild(div);
-          });
-          document.getElementById("resultat").innerHTML =
-            `<strong>Tirage :</strong><br>
-             Numéros : ${draw.numbers.join(", ")}<br>
-             Étoiles : ${draw.stars.join(", ")}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + draw.myMillon : ""}`;
-          document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
-          document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
-          updateTimePassed(count);
-          updateStatsDisplay();
-          updateGainDisplay();
-          alert("Seuil atteint !\n" +
-                "Ticket gagnant : " + winningTicket.numbers.join(", ") + " | " + winningTicket.stars.join(", ") + "\n" +
-                "Tirage : " + draw.numbers.join(", ") + " | " + draw.stars.join(", ") + "\n" +
-                "Nombre de tirages : " + count.toLocaleString('de-DE'));
-          stopFlag = true;
-          document.getElementById("startBtn").style.display = "block";
-          return;
-        }
+		if (foundWinningTicket) {
+		  document.getElementById("ticketsContainer").innerHTML = "";
+		  tickets.forEach((ticket, index) => {
+			const div = document.createElement("div");
+			div.className = "ticket";
+			const highlightedNums = highlightMatches(ticket.numbers, draw.numbers);
+			const highlightedStars = highlightMatches(ticket.stars, draw.stars);
+			div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
+							 Numéros : ${highlightedNums}<br>
+							 Étoiles : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + ticket.myMillon : ""}`;
+			if (ticket === winningTicket) {
+			  div.classList.add("winning");
+			}
+			document.getElementById("ticketsContainer").appendChild(div);
+		  });
+		  document.getElementById("resultat").innerHTML =
+			`<strong>Tirage :</strong><br>
+			 Numéros : ${draw.numbers.join(", ")}<br>
+			 Étoiles : ${draw.stars.join(", ")}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + draw.myMillon : ""}`;
+		  document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+		  document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+		  updateTimePassed(count);
+		  updateStatsDisplay();
+		  updateGainDisplay();
+			// Calcul du gain du ticket gagnant
+			const winningMatchNumbers = countMatches(winningTicket.numbers, draw.numbers);
+			const winningMatchStars = countMatches(winningTicket.stars, draw.stars);
+			const winningKey = winningMatchNumbers + "_" + winningMatchStars;
+			let winningGain = prizeMapping[winningKey] || 0;
+			if (document.getElementById("multichanceCheckbox").checked) {
+			  winningGain *= multichanceRatio;
+			}
+
+			alert("Seuil atteint !\n" +
+				  "Ticket gagnant : " + winningTicket.numbers.join(", ") + " | " + winningTicket.stars.join(", ") + "\n" +
+				  "Tirage : " + draw.numbers.join(", ") + " | " + draw.stars.join(", ") + "\n" +
+				  "Nombre de tirages : " + count.toLocaleString('de-DE') + "\n" +
+				  "Gain : " + winningGain.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
+
+		  stopFlag = true;
+		  document.getElementById("startBtn").style.display = "block";
+		  return;
+		}
+
         
         // Vérification du seuil de gain net négatif
 		if (document.getElementById("stopNegativeGainCheckbox").checked) {
