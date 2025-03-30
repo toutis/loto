@@ -70,6 +70,10 @@
     #statsContainer li {
       margin: 5px 0;
     }
+	#multichanceAndMyMillonContainer {
+      display: flex;
+      align-items: center;
+	}
     /* Style pour l'icône d'info */
     .info-icon {
       display: inline-block;
@@ -117,14 +121,21 @@
           <label for="numTickets">Nombre de tickets par tirage :</label>
           <input type="number" id="numTickets" value="1" min="1">
         </div>
-        <div class="form-group">
-          <label for="stopNumbers">Stopper si au moins X numéros corrects :</label>
-          <input type="number" id="stopNumbers" value="5" min="0" max="5">
-        </div>
-        <div class="form-group">
-          <label for="stopStars">Stopper si au moins Y étoiles correctes :</label>
-          <input type="number" id="stopStars" value="2" min="0" max="2">
-        </div>
+		<!-- Champs pour stopper en fonction du nombre et des étoiles (sans checkbox) -->
+		<div class="form-group">
+		  <label for="stopNumbers">Stopper si au moins X numéros corrects :</label>
+		  <input type="number" id="stopNumbers" value="5" min="0" max="5">
+		</div>
+
+		<div class="form-group">
+		  <label for="stopStars">Stopper si au moins Y étoiles correctes :</label>
+		  <input type="number" id="stopStars" value="2" min="0" max="2">
+		</div>
+		<div class="form-group">
+		  <input type="checkbox" id="stopNegativeGainCheckbox">
+		  <label for="stopNegativeGainCheckbox">Stopper si le gain net est négatif à :</label>
+		  <input type="number" id="stopNegativeGainThreshold" value="10000" step="0.01" style="width:100px;">
+		</div>
         <div class="form-group">
           <input type="checkbox" id="stopAfterYearsCheckbox">
           <label for="stopAfterYearsCheckbox">Stopper si on dépasse X années :</label>
@@ -139,40 +150,38 @@
           <input type="number" id="speed" value="1" min="0">
         </div>
         <!-- Option multichance -->
-        <div class="form-group" id="multichanceGroup">
-          <input type="checkbox" id="multichanceCheckbox">
-          <label for="multichanceCheckbox">
-            Option Multichance
-            <span class="info-icon"
-              title="L'option Multichance : Il permet de réduire votre mise en 
-répartissant votre investissement sur plusieurs parts.
-Cela diminue le coût par ticket, mais réduit également les gains 
-proportionnellement au nombre de parts détenues.
-
+		<div class="form-group" id="multichanceAndMyMillonContainer">
+		  <div id="myMillonGroup" style="display: inline-block; margin-right: 20px;">
+			<input type="checkbox" id="myMillonCheckbox">
+			<label for="myMillonCheckbox">
+			  My Millon
+			  <span class="info-icon"
+					title="L'option My Millon : Chaque mardi, environ 7 millions de grilles sont jouées, et 10 millions le vendredi.
+À chaque tirage, un numéro aléatoire est attribué parmi l'ensemble des grilles jouées.
+Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 000 000 € !"
+					onclick="event.stopPropagation(); event.preventDefault();"
+					onmousedown="event.stopPropagation(); event.preventDefault();">
+				i
+			  </span>
+			</label>
+		  </div>
+		  <div id="multichanceGroup" style="display: inline-block;">
+			<input type="checkbox" id="multichanceCheckbox">
+			<label for="multichanceCheckbox">
+			  Multichance
+			  <span class="info-icon"
+					title="L'option Multichance : Il permet de réduire votre mise en répartissant votre investissement sur plusieurs parts.
+Cela diminue le coût par ticket, mais réduit également les gains proportionnellement au nombre de parts détenues.
 Cette option est utilisée seulement avec une dizaine de grilles multiples
 Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
-              onclick="event.stopPropagation(); event.preventDefault();"
-              onmousedown="event.stopPropagation(); event.preventDefault();">
-              i
-            </span>
-          </label>
-        </div>
-        <!-- Nouvel option My Millon -->
-        <div class="form-group" id="myMillonGroup">
-          <input type="checkbox" id="myMillonCheckbox">
-          <label for="myMillonCheckbox">
-            Option My Millon
-            <span class="info-icon"
-              title="L'option My Millon : Chaque mardi, environ 7 millions de grilles sont jouées, et 10 millions le vendredi.
-À chaque tirage, un numéro aléatoire est attribué parmi l'ensemble des grilles jouées.
+					onclick="event.stopPropagation(); event.preventDefault();"
+					onmousedown="event.stopPropagation(); event.preventDefault();">
+				i
+			  </span>
+			</label>
+		  </div>
+		</div>
 
-Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 000 000 € !"
-              onclick="event.stopPropagation(); event.preventDefault();"
-              onmousedown="event.stopPropagation(); event.preventDefault();">
-              i
-            </span>
-          </label>
-        </div>
         <!-- Nouveaux champs pour multichance -->
         <div class="form-group" id="multichancePartsContainer" style="display:none; margin-left:20px;">
           <label for="totalParts">Total de parts :</label>
@@ -180,9 +189,11 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
           <label for="yourParts">Votre nombre de parts :</label>
           <input type="number" id="yourParts" value="1" min="1">
         </div>
-        <button id="startBtn">Démarrer la simulation</button>
-        <button id="stopBtn">Stop</button>
-        <button id="resetBtn">Reset</button>
+		<div style="display: inline-flex; gap: 10px;">
+		  <button id="startBtn">Démarrer la simulation</button>
+		  <button id="stopBtn">Stop</button>
+		  <button id="resetBtn">Reset</button>
+		</div>
       </div>
     </div>
 
@@ -519,8 +530,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
       // Calcul du nombre de grilles simples pour un ticket
       const simpleGridsPerTicket = combination(numCount, 5) * combination(starCount, 2);
       
-      const stopNumbers = parseInt(document.getElementById("stopNumbers").value) ?? 5;
-      const stopStars = parseInt(document.getElementById("stopStars").value) ?? 2;
+      const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 0;
+      const stopStars = parseInt(document.getElementById("stopStars").value) || 0;
       const speed = parseInt(document.getElementById("speed").value) || 0;
       const batchSize = parseInt(document.getElementById("batchSize").value) || 1000;
       const stopAfterYearsChecked = document.getElementById("stopAfterYearsCheckbox").checked;
@@ -610,12 +621,13 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
           }
           balance += prize;
           
+          // Vérification de la condition de stop
           if (matchNumbers >= stopNumbers && matchStars >= stopStars) {
             foundWinningTicket = true;
             winningTicket = ticket;
           }
         });
-
+        
         // Vérification de l'option My Millon
         if (document.getElementById("myMillonCheckbox").checked) {
           let myMillonWin = tickets.some(ticket => ticket.myMillon === draw.myMillon);
@@ -653,7 +665,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
             return;
           }
         }
-
+        
+        // Vérification de l'option Stopper si on dépasse X années
         if (stopAfterYearsChecked) {
           const currentYears = (count * 3.5) / 365;
           if (currentYears >= stopAfterYearsValue) {
@@ -673,7 +686,8 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
             return;
           }
         }
-
+        
+        // Vérification si un ticket gagnant a été trouvé
         if (foundWinningTicket) {
           document.getElementById("ticketsContainer").innerHTML = "";
           tickets.forEach((ticket, index) => {
@@ -705,6 +719,27 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
           stopFlag = true;
           document.getElementById("startBtn").style.display = "block";
           return;
+        }
+        
+        // Vérification du seuil de gain net négatif
+		if (document.getElementById("stopNegativeGainCheckbox").checked) {
+		  const negThreshold = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
+		  if (balance < -negThreshold) {
+            document.getElementById("ticketsContainer").innerHTML = "";
+            document.getElementById("resultat").innerHTML =
+              `<strong>Tirage :</strong><br>
+               Numéros : ${draw.numbers.join(", ")}<br>
+               Étoiles : ${draw.stars.join(", ")}${document.getElementById("myMillonCheckbox").checked ? "<br>My Million : " + draw.myMillon : ""}`;
+            document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+            document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+            updateTimePassed(count);
+            updateStatsDisplay();
+            updateGainDisplay();
+            alert("Le gain net est inférieur au seuil défini (-" + negThreshold + " €). La simulation est arrêtée.");
+            stopFlag = true;
+            document.getElementById("startBtn").style.display = "block";
+            return;
+          }
         }
       }
       // Mise à jour des affichages après le batch de tirages
