@@ -156,7 +156,7 @@
 			<label for="myMillonCheckbox">
 			  My Millon
 			  <span class="info-icon"
-					title="L'option My Millon : Chaque mardi, environ 7 millions de grilles sont jouées, et 10 millions le vendredi.
+					title="L'option My Millon : Chaque mardi en France, environ 4 millions de grilles sont jouées, et 8 millions le vendredi.
 À chaque tirage, un numéro aléatoire est attribué parmi l'ensemble des grilles jouées.
 Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 000 000 € !"
 					onclick="event.stopPropagation(); event.preventDefault();"
@@ -568,7 +568,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         
         // Gestion de l'option My Millon
         if (document.getElementById("myMillonCheckbox").checked) {
-          let possibilities = (count % 2 === 0) ? 7000000 : 10000000;
+          let possibilities = (count % 2 === 0) ? 4000000 : 8000000;
           let assignedRanges = [];
           tickets.forEach(ticket => {
             let n = ticket.numbers.length;
