@@ -108,40 +108,57 @@
       pointer-events: none;
       z-index: 9999;
     }
-	/* Amélioration de l'effet feu d'artifice */
-	.firework {
-	  position: absolute;
-	  width: 4px;
-	  height: 4px;
-	  background: radial-gradient(circle, var(--color) 0%, var(--color-dark) 70%);
-	  border-radius: 50%;
-	  opacity: 1;
-	  animation: firework 2.0s ease-out forwards;  /* durée prolongée */
-	  box-shadow: 0 0 15px var(--color);
-	}
+    .firework {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: radial-gradient(circle, var(--color) 0%, var(--color-dark) 70%);
+      border-radius: 50%;
+      opacity: 1;
+      animation: firework 2.0s ease-out forwards;  /* durée prolongée */
+      box-shadow: 0 0 15px var(--color);
+    }
+    @keyframes firework {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(3);
+        opacity: 0;
+      }
+    }
 
-	@keyframes firework {
-	  0% {
-		transform: scale(1);
-		opacity: 1;
-	  }
-	  50% {
-		opacity: 1;
-	  }
-	  100% {
-		transform: translate(var(--tx), var(--ty)) scale(3);
-		opacity: 0;
-	  }
-	}
-
-
+    /* Icônes de son */
+    .sound-toggle {
+      cursor: pointer;
+      margin-left: 10px;
+      font-size: 24px; /* Ajuster si besoin */
+    }
+    .sound-toggle span {
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
   <div class="main-container">
     <!-- Colonne de gauche : paramètres et boutons -->
     <div class="left-column">
-      <h1>Simulation Euro Millions</h1>
+      <!-- Titre avec icône de son -->
+      <h1>
+        Simulation Euro Millions
+        <!-- Icône de son -->
+        <span id="soundToggle" class="sound-toggle">
+          <!-- Icône "son activé" (haut-parleur) -->
+          <span id="soundOnIcon">&#128266;</span>
+          <!-- Icône "son coupé" (haut-parleur barré), caché au début -->
+          <span id="soundOffIcon" style="display: none;">&#128263;</span>
+        </span>
+      </h1>
+
       <div class="section">
         <div class="form-group">
           <label for="modeSelect">Mode :</label>
@@ -287,6 +304,22 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
   <div id="fireworksContainer"></div>
 
   <script>
+    // --- Nouveau : gestion du son ---
+    let soundEnabled = true;
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundOnIcon').style.display = soundEnabled ? 'inline-block' : 'none';
+      document.getElementById('soundOffIcon').style.display = soundEnabled ? 'none' : 'inline-block';
+    }
+    document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+    // Fonction utilitaire pour jouer un son uniquement si le son est activé
+    function playSound(soundFile) {
+      if (!soundEnabled) return;
+      new Audio(soundFile).play();
+    }
+    // --- FIN gestion du son ---
+
     // --- VARIABLES GLOBALES ---
     let stats = {
       "5_2": 0, "5_1": 0, "5_0": 0,
@@ -425,42 +458,42 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       ).join(", ");
     }
 
-	// Fonction pour lancer les effets de feu d'artifice amélioré
-	function launchFireworks() {
-	  const container = document.getElementById('fireworksContainer');
-	  let count = 0;
-	  const total = 80; // nombre total de particules
-	  const interval = setInterval(() => {
-		if (count >= total) {
-		  clearInterval(interval);
-		  return;
-		}
-		const firework = document.createElement('div');
-		firework.classList.add('firework');
-		const x = Math.random() * window.innerWidth;
-		firework.style.left = x + 'px';
-		firework.style.top = '0px';
-		const tx = (Math.random() - 0.5) * 300;
-		const ty = Math.random() * 500;
-		firework.style.setProperty('--tx', tx + 'px');
-		firework.style.setProperty('--ty', ty + 'px');
-		// Définition de couleurs aléatoires pour un effet plus dynamique
-		const colors = [
-		  { light: '#ffcc00', dark: '#ff9900' },
-		  { light: '#ff3366', dark: '#cc0033' },
-		  { light: '#66ccff', dark: '#3399ff' },
-		  { light: '#99ff99', dark: '#33cc33' }
-		];
-		const chosen = colors[Math.floor(Math.random() * colors.length)];
-		firework.style.setProperty('--color', chosen.light);
-		firework.style.setProperty('--color-dark', chosen.dark);
-		container.appendChild(firework);
-		firework.addEventListener('animationend', () => {
-		  firework.remove();
-		});
-		count++;
-	  }, 25); // Une particule toutes les 100ms
-	}
+    // Fonction pour lancer les effets de feu d'artifice amélioré
+    function launchFireworks() {
+      const container = document.getElementById('fireworksContainer');
+      let count = 0;
+      const total = 80; // nombre total de particules
+      const interval = setInterval(() => {
+        if (count >= total) {
+          clearInterval(interval);
+          return;
+        }
+        const firework = document.createElement('div');
+        firework.classList.add('firework');
+        const x = Math.random() * window.innerWidth;
+        firework.style.left = x + 'px';
+        firework.style.top = '0px';
+        const tx = (Math.random() - 0.5) * 300;
+        const ty = Math.random() * 500;
+        firework.style.setProperty('--tx', tx + 'px');
+        firework.style.setProperty('--ty', ty + 'px');
+        // Couleurs aléatoires
+        const colors = [
+          { light: '#ffcc00', dark: '#ff9900' },
+          { light: '#ff3366', dark: '#cc0033' },
+          { light: '#66ccff', dark: '#3399ff' },
+          { light: '#99ff99', dark: '#33cc33' }
+        ];
+        const chosen = colors[Math.floor(Math.random() * colors.length)];
+        firework.style.setProperty('--color', chosen.light);
+        firework.style.setProperty('--color-dark', chosen.dark);
+        container.appendChild(firework);
+        firework.addEventListener('animationend', () => {
+          firework.remove();
+        });
+        count++;
+      }, 25);
+    }
 
     // Mise à jour des statistiques
     function updateStatsDisplay() {
@@ -775,6 +808,16 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             }
             balance += myMillonPrize;
             alert("Option My Millon gagnée !\nTirage My Million : " + draw.myMillon + "\nGain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
+
+            // Lecture du son selon le gain
+			if (balance >= 1) {
+			  playSound("win.mp3");
+			} else if (balance <= -1000000) {
+			  playSound("bigloose.mp3");
+			} else {
+			  playSound("loose.mp3");
+			}
+
             stopFlag = true;
             document.getElementById("startBtn").style.display = "block";
             document.getElementById("ticketsContainer").innerHTML = "";
@@ -830,6 +873,15 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             updateStatsDisplay();
             updateGainDisplay();
             alert("On a dépassé les " + stopAfterYearsValue + " ans de simulation !\n(Nombre de tirages : " + count.toLocaleString('de-DE') + ")");
+
+			if (balance >= 1) {
+			  playSound("win.mp3");
+			} else if (balance <= -1000000) {
+			  playSound("bigloose.mp3");
+			} else {
+			  playSound("loose.mp3");
+			}
+
             stopFlag = true;
             document.getElementById("startBtn").style.display = "block";
             return;
@@ -868,7 +920,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           if (document.getElementById("multichanceCheckbox").checked) {
             winningGain *= multichanceRatio;
           }
-          // Si le jackpot est gagné (5 n° et 2 ★), déclenche l'effet feu d'artifice
           if (winningMatchNumbers === 5 && winningMatchStars === 2) {
             launchFireworks();
           }
@@ -877,6 +928,15 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
                 "Tirage : " + draw.numbers.join(", ") + " | " + draw.stars.join(", ") + "\n" +
                 "Nombre de tirages : " + count.toLocaleString('de-DE') + "\n" +
                 "Gain : " + winningGain.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
+
+          // Lecture du son selon le gain par pallier
+			if (balance >= 1) {
+			  playSound("win.mp3");
+			} else if (balance <= -1000000) {
+			  playSound("bigloose.mp3");
+			} else {
+			  playSound("loose.mp3");
+			}
 
           stopFlag = true;
           document.getElementById("startBtn").style.display = "block";
@@ -897,11 +957,21 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             updateStatsDisplay();
             updateGainDisplay();
             alert("Le gain net est inférieur au seuil défini (-" + negThreshold + " €). La simulation est arrêtée.");
+
+			if (balance >= 1) {
+			  playSound("win.mp3");
+			} else if (balance <= -1000000) {
+			  playSound("bigloose.mp3");
+			} else {
+			  playSound("loose.mp3");
+			}
+
             stopFlag = true;
             document.getElementById("startBtn").style.display = "block";
             return;
           }
         }
+
       }
 
       document.getElementById("ticketsContainer").innerHTML = "";
