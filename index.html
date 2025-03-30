@@ -88,16 +88,50 @@
       cursor: help;
     }
     /* Style pour le slider de vitesse */
-	#speedControlGroup {
-	  display: flex;
-	  align-items: center;
-	  justify-content: flex-start; /* alignement à gauche */
-	  gap: 10px;
-	  margin: 10px 0;
+    #speedControlGroup {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    #speedValueLabel {
+      color: gray;
+    }
+    /* Effet feu d'artifice */
+    #fireworksContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+	/* Amélioration de l'effet feu d'artifice */
+	.firework {
+	  position: absolute;
+	  width: 4px;
+	  height: 4px;
+	  background: radial-gradient(circle, var(--color) 0%, var(--color-dark) 70%);
+	  border-radius: 50%;
+	  opacity: 1;
+	  animation: firework 2.0s ease-out forwards;  /* durée prolongée */
+	  box-shadow: 0 0 15px var(--color);
 	}
 
-	#speedValueLabel {
-	  color: gray;
+	@keyframes firework {
+	  0% {
+		transform: scale(1);
+		opacity: 1;
+	  }
+	  50% {
+		opacity: 1;
+	  }
+	  100% {
+		transform: translate(var(--tx), var(--ty)) scale(3);
+		opacity: 0;
+	  }
 	}
 
 
@@ -135,12 +169,11 @@
           <label for="numTickets">Nombre de tickets par tirage :</label>
           <input type="number" id="numTickets" value="1" min="1">
         </div>
-        <!-- Champs pour stopper en fonction du nombre et des étoiles (sans checkbox) -->
+        <!-- Champs pour stopper en fonction du nombre et des étoiles -->
         <div class="form-group">
           <label for="stopNumbers">Stopper si au moins X numéros corrects :</label>
           <input type="number" id="stopNumbers" value="5" min="0" max="5">
         </div>
-
         <div class="form-group">
           <label for="stopStars">Stopper si au moins Y étoiles correctes :</label>
           <input type="number" id="stopStars" value="2" min="0" max="2">
@@ -155,18 +188,15 @@
           <label for="stopAfterYearsCheckbox">Stopper si on dépasse X années :</label>
           <input type="number" id="stopAfterYearsInput" value="50" min="1" style="width:80px;">
         </div>
-
         <!-- Contrôle unique de la vitesse -->
-		<div class="form-group" id="speedControlGroup">
-		  <label for="speedSlider">Vitesse :</label>
-		  <input type="range" id="speedSlider" min="1" max="100" value="50" list="tickmarks">
-		  <datalist id="tickmarks">
-			<option value="50" label="50%"></option>
-		  </datalist>
-		  <span id="speedValueLabel">(Tirage = 1, Délai = 1000 ms)</span>
-		</div>
-
-
+        <div class="form-group" id="speedControlGroup">
+          <label for="speedSlider">Vitesse :</label>
+          <input type="range" id="speedSlider" min="1" max="100" value="50" list="tickmarks">
+          <datalist id="tickmarks">
+            <option value="50" label="50%"></option>
+          </datalist>
+          <span id="speedValueLabel">(Tirage = 1, Délai = 1000 ms)</span>
+        </div>
         <!-- Option multichance -->
         <div class="form-group" id="multichanceAndMyMillonContainer">
           <div id="myMillonGroup" style="display: inline-block; margin-right: 20px;">
@@ -176,7 +206,6 @@
               <span class="info-icon"
                     title="L'option My Millon : Chaque mardi en France, environ 4 millions de grilles sont jouées, et 8 millions le vendredi.
 À chaque tirage, un numéro aléatoire est attribué parmi l'ensemble des grilles jouées.
-
 Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 000 000 € !"
                     onclick="event.stopPropagation(); event.preventDefault();"
                     onmousedown="event.stopPropagation(); event.preventDefault();">
@@ -191,8 +220,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
               <span class="info-icon"
                     title="L'option Multichance : Il permet de réduire votre mise en répartissant votre investissement sur plusieurs parts.
 Cela diminue le coût par ticket, mais réduit également les gains proportionnellement au nombre de parts détenues.
-Cette option est utilisée seulement avec une dizaine de grilles multiples
-
+Cette option est utilisée seulement avec une dizaine de grilles multiples.
 Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
                     onclick="event.stopPropagation(); event.preventDefault();"
                     onmousedown="event.stopPropagation(); event.preventDefault();">
@@ -201,7 +229,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             </label>
           </div>
         </div>
-
         <!-- Nouveaux champs pour multichance -->
         <div class="form-group" id="multichancePartsContainer" style="display:none; margin-left:20px;">
           <label for="totalParts">Total de parts :</label>
@@ -209,7 +236,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           <label for="yourParts">Votre nombre de parts :</label>
           <input type="number" id="yourParts" value="1" min="1">
         </div>
-
         <div style="display: inline-flex; gap: 10px;">
           <button id="startBtn">Démarrer la simulation</button>
           <button id="stopBtn">Stop</button>
@@ -217,7 +243,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         </div>
       </div>
     </div>
-
     <!-- Colonne de droite : affichage des chances, tickets, résultats, compteur, stats -->
     <div class="right-column">
       <div id="chanceDisplay"></div>
@@ -225,7 +250,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         <strong>Tirage :</strong><br>
         Numéros : --<br>
         Étoiles : --<br>
-        <!-- La ligne My Millon sera ajoutée ci-dessous si l'option est activée -->
       </div>
       <div class="compteur" id="counter">Tirages : 0</div>
       <div class="compteur" id="timePassed">Temps écoulé : 0 jour</div>
@@ -259,9 +283,22 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     </div>
   </div>
 
+  <!-- Conteneur pour les effets feu d'artifice -->
+  <div id="fireworksContainer"></div>
+
   <script>
     // --- VARIABLES GLOBALES ---
     let stats = {
+      "5_2": 0, "5_1": 0, "5_0": 0,
+      "4_2": 0, "4_1": 0, "4_0": 0,
+      "3_2": 0, "3_1": 0, "3_0": 0,
+      "2_2": 0, "2_1": 0, "2_0": 0,
+      "1_2": 0, "1_1": 0, "1_0": 0,
+      "0_2": 0, "0_1": 0, "0_0": 0
+    };
+
+    // Objet pour cumuler le total des gains par combinaison
+    let statsGain = {
       "5_2": 0, "5_1": 0, "5_0": 0,
       "4_2": 0, "4_1": 0, "4_0": 0,
       "3_2": 0, "3_1": 0, "3_0": 0,
@@ -275,9 +312,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     let loopTimeout;             // ID du timeout de la boucle
     let balance = 0;             // Gain net
     const ticketCost = 2.5;      // Coût d'une grille simple en €
-
-    // Variable pour accumuler le nombre total de grilles jouées
-    let totalGrillesJouees = 0;
+    let totalGrillesJouees = 0;  // Total des grilles jouées
 
     // Mapping des gains (valeurs approximatives)
     const prizeMapping = {
@@ -302,22 +337,20 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     };
 
     // Presets pour le slider de vitesse : index 1..10
-    // On associe un batchSize et un delay (speed en ms) pour chaque « cran ».
     const speedPresets = [
-      { batchSize: 1,     speed: 1000 },  // slider = 1 (très lent)
+      { batchSize: 1,     speed: 1000 },
       { batchSize: 10,    speed: 500 },
       { batchSize: 100,   speed: 100 },
       { batchSize: 500,   speed: 50 },
-      { batchSize: 1000,  speed: 10 },    // slider = 5
+      { batchSize: 1000,  speed: 10 },
       { batchSize: 2000,  speed: 5 },
       { batchSize: 5000,  speed: 2 },
       { batchSize: 10000, speed: 1 },
       { batchSize: 50000, speed: 0 },
-      { batchSize: 100000,speed: 0 }      // slider = 10 (ultra rapide)
+      { batchSize: 100000,speed: 0 }
     ];
 
-    // Valeurs courantes de batchSize et speed, mises à jour par le slider
-    let currentBatchSize = speedPresets[4].batchSize; // par défaut (milieu)
+    let currentBatchSize = speedPresets[4].batchSize;
     let currentSpeed = speedPresets[4].speed;
 
     // --- FONCTIONS UTILES ---
@@ -331,12 +364,10 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       return num / den;
     }
 
-    // Fonction calculant le coût d'un ticket en fonction du nombre de numéros et d'étoiles
     function costOfTicket(ticket) {
       const n = ticket.numbers.length;
       const s = ticket.stars.length;
-      let cost = combination(n, 5) * combination(s, 2) * ticketCost;
-      return cost;
+      return combination(n, 5) * combination(s, 2) * ticketCost;
     }
 
     function generateNumbers(count, max) {
@@ -357,9 +388,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
 
     function generateDraw() {
-      const drawNumbers = generateNumbers(5, 50);
-      const drawStars = generateNumbers(2, 12);
-      return { numbers: drawNumbers, stars: drawStars };
+      return { numbers: generateNumbers(5, 50), stars: generateNumbers(2, 12) };
     }
 
     function countMatches(arr1, arr2) {
@@ -396,6 +425,44 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       ).join(", ");
     }
 
+	// Fonction pour lancer les effets de feu d'artifice amélioré
+	function launchFireworks() {
+	  const container = document.getElementById('fireworksContainer');
+	  let count = 0;
+	  const total = 80; // nombre total de particules
+	  const interval = setInterval(() => {
+		if (count >= total) {
+		  clearInterval(interval);
+		  return;
+		}
+		const firework = document.createElement('div');
+		firework.classList.add('firework');
+		const x = Math.random() * window.innerWidth;
+		firework.style.left = x + 'px';
+		firework.style.top = '0px';
+		const tx = (Math.random() - 0.5) * 300;
+		const ty = Math.random() * 500;
+		firework.style.setProperty('--tx', tx + 'px');
+		firework.style.setProperty('--ty', ty + 'px');
+		// Définition de couleurs aléatoires pour un effet plus dynamique
+		const colors = [
+		  { light: '#ffcc00', dark: '#ff9900' },
+		  { light: '#ff3366', dark: '#cc0033' },
+		  { light: '#66ccff', dark: '#3399ff' },
+		  { light: '#99ff99', dark: '#33cc33' }
+		];
+		const chosen = colors[Math.floor(Math.random() * colors.length)];
+		firework.style.setProperty('--color', chosen.light);
+		firework.style.setProperty('--color-dark', chosen.dark);
+		container.appendChild(firework);
+		firework.addEventListener('animationend', () => {
+		  firework.remove();
+		});
+		count++;
+	  }, 25); // Une particule toutes les 100ms
+	}
+
+    // Mise à jour des statistiques
     function updateStatsDisplay() {
       let total = 0;
       for (let combo in stats) {
@@ -406,10 +473,22 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         if (elem) {
           const countValue = stats[combo];
           let pct = total > 0 ? (countValue / total * 100) : 0;
+          const totalPrize = statsGain[combo];
+          const totalPrizeFormatted = totalPrize.toLocaleString('de-DE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+          const prizeDisplay = totalPrize === 0 ? "" : `<span style='color: green;'>+${totalPrizeFormatted}€</span>`;
           if (countValue === 0) {
-            elem.innerHTML = "<span style='color: red;'>" + countValue.toLocaleString('de-DE') + "</span> <span style='color: gray;'>(" + pct.toFixed(2) + "%)</span>";
+            elem.innerHTML =
+              `<span style='color: red;'>${countValue.toLocaleString('de-DE')}</span>
+               <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
+               ${prizeDisplay}`;
           } else {
-            elem.innerHTML = countValue.toLocaleString('de-DE') + " <span style='color: gray;'>(" + pct.toFixed(2) + "%)</span>";
+            elem.innerHTML =
+              `${countValue.toLocaleString('de-DE')}
+               <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
+               ${prizeDisplay}`;
           }
         }
       }
@@ -439,15 +518,11 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       function computeChance(numCount, starCount, stopNumbers, stopStars) {
         let probNum = 0;
         for (let k = stopNumbers; k <= Math.min(numCount, 5); k++) {
-          probNum += combination(numCount, k) *
-                     combination(50 - numCount, 5 - k) /
-                     combination(50, 5);
+          probNum += combination(numCount, k) * combination(50 - numCount, 5 - k) / combination(50, 5);
         }
         let probStars = 0;
         for (let l = stopStars; l <= Math.min(starCount, 2); l++) {
-          probStars += combination(starCount, l) *
-                       combination(12 - starCount, 2 - l) /
-                       combination(12, 2);
+          probStars += combination(starCount, l) * combination(12 - starCount, 2 - l) / combination(12, 2);
         }
         return probNum * probStars;
       }
@@ -460,7 +535,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         : "∞";
       document.getElementById("chanceDisplay").innerHTML =
         `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ★) : ${percent}%<br>
-        1 chance sur ${reciprocalFormatted}`;
+         1 chance sur ${reciprocalFormatted}`;
     }
 
     function formatTimeInDays(totalDays) {
@@ -483,7 +558,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
 
     function updateTimePassed(drawCount) {
-      // On considère 3,5 jours entre deux tirages hebdo (mardi + vendredi)
       const days = drawCount * 3.5;
       const formatted = formatTimeInDays(days);
       document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
@@ -499,19 +573,13 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       }
     }
 
-    // --- EVENEMENTS ET BOUCLE PRINCIPALE ---
-
-    // Met à jour le taux de chance lorsque certains champs changent
     document.querySelectorAll("#ticketNumbersCount, #ticketStarsCount, #numTickets, #stopNumbers, #stopStars, #customGrids, #stopAfterYearsInput, #stopAfterYearsCheckbox")
       .forEach(input => {
         input.addEventListener("input", updateChanceDisplay);
       });
     updateChanceDisplay();
-
-    // On masque le bouton "Stop" tant qu'on n'a pas lancé la simulation
     document.getElementById("stopBtn").style.display = "none";
 
-    // Gestion de l'affichage des champs multichance en fonction du mode
     document.getElementById("multichanceCheckbox").addEventListener("change", function() {
       const partsContainer = document.getElementById("multichancePartsContainer");
       partsContainer.style.display = this.checked ? "block" : "none";
@@ -536,49 +604,33 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       updateChanceDisplay();
     });
 
-    // NOUVEAU : gestion du slider qui contrôle batchSize et speed
     const speedSlider = document.getElementById("speedSlider");
     const speedValueLabel = document.getElementById("speedValueLabel");
 
-	function updateSpeedFromSlider(value) {
-	  const sliderVal = parseInt(value, 10);
-	  if (sliderVal <= 50) {
-		// Pour 1 à 50 :
-		// - batchSize fixe à 1
-		// - delay varie de 1000 ms à 1 ms
-		currentBatchSize = 1;
-		currentSpeed = Math.round(1000 - (sliderVal - 1) * (1000 - 1) / 49);
-	  } else if (sliderVal <= 70) {
-		// Pour 51 à 70 :
-		// - batchSize varie linéairement de 1 à 200
-		// - delay constant à 1 ms
-		let ratio = (sliderVal - 50) / 20;
-		currentBatchSize = Math.round(1 + ratio * (200 - 1));
-		currentSpeed = 1;
-	  } else {
-		// Pour 71 à 100 :
-		// - batchSize varie linéairement de 200 à 3000
-		// - delay varie linéairement de 1 ms à 0 ms
-		let ratio = (sliderVal - 70) / 30;
-		currentBatchSize = Math.round(200 + ratio * (2000 - 200));
-		currentSpeed = Math.round(1 - ratio * 1);
-	  }
-	  speedValueLabel.textContent = `(Tirage = ${currentBatchSize}, Délai = ${currentSpeed} ms)`;
-	}
+    function updateSpeedFromSlider(value) {
+      const sliderVal = parseInt(value, 10);
+      if (sliderVal <= 50) {
+        currentBatchSize = 1;
+        currentSpeed = Math.round(1000 - (sliderVal - 1) * (999 / 49));
+      } else if (sliderVal <= 70) {
+        let ratio = (sliderVal - 50) / 20;
+        currentBatchSize = Math.round(1 + ratio * (200 - 1));
+        currentSpeed = 1;
+      } else {
+        let ratio = (sliderVal - 70) / 30;
+        currentBatchSize = Math.round(200 + ratio * (2000 - 200));
+        currentSpeed = Math.round(1 - ratio * 1);
+      }
+      speedValueLabel.textContent = `(Tirage = ${currentBatchSize}, Délai = ${currentSpeed} ms)`;
+    }
 
-
-
-    // Initialisation
     updateSpeedFromSlider(speedSlider.value);
-
-    // Quand on bouge le slider
     speedSlider.addEventListener("input", function() {
       updateSpeedFromSlider(this.value);
     });
 
     function runLoop() {
       if (stopFlag) return;
-
       const mode = document.getElementById("modeSelect").value;
       let multichanceRatio = 1;
       if (mode === "flash" && document.getElementById("multichanceCheckbox").checked) {
@@ -600,7 +652,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         const customGridsText = document.getElementById("customGrids").value;
         customTickets = parseCustomGrids(customGridsText);
       }
-      // Ces paramètres sont lus à chaque itération
       const numCount = mode === "flash"
         ? (parseInt(document.getElementById("ticketNumbersCount").value) || 5)
         : (customTickets.length > 0 ? customTickets[0].numbers.length : 5);
@@ -611,36 +662,29 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         ? (parseInt(document.getElementById("numTickets").value) || 1)
         : (customTickets.length > 0 ? customTickets.length : 1);
 
-      // Calcul du nombre de grilles simples pour un ticket
       const simpleGridsPerTicket = combination(numCount, 5) * combination(starCount, 2);
-
       const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 0;
       const stopStars = parseInt(document.getElementById("stopStars").value) || 0;
       const stopAfterYearsChecked = document.getElementById("stopAfterYearsCheckbox").checked;
       const stopAfterYearsValue = parseInt(document.getElementById("stopAfterYearsInput").value) || 100;
-
-      // On utilise les valeurs courantes issues du slider
       const batchSize = currentBatchSize;
       const speed = currentSpeed;
 
       for (let i = 0; i < batchSize; i++) {
         count++;
-        // Ajout du nombre de grilles jouées pour ce tirage
         totalGrillesJouees += numTickets * simpleGridsPerTicket;
         tickets = [];
         for (let j = 0; j < numTickets; j++) {
           if (mode === "flash") {
-            let ticket = generateTicket(numCount, starCount);
-            tickets.push(ticket);
+            tickets.push(generateTicket(numCount, starCount));
           } else {
             if (customTickets.length > 0) {
               tickets.push(customTickets[j % customTickets.length]);
             }
           }
         }
-        // Déduction du coût des tickets
         if (mode === "flash") {
-          let costPerTicket = combination(numCount, 5) * combination(starCount, 2) * ticketCost;
+          let costPerTicket = simpleGridsPerTicket * ticketCost;
           if (document.getElementById("multichanceCheckbox").checked) {
             costPerTicket *= multichanceRatio;
           }
@@ -706,15 +750,13 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             prize *= multichanceRatio;
           }
           balance += prize;
-
-          // Vérification de la condition de stop (X numéros, Y étoiles)
+          statsGain[key] += prize;
           if (matchNumbers >= stopNumbers && matchStars >= stopStars) {
             foundWinningTicket = true;
             winningTicket = ticket;
           }
         });
 
-        // Vérification de l'option My Millon
         if (document.getElementById("myMillonCheckbox").checked) {
           let myMillonWin = tickets.some(ticket => {
             if (typeof ticket.myMillon === "string" && ticket.myMillon.includes(" à ")) {
@@ -774,7 +816,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           }
         }
 
-        // Vérification de l'option Stopper si on dépasse X années
         if (stopAfterYearsChecked) {
           const currentYears = (count * 3.5) / 365;
           if (currentYears >= stopAfterYearsValue) {
@@ -795,7 +836,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           }
         }
 
-        // Vérification si un ticket gagnant a été trouvé (pour la condition X numéros, Y étoiles)
         if (foundWinningTicket) {
           document.getElementById("ticketsContainer").innerHTML = "";
           tickets.forEach((ticket, index) => {
@@ -821,7 +861,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           updateStatsDisplay();
           updateGainDisplay();
 
-          // Calcul du gain du ticket gagnant
           const winningMatchNumbers = countMatches(winningTicket.numbers, draw.numbers);
           const winningMatchStars = countMatches(winningTicket.stars, draw.stars);
           const winningKey = winningMatchNumbers + "_" + winningMatchStars;
@@ -829,7 +868,10 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           if (document.getElementById("multichanceCheckbox").checked) {
             winningGain *= multichanceRatio;
           }
-
+          // Si le jackpot est gagné (5 n° et 2 ★), déclenche l'effet feu d'artifice
+          if (winningMatchNumbers === 5 && winningMatchStars === 2) {
+            launchFireworks();
+          }
           alert("Seuil atteint !\n" +
                 "Ticket gagnant : " + winningTicket.numbers.join(", ") + " | " + winningTicket.stars.join(", ") + "\n" +
                 "Tirage : " + draw.numbers.join(", ") + " | " + draw.stars.join(", ") + "\n" +
@@ -841,7 +883,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           return;
         }
 
-        // Vérification du seuil de gain net négatif
         if (document.getElementById("stopNegativeGainCheckbox").checked) {
           const negThreshold = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
           if (balance < -negThreshold) {
@@ -863,7 +904,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         }
       }
 
-      // Mise à jour des affichages après le batch de tirages
       document.getElementById("ticketsContainer").innerHTML = "";
       tickets.forEach((ticket, index) => {
         const div = document.createElement("div");
@@ -901,9 +941,10 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       count = 0;
       stopFlag = false;
       balance = 0;
-      totalGrillesJouees = 0;  // Réinitialisation du compteur de grilles jouées
+      totalGrillesJouees = 0;
       for (let combo in stats) {
         stats[combo] = 0;
+        statsGain[combo] = 0;
       }
       document.getElementById("counter").textContent = "Tirages : 0";
       document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
@@ -921,7 +962,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
 
     document.getElementById("startBtn").addEventListener("click", startDrawing);
-
     document.getElementById("stopBtn").addEventListener("click", function() {
       if (!stopFlag) {
         stopFlag = true;
@@ -933,7 +973,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         runLoop();
       }
     });
-
     document.getElementById("resetBtn").addEventListener("click", function() {
       stopFlag = true;
       clearTimeout(loopTimeout);
@@ -941,6 +980,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       totalGrillesJouees = 0;
       for (let combo in stats) {
         stats[combo] = 0;
+        statsGain[combo] = 0;
       }
       updateStatsDisplay();
       document.getElementById("counter").textContent = "Tirages : 0";
@@ -948,8 +988,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
       document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Gain net : 0,00 €</span>";
       document.getElementById("ticketsContainer").innerHTML = "";
-      document.getElementById("resultat").innerHTML =
-        `<strong>Tirage :</strong><br>Numéros : --<br>Étoiles : --`;
+      document.getElementById("resultat").innerHTML = `<strong>Tirage :</strong><br>Numéros : --<br>Étoiles : --`;
       document.getElementById("stopBtn").textContent = "Stop";
       document.getElementById("startBtn").style.display = "block";
       document.getElementById("stopBtn").style.display = "none";
