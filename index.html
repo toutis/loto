@@ -271,6 +271,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       <div class="compteur" id="counter">Tirages : 0</div>
       <div class="compteur" id="timePassed">Temps écoulé : 0 jour</div>
       <div class="compteur" id="grillesPlayed">Grilles jouées : 0</div>
+      <!-- Remarque : on insère un span pour l'image de loose -->
       <div class="compteur" id="gainDisplay">Gain net : 0 €</div>
       <div class="section display" id="ticketsContainer"></div>
       <!-- Statistiques de combinaisons -->
@@ -458,7 +459,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       ).join(", ");
     }
 
-    // Fonction pour lancer les effets de feu d'artifice amélioré
+    // Fonction pour lancer les effets de feu d'artifice
     function launchFireworks() {
       const container = document.getElementById('fireworksContainer');
       let count = 0;
@@ -493,6 +494,29 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         });
         count++;
       }, 25);
+    }
+
+    function removeLooseImages() {
+      // On supprime toute image dans la zone #looseImageContainer
+      const container = document.querySelector('#looseImageContainer');
+      if (container) {
+        container.innerHTML = "";
+      }
+    }
+
+    function addLooseImage(filename) {
+      // On ajoute l'image dans #looseImageContainer
+      const container = document.querySelector('#looseImageContainer');
+      if (!container) return;
+      const img = document.createElement('img');
+      img.src = filename;
+      // adapter l'image à la taille du texte
+      img.style.width = "1.5em";
+      img.style.height = "1.5em";
+      img.style.verticalAlign = "middle";
+      // petite marge à gauche
+      img.style.marginLeft = "8px";
+      container.appendChild(img);
     }
 
     // Mise à jour des statistiques
@@ -596,13 +620,14 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
     }
 
+    // On insère ici un span id=looseImageContainer pour coller l'image si besoin
     function updateGainDisplay() {
       const formatted = balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const gainElem = document.getElementById("gainDisplay");
       if (balance >= 0) {
-        gainElem.innerHTML = "Gain net : <span style='color: green;'>" + formatted + " €</span>";
+        gainElem.innerHTML = `Gain net : <span style='color: green;'>${formatted} €<span id='looseImageContainer'></span></span>`;
       } else {
-        gainElem.innerHTML = "Gain net : <span style='color: red;'>" + formatted + " €</span>";
+        gainElem.innerHTML = `Gain net : <span style='color: red;'>${formatted} €<span id='looseImageContainer'></span></span>`;
       }
     }
 
@@ -663,6 +688,9 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     });
 
     function runLoop() {
+      // On enlève l'image loose à chaque début de tirage ou reprise
+      removeLooseImages();
+
       if (stopFlag) return;
       const mode = document.getElementById("modeSelect").value;
       let multichanceRatio = 1;
@@ -810,13 +838,15 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             alert("Option My Millon gagnée !\nTirage My Million : " + draw.myMillon + "\nGain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
 
             // Lecture du son selon le gain
-			if (balance >= 1) {
-			  playSound("win.mp3");
-			} else if (balance <= -1000000) {
-			  playSound("bigloose.mp3");
-			} else {
-			  playSound("loose.mp3");
-			}
+            if (balance >= 1) {
+              playSound("win.mp3");
+            } else if (balance <= -1000000) {
+              playSound("bigloose.mp3");
+              addLooseImage("bigloose.jpeg");
+            } else {
+              playSound("loose.mp3");
+              addLooseImage("loose.png");
+            }
 
             stopFlag = true;
             document.getElementById("startBtn").style.display = "block";
@@ -874,13 +904,15 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             updateGainDisplay();
             alert("On a dépassé les " + stopAfterYearsValue + " ans de simulation !\n(Nombre de tirages : " + count.toLocaleString('de-DE') + ")");
 
-			if (balance >= 1) {
-			  playSound("win.mp3");
-			} else if (balance <= -1000000) {
-			  playSound("bigloose.mp3");
-			} else {
-			  playSound("loose.mp3");
-			}
+            if (balance >= 1) {
+              playSound("win.mp3");
+            } else if (balance <= -1000000) {
+              playSound("bigloose.mp3");
+              addLooseImage("bigloose.jpeg");
+            } else {
+              playSound("loose.mp3");
+              addLooseImage("loose.png");
+            }
 
             stopFlag = true;
             document.getElementById("startBtn").style.display = "block";
@@ -929,14 +961,15 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
                 "Nombre de tirages : " + count.toLocaleString('de-DE') + "\n" +
                 "Gain : " + winningGain.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
 
-          // Lecture du son selon le gain par pallier
-			if (balance >= 1) {
-			  playSound("win.mp3");
-			} else if (balance <= -1000000) {
-			  playSound("bigloose.mp3");
-			} else {
-			  playSound("loose.mp3");
-			}
+          if (balance >= 1) {
+            playSound("win.mp3");
+            } else if (balance <= -1000000) {
+              playSound("bigloose.mp3");
+              addLooseImage("bigloose.jpeg");
+            } else {
+              playSound("loose.mp3");
+              addLooseImage("loose.png");
+            }
 
           stopFlag = true;
           document.getElementById("startBtn").style.display = "block";
@@ -958,13 +991,15 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             updateGainDisplay();
             alert("Le gain net est inférieur au seuil défini (-" + negThreshold + " €). La simulation est arrêtée.");
 
-			if (balance >= 1) {
-			  playSound("win.mp3");
-			} else if (balance <= -1000000) {
-			  playSound("bigloose.mp3");
-			} else {
-			  playSound("loose.mp3");
-			}
+            if (balance >= 1) {
+              playSound("win.mp3");
+            } else if (balance <= -1000000) {
+              playSound("bigloose.mp3");
+              addLooseImage("bigloose.jpeg");
+            } else {
+              playSound("loose.mp3");
+              addLooseImage("loose.png");
+            }
 
             stopFlag = true;
             document.getElementById("startBtn").style.display = "block";
@@ -1026,6 +1061,10 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       updateStatsDisplay();
       updateTimePassed(0);
       updateGainDisplay();
+
+      // On enlève aussi l'image loose au démarrage
+      removeLooseImages();
+
       document.getElementById("startBtn").style.display = "none";
       document.getElementById("stopBtn").style.display = "inline-block";
       runLoop();
@@ -1062,6 +1101,9 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       document.getElementById("stopBtn").textContent = "Stop";
       document.getElementById("startBtn").style.display = "block";
       document.getElementById("stopBtn").style.display = "none";
+
+      // On enlève aussi l'image loose au reset
+      removeLooseImages();
     });
   </script>
 </body>
