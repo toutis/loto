@@ -621,15 +621,26 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
 
     // On insère ici un span id=looseImageContainer pour coller l'image si besoin
-    function updateGainDisplay() {
-      const formatted = balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const gainElem = document.getElementById("gainDisplay");
-      if (balance >= 0) {
-        gainElem.innerHTML = `Gain net : <span style='color: green;'>${formatted} €<span id='looseImageContainer'></span></span>`;
-      } else {
-        gainElem.innerHTML = `Gain net : <span style='color: red;'>${formatted} €<span id='looseImageContainer'></span></span>`;
-      }
-    }
+	function updateGainDisplay() {
+	  const formatted = balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	  const gainElem = document.getElementById("gainDisplay");
+	  
+	  // Récupère le conteneur d'image existant ou le crée s'il n'existe pas
+	  let imageContainer = document.getElementById("looseImageContainer");
+	  if (!imageContainer) {
+		imageContainer = document.createElement("span");
+		imageContainer.id = "looseImageContainer";
+	  }
+	  
+	  // Met à jour l'affichage du gain sans écraser le conteneur d'image
+	  if (balance >= 0) {
+		gainElem.innerHTML = `Gain net : <span style='color: green;'>${formatted} €</span>`;
+	  } else {
+		gainElem.innerHTML = `Gain net : <span style='color: red;'>${formatted} €</span>`;
+	  }
+	  gainElem.appendChild(imageContainer);
+	}
+
 
     document.querySelectorAll("#ticketNumbersCount, #ticketStarsCount, #numTickets, #stopNumbers, #stopStars, #customGrids, #stopAfterYearsInput, #stopAfterYearsCheckbox")
       .forEach(input => {
