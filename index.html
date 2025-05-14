@@ -527,33 +527,34 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       let total = 0;
       for (let combo in stats) total += stats[combo];
 
-      // My Million
-      const elemMyMillion = document.getElementById("stats_myMillion");
-      const valMyMillion = document.getElementById("stats_myMillion_value");
-      const pctMyMillion = document.getElementById("stats_myMillion_pct");
-      const gainMyMillion = document.getElementById("stats_myMillion_gain");
+	// My Million
+	const elemMyMillion = document.getElementById("stats_myMillion");
+	const valMyMillion = document.getElementById("stats_myMillion_value");
+	const pctMyMillion = document.getElementById("stats_myMillion_pct");
+	const gainMyMillion = document.getElementById("stats_myMillion_gain");
 
-      if (!document.getElementById("myMillonCheckbox").checked) {
-        elemMyMillion.style.display = "none";
-      } else {
-        elemMyMillion.style.display = "list-item";
-        let percent = count > 0 ? (myMillionWinCount / count * 100) : 0;
-        // Seulement en rouge si la simulation est active ET qu'on est à 0
-        if (myMillionWinCount === 0 && simulationActive && count > 0) {
-          valMyMillion.innerHTML = `<span style='color: red;'>0</span>`;
-        } else {
-          valMyMillion.innerHTML = myMillionWinCount.toLocaleString('de-DE');
-        }
-        pctMyMillion.innerHTML = ` <span style='color: gray;'>(${percent.toFixed(2)}%)</span>`;
-        if (myMillionTotalGain > 0) {
-          gainMyMillion.innerHTML = ` <span style='color: green;'>+${myMillionTotalGain.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}€</span>`;
-        } else {
-          gainMyMillion.innerHTML = '';
-        }
-      }
+	if (!document.getElementById("myMillonCheckbox").checked) {
+	  elemMyMillion.style.display = "none";
+	} else {
+	  elemMyMillion.style.display = "list-item";
+	  let percent = count > 0 ? (myMillionWinCount / count * 100) : 0;
+	  // >>> ICI correction <<<
+	  if (myMillionWinCount === 0 && simulationHasStarted && count > 0) {
+		valMyMillion.innerHTML = `<span style='color: red;'>0</span>`;
+	  } else {
+		valMyMillion.innerHTML = myMillionWinCount.toLocaleString('de-DE');
+	  }
+	  pctMyMillion.innerHTML = ` <span style='color: gray;'>(${percent.toFixed(2)}%)</span>`;
+	  if (myMillionTotalGain > 0) {
+		gainMyMillion.innerHTML = ` <span style='color: green;'>+${myMillionTotalGain.toLocaleString('de-DE', {
+		  minimumFractionDigits: 2,
+		  maximumFractionDigits: 2
+		})}€</span>`;
+	  } else {
+		gainMyMillion.innerHTML = '';
+	  }
+	}
+
       // Autres stats
       for (let combo in stats) {
         const elem = document.getElementById("stats_" + combo);
@@ -568,7 +569,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           const prizeDisplay = totalPrize === 0 ? "" : `<span style='color: green;'>+${totalPrizeFormatted}€</span>`;
 			if (countValue === 0) {
 			  elem.innerHTML =
-				`<span style='color: ${simulationActive ? 'red' : 'black'};'>${countValue.toLocaleString('de-DE')}</span>
+				`<span style='color: ${simulationHasStarted ? 'red' : 'black'};'>${countValue.toLocaleString('de-DE')}</span>
 				 <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
 				 ${prizeDisplay}`;
 			} else {
@@ -1113,6 +1114,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
 
     function startDrawing() {
+	  simulationHasStarted = true;
       if (document.getElementById("modeSelect").value === "flash" && document.getElementById("multichanceCheckbox").checked) {
         const totalParts = parseInt(document.getElementById("totalParts").value) || 0;
         const yourParts = parseInt(document.getElementById("yourParts").value) || 0;
@@ -1170,6 +1172,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     });
     document.getElementById("resetBtn").addEventListener("click", function() {
       stopFlag = true;
+	  simulationHasStarted = false;
       clearTimeout(loopTimeout);
       count = 0;
       totalGrillesJouees = 0;
