@@ -959,36 +959,44 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           }
         }
 
-        let foundWinningTicket = false;
-        let winningTicket = null;
-		tickets.forEach(ticket => {
-		  let numCombos = getCombinations(ticket.numbers, 5);
-		  let starCombos = getCombinations(ticket.stars, 2);
-		  let ticketHasWin = false;
+	let foundWinningTicket = false;
+	let winningTicket = null;
+	tickets.forEach(ticket => {
+	  const n = ticket.numbers.length;
+	  const s = ticket.stars.length;
 
-		  numCombos.forEach(nums => {
-			starCombos.forEach(stars => {
-			  const matchNumbers = countMatches(nums, draw.numbers);
-			  const matchStars = countMatches(stars, draw.stars);
-			  const key = matchNumbers + "_" + matchStars;
-			  if (stats.hasOwnProperty(key)) {
-				stats[key]++;
-			  }
-			  let prize = prizeMapping[key] || 0;
-			  if (document.getElementById("multichanceCheckbox").checked) {
-				prize *= multichanceRatio;
-			  }
-			  balance += prize;
-			  statsGain[key] += prize;
-			  // Si AU MOINS une des combinaisons atteint le seuil d'arrêt, on arrête
-			  if (!ticketHasWin && matchNumbers >= stopNumbers && matchStars >= stopStars) {
-				foundWinningTicket = true;
-				winningTicket = ticket;
-				ticketHasWin = true; // pour ne pas refaire l'affectation sur toutes les combis
-			  }
-			});
-		  });
-		});
+	  const numGood = countMatches(ticket.numbers, draw.numbers);
+	  const numBad = n - numGood;
+	  const starGood = countMatches(ticket.stars, draw.stars);
+	  const starBad = s - starGood;
+
+	  // Pour chaque possibilité de bons numéros (0 à 5) et étoiles (0 à 2)
+	  for (let nb = 0; nb <= Math.min(5, n); nb++) {
+		for (let sb = 0; sb <= Math.min(2, s); sb++) {
+		  // Combien de grilles simples (dans la grille multiple) font nb bons numéros et sb bonnes étoiles
+		  const waysNum = combination(numGood, nb) * combination(numBad, 5 - nb);
+		  const waysStar = combination(starGood, sb) * combination(starBad, 2 - sb);
+		  const countGrilles = waysNum * waysStar;
+		  if (countGrilles > 0) {
+			const key = nb + "_" + sb;
+			if (stats.hasOwnProperty(key)) stats[key] += countGrilles;
+			let prize = prizeMapping[key] || 0;
+			if (document.getElementById("multichanceCheckbox").checked) {
+			  prize *= multichanceRatio;
+			}
+			balance += prize * countGrilles;
+			statsGain[key] += prize * countGrilles;
+
+			// Si au moins UNE des grilles simples franchit le seuil d'arrêt, on considère le ticket "gagnant" (pour l'affichage, l'alerte, etc)
+			if (!foundWinningTicket && nb >= stopNumbers && sb >= stopStars && countGrilles > 0) {
+			  foundWinningTicket = true;
+			  winningTicket = ticket;
+			}
+		  }
+		}
+	  }
+	});
+
 
         if (foundWinningTicket) {
           document.getElementById("ticketsContainer").innerHTML = "";
