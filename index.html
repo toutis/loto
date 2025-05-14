@@ -59,7 +59,6 @@
       padding: 10px;
       margin: 10px 0;
     }
-    /* Style pour la liste des stats */
     #statsContainer {
       margin-top: 20px;
     }
@@ -74,7 +73,6 @@
       display: flex;
       align-items: center;
     }
-    /* Style pour l'icône d'info */
     .info-icon {
       display: inline-block;
       width: 16px;
@@ -87,7 +85,6 @@
       margin-left: 5px;
       cursor: help;
     }
-    /* Style pour le slider de vitesse */
     #speedControlGroup {
       display: flex;
       align-items: center;
@@ -98,7 +95,6 @@
     #speedValueLabel {
       color: gray;
     }
-    /* Effet feu d'artifice */
     #fireworksContainer {
       position: fixed;
       top: 0;
@@ -115,50 +111,40 @@
       background: radial-gradient(circle, var(--color) 0%, var(--color-dark) 70%);
       border-radius: 50%;
       opacity: 1;
-      animation: firework 2.0s ease-out forwards;  /* durée prolongée */
+      animation: firework 2.0s ease-out forwards;
       box-shadow: 0 0 15px var(--color);
     }
     @keyframes firework {
-      0% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        transform: translate(var(--tx), var(--ty)) scale(3);
-        opacity: 0;
-      }
+      0% { transform: scale(1); opacity: 1; }
+      50% { opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(3); opacity: 0; }
     }
-
-    /* Icônes de son */
     .sound-toggle {
       cursor: pointer;
       margin-left: 10px;
-      font-size: 24px; /* Ajuster si besoin */
+      font-size: 24px;
     }
     .sound-toggle span {
       display: inline-block;
+    }
+    #stopMyMillonWinGroup {
+      margin-left: 22px;
+      margin-top: 0;
+      font-size: 0.95em;
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="main-container">
-    <!-- Colonne de gauche : paramètres et boutons -->
     <div class="left-column">
-      <!-- Titre avec icône de son -->
       <h1>
         Simulation Euro Millions
-        <!-- Icône de son -->
         <span id="soundToggle" class="sound-toggle">
-          <!-- Icône "son activé" (haut-parleur) -->
-          <span id="soundOnIcon">&#128266;</span>
-          <!-- Icône "son coupé" (haut-parleur barré), caché au début -->
-          <span id="soundOffIcon" style="display: none;">&#128263;</span>
+          <span id="soundOnIcon" style="display: none;">&#128266;</span>
+          <span id="soundOffIcon" style="display: inline-block;">&#128263;</span>
         </span>
       </h1>
-
       <div class="section">
         <div class="form-group">
           <label for="modeSelect">Mode :</label>
@@ -186,7 +172,6 @@
           <label for="numTickets">Nombre de tickets par tirage :</label>
           <input type="number" id="numTickets" value="1" min="1">
         </div>
-        <!-- Champs pour stopper en fonction du nombre et des étoiles -->
         <div class="form-group">
           <label for="stopNumbers">Stopper si au moins X numéros corrects :</label>
           <input type="number" id="stopNumbers" value="5" min="0" max="5">
@@ -205,7 +190,6 @@
           <label for="stopAfterYearsCheckbox">Stopper si on dépasse X années :</label>
           <input type="number" id="stopAfterYearsInput" value="50" min="1" style="width:80px;">
         </div>
-        <!-- Contrôle unique de la vitesse -->
         <div class="form-group" id="speedControlGroup">
           <label for="speedSlider">Vitesse :</label>
           <input type="range" id="speedSlider" min="1" max="100" value="50" list="tickmarks">
@@ -214,10 +198,9 @@
           </datalist>
           <span id="speedValueLabel">(Tirage = 1, Délai = 1000 ms)</span>
         </div>
-        <!-- Option multichance -->
         <div class="form-group" id="multichanceAndMyMillonContainer">
           <div id="myMillonGroup" style="display: inline-block; margin-right: 20px;">
-            <input type="checkbox" id="myMillonCheckbox">
+            <input type="checkbox" id="myMillonCheckbox" checked>
             <label for="myMillonCheckbox">
               My Millon
               <span class="info-icon"
@@ -246,7 +229,11 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             </label>
           </div>
         </div>
-        <!-- Nouveaux champs pour multichance -->
+        <!-- Case à cocher "stopper si on gagne le my million", visible seulement si My Million est coché -->
+        <div class="form-group" id="stopMyMillonWinGroup" style="display:none;">
+          <input type="checkbox" id="stopMyMillonWinCheckbox">
+          <label for="stopMyMillonWinCheckbox">Stopper si on gagne le my million</label>
+        </div>
         <div class="form-group" id="multichancePartsContainer" style="display:none; margin-left:20px;">
           <label for="totalParts">Total de parts :</label>
           <input type="number" id="totalParts" value="420" min="1"><br>
@@ -260,7 +247,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         </div>
       </div>
     </div>
-    <!-- Colonne de droite : affichage des chances, tickets, résultats, compteur, stats -->
     <div class="right-column">
       <div id="chanceDisplay"></div>
       <div class="section display" id="resultat">
@@ -271,13 +257,16 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       <div class="compteur" id="counter">Tirages : 0</div>
       <div class="compteur" id="timePassed">Temps écoulé : 0 jour</div>
       <div class="compteur" id="grillesPlayed">Grilles jouées : 0</div>
-      <!-- Remarque : on insère un span pour l'image de loose -->
       <div class="compteur" id="gainDisplay">Gain net : 0 €</div>
       <div class="section display" id="ticketsContainer"></div>
-      <!-- Statistiques de combinaisons -->
       <div class="section display" id="statsContainer">
         <h3>Statistiques de résultats</h3>
         <ul>
+          <li id="stats_myMillion" style="display: list-item;">
+            My Million : <span id="stats_myMillion_value">0</span>
+            <span id="stats_myMillion_pct"></span>
+            <span id="stats_myMillion_gain"></span>
+          </li>
           <li>5 n° + 2 ★ : <span id="stats_5_2">0</span></li>
           <li>5 n° + 1 ★ : <span id="stats_5_1">0</span></li>
           <li>5 n° + 0 ★ : <span id="stats_5_0">0</span></li>
@@ -300,13 +289,10 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       </div>
     </div>
   </div>
-
-  <!-- Conteneur pour les effets feu d'artifice -->
   <div id="fireworksContainer"></div>
-
   <script>
     // --- Nouveau : gestion du son ---
-    let soundEnabled = true;
+    let soundEnabled = false; // Désactivé par défaut
     function toggleSound() {
       soundEnabled = !soundEnabled;
       document.getElementById('soundOnIcon').style.display = soundEnabled ? 'inline-block' : 'none';
@@ -314,7 +300,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
     document.getElementById('soundToggle').addEventListener('click', toggleSound);
 
-    // Fonction utilitaire pour jouer un son uniquement si le son est activé
     function playSound(soundFile) {
       if (!soundEnabled) return;
       new Audio(soundFile).play();
@@ -331,7 +316,9 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       "0_2": 0, "0_1": 0, "0_0": 0
     };
 
-    // Objet pour cumuler le total des gains par combinaison
+    let myMillionWinCount = 0;
+    let myMillionTotalGain = 0;
+
     let statsGain = {
       "5_2": 0, "5_1": 0, "5_0": 0,
       "4_2": 0, "4_1": 0, "4_0": 0,
@@ -341,14 +328,15 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       "0_2": 0, "0_1": 0, "0_0": 0
     };
 
-    let count = 0;               // Compteur de tirages
-    let stopFlag = false;        // Flag pour stopper la simulation
-    let loopTimeout;             // ID du timeout de la boucle
-    let balance = 0;             // Gain net
-    const ticketCost = 2.5;      // Coût d'une grille simple en €
-    let totalGrillesJouees = 0;  // Total des grilles jouées
+    let count = 0;
+    let stopFlag = false;
+    let loopTimeout;
+    let balance = 0;
+    const ticketCost = 2.5;
+    let totalGrillesJouees = 0;
 
-    // Mapping des gains (valeurs approximatives)
+    let simulationActive = false; // Indique si la simulation est en cours
+
     const prizeMapping = {
       "5_2": 45000000,
       "5_1": 400000,
@@ -370,7 +358,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       "0_0": 0
     };
 
-    // Presets pour le slider de vitesse : index 1..10
     const speedPresets = [
       { batchSize: 1,     speed: 1000 },
       { batchSize: 10,    speed: 500 },
@@ -387,7 +374,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     let currentBatchSize = speedPresets[4].batchSize;
     let currentSpeed = speedPresets[4].speed;
 
-    // --- FONCTIONS UTILES ---
     function combination(n, r) {
       if (r > n) return 0;
       let num = 1, den = 1;
@@ -414,12 +400,35 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       }
       return numbers.sort((a, b) => a - b);
     }
+	
+	// Renvoie toutes les combinaisons de k éléments dans arr
+	function getCombinations(arr, k) {
+	  const results = [];
+	  function combine(start, combo) {
+		if (combo.length === k) {
+		  results.push(combo.slice());
+		  return;
+		}
+		for (let i = start; i < arr.length; i++) {
+		  combo.push(arr[i]);
+		  combine(i + 1, combo);
+		  combo.pop();
+		}
+	  }
+	  combine(0, []);
+	  return results;
+	}
 
-    function generateTicket(numCount, starCount) {
-      const ticketNumbers = generateNumbers(numCount, 50);
-      const ticketStars = generateNumbers(starCount, 12);
-      return { numbers: ticketNumbers, stars: ticketStars };
-    }
+
+	function generateTicket(numCount, starCount) {
+	  // Clamp les valeurs pour garantir les bornes
+	  numCount = Math.max(5, Math.min(50, numCount));
+	  starCount = Math.max(2, Math.min(12, starCount));
+
+	  const ticketNumbers = generateNumbers(numCount, 50);
+	  const ticketStars = generateNumbers(starCount, 12);
+	  return { numbers: ticketNumbers, stars: ticketStars };
+	}
 
     function generateDraw() {
       return { numbers: generateNumbers(5, 50), stars: generateNumbers(2, 12) };
@@ -459,11 +468,10 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       ).join(", ");
     }
 
-    // Fonction pour lancer les effets de feu d'artifice
     function launchFireworks() {
       const container = document.getElementById('fireworksContainer');
       let count = 0;
-      const total = 80; // nombre total de particules
+      const total = 80;
       const interval = setInterval(() => {
         if (count >= total) {
           clearInterval(interval);
@@ -478,7 +486,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         const ty = Math.random() * 500;
         firework.style.setProperty('--tx', tx + 'px');
         firework.style.setProperty('--ty', ty + 'px');
-        // Couleurs aléatoires
         const colors = [
           { light: '#ffcc00', dark: '#ff9900' },
           { light: '#ff3366', dark: '#cc0033' },
@@ -497,7 +504,6 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
 
     function removeLooseImages() {
-      // On supprime toute image dans la zone #looseImageContainer
       const container = document.querySelector('#looseImageContainer');
       if (container) {
         container.innerHTML = "";
@@ -505,26 +511,50 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     }
 
     function addLooseImage(filename) {
-      // On ajoute l'image dans #looseImageContainer
       const container = document.querySelector('#looseImageContainer');
       if (!container) return;
       const img = document.createElement('img');
       img.src = filename;
-      // adapter l'image à la taille du texte
       img.style.width = "1.5em";
       img.style.height = "1.5em";
       img.style.verticalAlign = "middle";
-      // petite marge à gauche
       img.style.marginLeft = "8px";
       container.appendChild(img);
     }
 
-    // Mise à jour des statistiques
+    // --- Affichage de la stat My Million avec % et couleur dynamique ---
     function updateStatsDisplay() {
       let total = 0;
-      for (let combo in stats) {
-        total += stats[combo];
+      for (let combo in stats) total += stats[combo];
+
+      // My Million
+      const elemMyMillion = document.getElementById("stats_myMillion");
+      const valMyMillion = document.getElementById("stats_myMillion_value");
+      const pctMyMillion = document.getElementById("stats_myMillion_pct");
+      const gainMyMillion = document.getElementById("stats_myMillion_gain");
+
+      if (!document.getElementById("myMillonCheckbox").checked) {
+        elemMyMillion.style.display = "none";
+      } else {
+        elemMyMillion.style.display = "list-item";
+        let percent = count > 0 ? (myMillionWinCount / count * 100) : 0;
+        // Seulement en rouge si la simulation est active ET qu'on est à 0
+        if (myMillionWinCount === 0 && simulationActive && count > 0) {
+          valMyMillion.innerHTML = `<span style='color: red;'>0</span>`;
+        } else {
+          valMyMillion.innerHTML = myMillionWinCount.toLocaleString('de-DE');
+        }
+        pctMyMillion.innerHTML = ` <span style='color: gray;'>(${percent.toFixed(2)}%)</span>`;
+        if (myMillionTotalGain > 0) {
+          gainMyMillion.innerHTML = ` <span style='color: green;'>+${myMillionTotalGain.toLocaleString('de-DE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}€</span>`;
+        } else {
+          gainMyMillion.innerHTML = '';
+        }
       }
+      // Autres stats
       for (let combo in stats) {
         const elem = document.getElementById("stats_" + combo);
         if (elem) {
@@ -536,17 +566,17 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             maximumFractionDigits: 2
           });
           const prizeDisplay = totalPrize === 0 ? "" : `<span style='color: green;'>+${totalPrizeFormatted}€</span>`;
-          if (countValue === 0) {
-            elem.innerHTML =
-              `<span style='color: red;'>${countValue.toLocaleString('de-DE')}</span>
-               <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
-               ${prizeDisplay}`;
-          } else {
-            elem.innerHTML =
-              `${countValue.toLocaleString('de-DE')}
-               <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
-               ${prizeDisplay}`;
-          }
+			if (countValue === 0) {
+			  elem.innerHTML =
+				`<span style='color: ${simulationActive ? 'red' : 'black'};'>${countValue.toLocaleString('de-DE')}</span>
+				 <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
+				 ${prizeDisplay}`;
+			} else {
+			  elem.innerHTML =
+				`${countValue.toLocaleString('de-DE')}
+				 <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
+				 ${prizeDisplay}`;
+			}
         }
       }
     }
@@ -568,6 +598,8 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           starCount = 2;
         }
       }
+	  numCount = Math.max(5, Math.min(50, numCount));
+      starCount = Math.max(2, Math.min(12, starCount));
       const numTickets = mode === "flash" ? (parseInt(document.getElementById("numTickets").value) || 1) : 1;
       const stopNumbers = parseInt(document.getElementById("stopNumbers").value) ?? 5;
       const stopStars = parseInt(document.getElementById("stopStars").value) ?? 2;
@@ -620,27 +652,21 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
     }
 
-    // On insère ici un span id=looseImageContainer pour coller l'image si besoin
-	function updateGainDisplay() {
-	  const formatted = balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-	  const gainElem = document.getElementById("gainDisplay");
-	  
-	  // Récupère le conteneur d'image existant ou le crée s'il n'existe pas
-	  let imageContainer = document.getElementById("looseImageContainer");
-	  if (!imageContainer) {
-		imageContainer = document.createElement("span");
-		imageContainer.id = "looseImageContainer";
-	  }
-	  
-	  // Met à jour l'affichage du gain sans écraser le conteneur d'image
-	  if (balance >= 0) {
-		gainElem.innerHTML = `Gain net : <span style='color: green;'>${formatted} €</span>`;
-	  } else {
-		gainElem.innerHTML = `Gain net : <span style='color: red;'>${formatted} €</span>`;
-	  }
-	  gainElem.appendChild(imageContainer);
-	}
-
+    function updateGainDisplay() {
+      const formatted = balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const gainElem = document.getElementById("gainDisplay");
+      let imageContainer = document.getElementById("looseImageContainer");
+      if (!imageContainer) {
+        imageContainer = document.createElement("span");
+        imageContainer.id = "looseImageContainer";
+      }
+      if (balance >= 0) {
+        gainElem.innerHTML = `Gain net : <span style='color: green;'>${formatted} €</span>`;
+      } else {
+        gainElem.innerHTML = `Gain net : <span style='color: red;'>${formatted} €</span>`;
+      }
+      gainElem.appendChild(imageContainer);
+    }
 
     document.querySelectorAll("#ticketNumbersCount, #ticketStarsCount, #numTickets, #stopNumbers, #stopStars, #customGrids, #stopAfterYearsInput, #stopAfterYearsCheckbox")
       .forEach(input => {
@@ -652,6 +678,11 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     document.getElementById("multichanceCheckbox").addEventListener("change", function() {
       const partsContainer = document.getElementById("multichancePartsContainer");
       partsContainer.style.display = this.checked ? "block" : "none";
+    });
+
+    document.getElementById("myMillonCheckbox").addEventListener("change", function() {
+      document.getElementById("stopMyMillonWinGroup").style.display = this.checked ? "block" : "none";
+      updateStatsDisplay();
     });
 
     document.getElementById("modeSelect").addEventListener("change", function() {
@@ -699,10 +730,10 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
     });
 
     function runLoop() {
-      // On enlève l'image loose à chaque début de tirage ou reprise
       removeLooseImages();
-
       if (stopFlag) return;
+      simulationActive = true;
+
       const mode = document.getElementById("modeSelect").value;
       let multichanceRatio = 1;
       if (mode === "flash" && document.getElementById("multichanceCheckbox").checked) {
@@ -712,11 +743,11 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
           alert("Erreur : Votre nombre de parts ne peut pas dépasser le total de parts (" + totalParts + ").");
           stopFlag = true;
           document.getElementById("startBtn").style.display = "block";
+          simulationActive = false;
           return;
         }
         multichanceRatio = yourParts / totalParts;
       }
-
       let tickets = [];
       let draw = null;
       let customTickets = [];
@@ -734,13 +765,21 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         ? (parseInt(document.getElementById("numTickets").value) || 1)
         : (customTickets.length > 0 ? customTickets.length : 1);
 
-      const simpleGridsPerTicket = combination(numCount, 5) * combination(starCount, 2);
+	const simpleGridsPerTicket = combination(
+	  Math.max(5, Math.min(50, numCount)),
+		5
+      ) * combination(
+      Math.max(2, Math.min(12, starCount)),
+		2
+      );
       const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 0;
       const stopStars = parseInt(document.getElementById("stopStars").value) || 0;
       const stopAfterYearsChecked = document.getElementById("stopAfterYearsCheckbox").checked;
       const stopAfterYearsValue = parseInt(document.getElementById("stopAfterYearsInput").value) || 100;
       const batchSize = currentBatchSize;
       const speed = currentSpeed;
+
+      const stopMyMillonWin = document.getElementById("stopMyMillonWinCheckbox").checked;
 
       for (let i = 0; i < batchSize; i++) {
         count++;
@@ -769,6 +808,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         draw = generateDraw();
 
         // Gestion de l'option My Millon
+        let myMillionJustWon = false;
         if (document.getElementById("myMillonCheckbox").checked) {
           let possibilities = (count % 2 === 0) ? 4000000 : 8000000;
           let assignedRanges = [];
@@ -806,30 +846,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             }
           });
           draw.myMillon = Math.floor(Math.random() * possibilities) + 1;
-        }
 
-        let foundWinningTicket = false;
-        let winningTicket = null;
-        tickets.forEach(ticket => {
-          const matchNumbers = countMatches(ticket.numbers, draw.numbers);
-          const matchStars = countMatches(ticket.stars, draw.stars);
-          const key = matchNumbers + "_" + matchStars;
-          if (stats.hasOwnProperty(key)) {
-            stats[key]++;
-          }
-          let prize = prizeMapping[key] || 0;
-          if (document.getElementById("multichanceCheckbox").checked) {
-            prize *= multichanceRatio;
-          }
-          balance += prize;
-          statsGain[key] += prize;
-          if (matchNumbers >= stopNumbers && matchStars >= stopStars) {
-            foundWinningTicket = true;
-            winningTicket = ticket;
-          }
-        });
-
-        if (document.getElementById("myMillonCheckbox").checked) {
           let myMillonWin = tickets.some(ticket => {
             if (typeof ticket.myMillon === "string" && ticket.myMillon.includes(" à ")) {
               let [start, end] = ticket.myMillon.split(" à ").map(Number);
@@ -838,7 +855,9 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
               return ticket.myMillon === draw.myMillon;
             }
           });
+
           if (myMillonWin) {
+            myMillionWinCount++;
             let myMillonPrize = 1000000;
             if (document.getElementById("multichanceCheckbox").checked) {
               const totalParts = parseInt(document.getElementById("totalParts").value) || 1;
@@ -846,60 +865,68 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
               myMillonPrize = 1000000 * (yourParts / totalParts);
             }
             balance += myMillonPrize;
-            alert("Option My Millon gagnée !\nTirage My Million : " + draw.myMillon + "\nGain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
+            myMillionTotalGain += myMillonPrize;
+            updateStatsDisplay();
 
-            // Lecture du son selon le gain
-            if (balance >= 1) {
-              playSound("win.mp3");
-            } else if (balance <= -1000000) {
-              playSound("bigloose.mp3");
-              addLooseImage("bigloose.jpeg");
-            } else {
-              playSound("loose.mp3");
-              addLooseImage("loose.png");
-            }
+            myMillionJustWon = true;
+            if (stopMyMillonWin) {
+              alert("Option My Millon gagnée !\nTirage My Million : " + draw.myMillon + "\nGain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
 
-            stopFlag = true;
-            document.getElementById("startBtn").style.display = "block";
-            document.getElementById("ticketsContainer").innerHTML = "";
-            tickets.forEach((ticket, index) => {
-              const div = document.createElement("div");
-              let isWinning = false;
-              if (typeof ticket.myMillon === "string" && ticket.myMillon.includes(" à ")) {
-                let [start, end] = ticket.myMillon.split(" à ").map(Number);
-                if (draw.myMillon >= start && draw.myMillon <= end) {
+              if (balance >= 1) {
+                playSound("win.mp3");
+              } else if (balance <= -1000000) {
+                playSound("bigloose.mp3");
+                addLooseImage("bigloose.jpeg");
+              } else {
+                playSound("loose.mp3");
+                addLooseImage("loose.png");
+              }
+
+              stopFlag = true;
+              simulationActive = false;
+              document.getElementById("startBtn").style.display = "block";
+              document.getElementById("ticketsContainer").innerHTML = "";
+              tickets.forEach((ticket, index) => {
+                const div = document.createElement("div");
+                let isWinning = false;
+                if (typeof ticket.myMillon === "string" && ticket.myMillon.includes(" à ")) {
+                  let [start, end] = ticket.myMillon.split(" à ").map(Number);
+                  if (draw.myMillon >= start && draw.myMillon <= end) {
+                    isWinning = true;
+                  }
+                } else if (ticket.myMillon === draw.myMillon) {
                   isWinning = true;
                 }
-              } else if (ticket.myMillon === draw.myMillon) {
-                isWinning = true;
-              }
-              div.className = "ticket" + (isWinning ? " winning" : "");
-              const highlightedNums = highlightMatches(ticket.numbers, draw.numbers);
-              const highlightedStars = highlightMatches(ticket.stars, draw.stars);
-              let myMillionDisplay = ticket.myMillon;
-              if (isWinning) {
-                myMillionDisplay = `<span style="color: green; font-weight: bold;">${ticket.myMillon}</span>`;
-              }
-              div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
-                               Numéros : ${highlightedNums}<br>
-                               Étoiles : ${highlightedStars}<br>
-                               My Million : ${myMillionDisplay}`;
-              document.getElementById("ticketsContainer").appendChild(div);
-            });
-            document.getElementById("resultat").innerHTML =
-              `<strong>Tirage :</strong><br>
-               Numéros : ${draw.numbers.join(", ")}<br>
-               Étoiles : ${draw.stars.join(", ")}<br>
-               My Million : ${draw.myMillon}`;
-            document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
-            document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
-            updateTimePassed(count);
-            updateStatsDisplay();
-            updateGainDisplay();
-            return;
+                div.className = "ticket" + (isWinning ? " winning" : "");
+                const highlightedNums = highlightMatches(ticket.numbers, draw.numbers);
+                const highlightedStars = highlightMatches(ticket.stars, draw.stars);
+                let myMillionDisplay = ticket.myMillon;
+                if (isWinning) {
+                  myMillionDisplay = `<span style="color: green; font-weight: bold;">${ticket.myMillon}</span>`;
+                }
+                div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
+                                 Numéros : ${highlightedNums}<br>
+                                 Étoiles : ${highlightedStars}<br>
+                                 My Million : ${myMillionDisplay}`;
+                document.getElementById("ticketsContainer").appendChild(div);
+              });
+              document.getElementById("resultat").innerHTML =
+                `<strong>Tirage :</strong><br>
+                 Numéros : ${draw.numbers.join(", ")}<br>
+                 Étoiles : ${draw.stars.join(", ")}<br>
+                 My Million : ${draw.myMillon}`;
+              document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+              document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+              updateTimePassed(count);
+              updateStatsDisplay();
+              updateGainDisplay();
+              return;
+            }
           }
         }
+        // --- (le reste du code runLoop inchangé) ---
 
+        // Check arrêt par années
         if (stopAfterYearsChecked) {
           const currentYears = (count * 3.5) / 365;
           if (currentYears >= stopAfterYearsValue) {
@@ -926,10 +953,42 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             }
 
             stopFlag = true;
+            simulationActive = false;
             document.getElementById("startBtn").style.display = "block";
             return;
           }
         }
+
+        let foundWinningTicket = false;
+        let winningTicket = null;
+		tickets.forEach(ticket => {
+		  let numCombos = getCombinations(ticket.numbers, 5);
+		  let starCombos = getCombinations(ticket.stars, 2);
+		  let ticketHasWin = false;
+
+		  numCombos.forEach(nums => {
+			starCombos.forEach(stars => {
+			  const matchNumbers = countMatches(nums, draw.numbers);
+			  const matchStars = countMatches(stars, draw.stars);
+			  const key = matchNumbers + "_" + matchStars;
+			  if (stats.hasOwnProperty(key)) {
+				stats[key]++;
+			  }
+			  let prize = prizeMapping[key] || 0;
+			  if (document.getElementById("multichanceCheckbox").checked) {
+				prize *= multichanceRatio;
+			  }
+			  balance += prize;
+			  statsGain[key] += prize;
+			  // Si AU MOINS une des combinaisons atteint le seuil d'arrêt, on arrête
+			  if (!ticketHasWin && matchNumbers >= stopNumbers && matchStars >= stopStars) {
+				foundWinningTicket = true;
+				winningTicket = ticket;
+				ticketHasWin = true; // pour ne pas refaire l'affectation sur toutes les combis
+			  }
+			});
+		  });
+		});
 
         if (foundWinningTicket) {
           document.getElementById("ticketsContainer").innerHTML = "";
@@ -983,6 +1042,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             }
 
           stopFlag = true;
+          simulationActive = false;
           document.getElementById("startBtn").style.display = "block";
           return;
         }
@@ -1013,11 +1073,11 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
             }
 
             stopFlag = true;
+            simulationActive = false;
             document.getElementById("startBtn").style.display = "block";
             return;
           }
         }
-
       }
 
       document.getElementById("ticketsContainer").innerHTML = "";
@@ -1062,6 +1122,9 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         stats[combo] = 0;
         statsGain[combo] = 0;
       }
+      myMillionWinCount = 0;
+      myMillionTotalGain = 0;
+      simulationActive = true;
       document.getElementById("counter").textContent = "Tirages : 0";
       document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
       document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
@@ -1072,26 +1135,30 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       updateStatsDisplay();
       updateTimePassed(0);
       updateGainDisplay();
-
-      // On enlève aussi l'image loose au démarrage
       removeLooseImages();
-
       document.getElementById("startBtn").style.display = "none";
       document.getElementById("stopBtn").style.display = "inline-block";
       runLoop();
     }
 
+    document.getElementById("myMillonCheckbox").checked = true;
+    document.getElementById("stopMyMillonWinCheckbox").checked = false;
+    document.getElementById("stopMyMillonWinGroup").style.display = "block";
+
     document.getElementById("startBtn").addEventListener("click", startDrawing);
     document.getElementById("stopBtn").addEventListener("click", function() {
       if (!stopFlag) {
         stopFlag = true;
+        simulationActive = false;
         clearTimeout(loopTimeout);
         this.textContent = "Continuer";
       } else {
         stopFlag = false;
+        simulationActive = true;
         this.textContent = "Stop";
         runLoop();
       }
+      updateStatsDisplay();
     });
     document.getElementById("resetBtn").addEventListener("click", function() {
       stopFlag = true;
@@ -1102,6 +1169,9 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         stats[combo] = 0;
         statsGain[combo] = 0;
       }
+      myMillionWinCount = 0;
+      myMillionTotalGain = 0;
+      simulationActive = false;
       updateStatsDisplay();
       document.getElementById("counter").textContent = "Tirages : 0";
       document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
@@ -1112,10 +1182,24 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       document.getElementById("stopBtn").textContent = "Stop";
       document.getElementById("startBtn").style.display = "block";
       document.getElementById("stopBtn").style.display = "none";
-
-      // On enlève aussi l'image loose au reset
       removeLooseImages();
     });
+
+    // Initialisation pour cacher/montrer la ligne au chargement
+    updateStatsDisplay();
+	
+	document.getElementById("ticketStarsCount").addEventListener("blur", function() {
+	  let v = parseInt(this.value) || 2;
+	  if (v < 2) v = 2;
+	  if (v > 12) v = 12;
+	  this.value = v;
+	});
+	document.getElementById("ticketNumbersCount").addEventListener("blur", function() {
+	  let v = parseInt(this.value) || 5;
+	  if (v < 5) v = 5;
+	  if (v > 50) v = 50;
+	  this.value = v;
+	});
   </script>
 </body>
 </html>
