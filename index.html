@@ -477,9 +477,14 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
 	let gainChart = null;
 	let gainDataBuffer = [];
 
-	function updateGainChartBuffer(x, y) {
-	  gainDataBuffer.push({ x, y });
+	function updateGainChartBuffer(x, y, previousY) {
+		// Détecte saut massif :
+		if (previousY !== undefined && Math.abs(y - previousY) > 100000) {
+			gainDataBuffer.push({x: x-0.1, y: null}); // discontinuité
+		}
+		gainDataBuffer.push({x, y});
 	}
+
 
 	function flushGainChartBuffer() {
 	  if (!gainChart) return;
