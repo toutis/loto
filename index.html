@@ -474,18 +474,16 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
 	
 	/* ------------ My Million : conversion index → code “AA XXX XXXX” ------------ */
 	function indexToMyMillionCode(n) {
-	  const zeroBased   = n - 1;               // 0 … 7 999 999
-	  const BLOCK_SIZE  = 100_000;             // ← 100 000 codes partagent les mêmes lettres
-											   //     (change à 50_000 ou 10_000 si tu veux encore plus de variété)
-	  const blockNumber = Math.floor(zeroBased / BLOCK_SIZE);       // 0 … 79  (80 blocs pour 8 M)
-	  
-	  /* permutation “pseudo-aléatoire” des 676 couples de lettres, 1 couple par bloc */
-	  const scramble    = (blockNumber * 7919 + 104729) % 676;      // 7919 & 104 729 sont deux nombres premiers
-	  const firstLetter = String.fromCharCode(65 + Math.floor(scramble / 26)); // A-Z
-	  const secondLetter= String.fromCharCode(65 + (scramble % 26));           // A-Z
-	  
-	  const digits      = String(zeroBased % 1_000_000).padStart(7, "0");      // 000 0000 → 999 9999
-	  
+	  const zeroBased   = n - 1;               
+	  const BLOCK_SIZE  = 20000;             
+	  const blockNumber = Math.floor(zeroBased / BLOCK_SIZE);      
+
+	  const scramble    = (blockNumber * 7919 + 104729) % 676;     
+	  const firstLetter = String.fromCharCode(65 + Math.floor(scramble / 26));
+	  const secondLetter= String.fromCharCode(65 + (scramble % 26));
+
+	  const digits      = String(zeroBased).padStart(7, "0"); // ← modifié ici
+
 	  return `${firstLetter}${secondLetter} ${digits.slice(0,3)} ${digits.slice(3)}`;
 	}
 
