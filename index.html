@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Simulation Euro Millions</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -304,6 +305,7 @@
 	  opacity: 1 !important;
 	}
 	
+	
   </style>
 </head>
 <body>
@@ -317,7 +319,6 @@
 		  <span id="soundOffIcon" style="display:inline-block;">&#128263;</span>
 	  </span>
 
-	  <!-- BOUTON D’AFFICHAGE -->
 	  <span id="displayToggle" class="display-toggle"
 			title="Basculer l’affichage des boules / affichage texte">
 		  <span id="displayFancyIcon" style="display:inline-block;">🔤</span>
@@ -439,6 +440,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       <div class="compteur" id="grillesPlayed">Grilles jouées : 0</div>
       <div class="compteur" id="gainDisplay">Gain net : 0 €</div>
       <div class="section display" id="ticketsContainer"></div>
+	  <canvas id="gainChart" height="150"></canvas>
       <div class="section display" id="statsContainer">
         <h3>Statistiques de résultats</h3>
         <ul>
@@ -471,7 +473,87 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
   </div>
   <div id="fireworksContainer"></div>
   <script>
-	
+
+	let gainChart = null;
+	let gainDataBuffer = [];
+
+	function updateGainChartBuffer(x, y) {
+	  gainDataBuffer.push({ x, y });
+	}
+
+	function flushGainChartBuffer() {
+	  if (!gainChart) return;
+	  if (gainDataBuffer.length > 0) {
+		gainChart.data.datasets[0].data.push(...gainDataBuffer);
+		gainDataBuffer = [];
+		gainChart.update();
+	  }
+	  setTimeout(flushGainChartBuffer, 100); // Toutes les 100 ms
+	}
+
+	function initGainChart() {
+	  const ctx = document.getElementById("gainChart").getContext("2d");
+
+	  gainChart = new Chart(ctx, {
+		type: "line",
+		data: {
+		  datasets: [{
+			label: "Gain net (€)",
+			data: [],
+			fill: false,  // PAS de fond
+			borderWidth: 2,
+			pointRadius: 0,
+			tension: 0,
+			// Coloration segmentée
+			segment: {
+			  borderColor: ctx => ctx.p1.parsed.y >= 0 ? "#43a047" : "#e53935"
+			}
+		  }]
+		},
+		options: {
+		  animation: false,
+		  parsing: false,
+		  spanGaps: true,
+		  elements: {
+			line: {
+			  borderCapStyle: 'round',
+			  borderJoinStyle: 'round'
+			},
+			point: {
+			  radius: 0
+			}
+		  },
+		  plugins: {
+			legend: { display: false },
+			decimation: {
+			  enabled: true,
+			  algorithm: 'min-max',
+			  samples: 1000
+			}
+		  },
+		  scales: {
+			x: { type: "linear", title: { display: true, text: "Tirages" } },
+			y: { title: { display: false, text: "€" } }
+		  }
+		}
+	  });
+	}
+
+	function updateGainChart() {
+	  if (!gainChart) return;
+	  gainChart.data.datasets[0].data.push({ x: count, y: balance });
+	  gainChart.update();
+	}
+
+	function resetGainChart() {
+	  if (!gainChart) return;
+	  gainChart.data.datasets[0].data = [];
+	  gainChart.update();
+	}
+
+	initGainChart();
+	flushGainChartBuffer();
+
 	/* ------------ My Million : conversion index → code “AA XXX XXXX” ------------ */
 	function indexToMyMillionCode(n) {
 	  const zeroBased   = n - 1;               
@@ -953,6 +1035,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
         gainElem.innerHTML = `Gain net : <span style='color: red;'>${formatted} €</span>`;
       }
       gainElem.appendChild(imageContainer);
+	  updateGainChart(); 
     }
 
     document.querySelectorAll("#ticketNumbersCount, #ticketStarsCount, #numTickets, #stopNumbers, #stopStars, #customGrids, #stopAfterYearsInput, #stopAfterYearsCheckbox")
@@ -1187,7 +1270,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
                 div.className = "ticket" + (isWinning ? " winning" : "");
                 const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
                 const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
-                let myMillionDisplay = ticket.myMillon;
+                let myMillionDisplay = formatMyMillion(ticket.myMillon);
                 if (isWinning) {
                   myMillionDisplay = `<span style="color: green; font-weight: bold;">${formatMyMillion(ticket.myMillon)}</span>`;
                 }
@@ -1420,6 +1503,8 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
 
     function startDrawing() {
       simulationHasStarted = true;
+	  resetGainChart();       // Vide le graphique
+	  gainDataBuffer = [];    // Vide le buffer aussi
       if (document.getElementById("modeSelect").value === "flash" && document.getElementById("multichanceCheckbox").checked) {
         const totalParts = parseInt(document.getElementById("totalParts").value) || 0;
         const yourParts = parseInt(document.getElementById("yourParts").value) || 0;
@@ -1499,6 +1584,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
       document.getElementById("startBtn").style.display = "block";
       document.getElementById("stopBtn").style.display = "none";
       removeLooseImages();
+	  resetGainChart();
     });
 
     // Initialisation pour cacher/montrer la ligne au chargement
