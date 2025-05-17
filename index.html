@@ -618,21 +618,29 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420"
 	  const twoCols   = tickets.length > 1 && !bigTicket;
 	  container.classList.toggle('cols-2', twoCols);
 	}
-  
-    // --- Nouveau : gestion du son ---
-    let soundEnabled = false; // Désactivé par défaut
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      document.getElementById('soundOnIcon').style.display = soundEnabled ? 'inline-block' : 'none';
-      document.getElementById('soundOffIcon').style.display = soundEnabled ? 'none' : 'inline-block';
-    }
-    document.getElementById('soundToggle').addEventListener('click', toggleSound);
 
-    function playSound(soundFile) {
-      if (!soundEnabled) return;
-      new Audio(soundFile).play();
-    }
-    // --- FIN gestion du son ---
+	let soundEnabled = false;
+	let currentAudio = null;
+
+	function toggleSound() {
+	  soundEnabled = !soundEnabled;
+	  document.getElementById('soundOnIcon').style.display = soundEnabled ? 'inline-block' : 'none';
+	  document.getElementById('soundOffIcon').style.display = soundEnabled ? 'none' : 'inline-block';
+	}
+
+	document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+	function playSound(soundFile) {
+	  if (!soundEnabled) return;
+	  if (currentAudio) {
+		currentAudio.pause();
+		currentAudio = null;
+	  }
+	  currentAudio = new Audio(soundFile);
+	  currentAudio.play().catch((err) => {
+		console.warn('Erreur de lecture audio :', err);
+	  });
+	}
 
     // --- VARIABLES GLOBALES ---
     let stats = {
