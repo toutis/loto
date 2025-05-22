@@ -776,7 +776,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
     function costOfTicket(ticket) {
       const n = ticket.numbers.length;
       const s = ticket.stars.length;
-      return combination(n, 5) * combination(s, 1) * ticketCost;
+      return combination(n, 6) * combination(s, 1) * ticketCost;
     }
 
     function generateNumbers(count, max) {
@@ -1347,7 +1347,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	}
 
 	let simpleGridsPerTicket = 1;
-	if (numCount > 5) simpleGridsPerTicket *= combination(numCount, 5);
+	if (numCount > 6) simpleGridsPerTicket *= combination(numCount, 6);
 	if (starCount > 1) simpleGridsPerTicket *= combination(starCount, 1);
       const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 0;
       const stopStars = parseInt(document.getElementById("stopStars").value) || 0;
@@ -1411,7 +1411,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
           tickets.forEach(ticket => {
             let n = ticket.numbers.length;
             let s = ticket.stars.length;
-            let numGrilles = combination(n, 5) * combination(s, 1);
+            let numGrilles = combination(n, 6) * combination(s, 1);
             if (numGrilles > 1) {
               let baseNumber;
               let attempt = 0;
@@ -1588,7 +1588,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
           for (let nb = 0; nb <= Math.min(6, n); nb++) {
             for (let sb = 0; sb <= Math.min(1, s); sb++) {
               // Combien de grilles simples (dans la grille multiple) font nb bons numéros et sb bon dream
-              const waysNum = combination(numGood, nb) * combination(numBad, 5 - nb);
+              const waysNum = combination(numGood, nb) * combination(numBad, 6 - nb);
               const waysStar = combination(starGood, sb) * combination(starBad, 1 - sb);
               const countGrilles = waysNum * waysStar;
               if (countGrilles > 0) {
