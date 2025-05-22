@@ -5,72 +5,71 @@
   <title>Simulations Loto & EuroMillions</title>
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   <style>
-    body { margin:0;font-family:Arial, sans-serif; }
-	.tabs {
-	  display: flex;
-	  gap: 8px;
-	  padding: 8px;
-	  border-bottom: 1px solid #ccc;
-	  background: #f7f7f7;
-	}
-
-	.tab {
-	  padding: 8px 32px;
-	  cursor: pointer;
-	  border: 1px solid #ccc;
-	  border-radius: 999px;
-	  background: #eaeaea;
-	  font-size: 1rem;
-	  font-weight: normal;
-	  position: relative;
-	  outline: none;
-	  /* SUPPRIMER margin-bottom, SUPPRIMER border-bottom */
-	  transition: background 0.2s, font-weight 0.2s;
-	}
-	.tab.active {
-	  background: #fff;
-	  font-weight: bold;
-	}
-	.view {
-	  visibility: hidden;
-	  position: absolute;
-	  top: 0; 
-	  left: 0;
-	  width: 100%;
-	  height: calc(100vh - 60px);
-	  border: none;
-	  pointer-events: none;
-	  z-index: 0;
-	  background: #fff;
-	}
-	.view.active {
-	  visibility: visible;
-	  position: relative;
-	  pointer-events: auto;
-	  z-index: 1;
-	}
-	body {
-	  overflow: hidden; /* plus de scroll du tout */
-	}
-
+    body { margin:0; font-family:Arial, sans-serif; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      border-bottom: 1px solid #ccc;
+      background: #f7f7f7;
+    }
+    .tab {
+      padding: 8px 32px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 999px;
+      background: #eaeaea;
+      font-size: 1rem;
+      font-weight: normal;
+      position: relative;
+      outline: none;
+      transition: background 0.2s, font-weight 0.2s;
+    }
+    .tab.active {
+      background: #fff;
+      font-weight: bold;
+    }
+    .view {
+      visibility: hidden;
+      position: absolute;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: calc(100vh - 60px);
+      border: none;
+      pointer-events: none;
+      z-index: 0;
+      background: #fff;
+    }
+    .view.active {
+      visibility: visible;
+      position: relative;
+      pointer-events: auto;
+      z-index: 1;
+    }
+    body {
+      overflow: hidden;
+    }
   </style>
   <script>
     function show(id) {
-      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-      document.getElementById('tab-'+id).classList.add('active');
-      document.getElementById('view-'+id).classList.add('active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      document.getElementById('view-' + id).classList.add('active');
     }
-    window.addEventListener('DOMContentLoaded',()=>show('loto'));
+    window.addEventListener('DOMContentLoaded', () => show('loto'));
   </script>
 </head>
 <body>
   <div class="tabs">
     <button class="tab" id="tab-loto" onclick="show('loto')">Loto</button>
     <button class="tab" id="tab-euro" onclick="show('euro')">Euro Millions</button>
+    <button class="tab" id="tab-dreams" onclick="show('dreams')">Euro Dreams</button>
   </div>
 
-  <iframe src="loto.html"  id="view-loto" class="view" title="Simulateur Loto"></iframe>
+  <iframe src="loto.html" id="view-loto" class="view" title="Simulateur Loto"></iframe>
   <iframe src="euromillions.html" id="view-euro" class="view" title="Simulateur EuroMillions"></iframe>
+  <iframe src="eurodreams.html" id="view-dreams" class="view" title="Simulateur EuroDreams"></iframe>
 </body>
 </html>
