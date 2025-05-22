@@ -563,19 +563,18 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	/* ------------------------- Code Loto :  A 1234 5678  ------------------------ */
 	function indexToMyMillionCode(n) {
 	  const zeroBased   = n - 1;
-	  const BLOCK_SIZE  = 20000;
+	  const BLOCK_SIZE  = 200000; // Beaucoup plus large, car on n’a que 26 lettres
 	  const blockNumber = Math.floor(zeroBased / BLOCK_SIZE);
 
-	  // Générateur linéaire pour 2 lettres
-	  const scramble    = (blockNumber * 7919 + 104729) % 676;
-	  const firstLetter = String.fromCharCode(65 + Math.floor(scramble / 26));
-	  const secondLetter= String.fromCharCode(65 + (scramble % 26));
+	  // Génère UNE lettre de A à Z
+	  const scramble    = (blockNumber * 7919 + 104729) % 26;
+	  const firstLetter = String.fromCharCode(65 + scramble);
 
 	  // Partie numérique 7 chiffres
 	  const digits      = String(zeroBased).padStart(7, "0");
 
 	  // Format final
-	  return `${firstLetter}${secondLetter} ${digits.slice(0,3)} ${digits.slice(3)}`;
+	  return `${firstLetter} ${digits.slice(0,3)} ${digits.slice(3)}`;
 	}
 
 	/* Accepte soit un nombre, soit une chaîne “start à end” ––> formate joliment */
