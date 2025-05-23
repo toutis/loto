@@ -491,6 +491,11 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
   </div>
   <div id="fireworksContainer"></div>
   <script>
+  
+	function simpleGrids(n, s) {
+	  return combination(n, 5) * combination(s, 2);
+	}
+
 
 	let gainChart = null;
 	let lastY;
@@ -1137,9 +1142,41 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       const reciprocalFormatted = pGlobal > 0
         ? (1 / pGlobal).toLocaleString('de-DE', { maximumFractionDigits: 0 })
         : "∞";
-      document.getElementById("chanceDisplay").innerHTML =
-        `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ★) : ${percent}%<br>
-         1 chance sur ${reciprocalFormatted}`;
+		/* ---------- PROBABILITÉ My Million ---------- */
+		// Moyenne simple entre mardi (~4 M) et vendredi (~8 M)
+		const POSSIBILITIES = 6_000_000;
+
+		let totalSimpleGrids = 0;
+		if (mode === "flash") {
+		  totalSimpleGrids = simpleGrids(numCount, starCount) * numTickets;
+		} else {                  // mode « personnalisé »
+		  parseCustomGrids(document.getElementById("customGrids").value)
+			.forEach(g => totalSimpleGrids += simpleGrids(g.numbers.length, g.stars.length));
+		}
+
+		const pMy  = 1 - Math.pow(1 - 1 / POSSIBILITIES, totalSimpleGrids);
+		const pctMy = (pMy * 100).toFixed(8);
+		const invMy = pMy > 0
+		  ? (1 / pMy).toLocaleString('de-DE', { maximumFractionDigits: 0 })
+		  : "∞";
+
+		/* ---------- CONSTRUCTION DE L’AFFICHAGE ---------- */
+		const lignes = [
+		  `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ★) : ${percent}%`,
+		  `1 chance sur ${reciprocalFormatted}`
+		];
+
+		if (document.getElementById("myMillonCheckbox").checked) {
+		  lignes.push(
+			`1 chance sur ${invMy} (My&nbsp;Million)
+			 <span class="info-icon"
+				            title="Estimation approximative : 
+Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
+		  );
+		}
+
+		document.getElementById("chanceDisplay").innerHTML = lignes.join("<br>");
+
     }
 
     function formatTimeInDays(totalDays) {
@@ -1199,6 +1236,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
     document.getElementById("myMillonCheckbox").addEventListener("change", function() {
       document.getElementById("stopMyMillonWinGroup").style.display = this.checked ? "block" : "none";
       updateStatsDisplay();
+	  updateChanceDisplay();
     });
 	
 	document.getElementById("smartDrawCheckbox").addEventListener("change", function () {
