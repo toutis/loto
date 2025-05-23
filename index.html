@@ -6,18 +6,30 @@
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   <style>
     body { margin:0; font-family:Arial, sans-serif; }
-    .tabs {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px;
-      border-bottom: 1px solid #ccc;
-      background: #f7f7f7;
-    }
-    .tab-group {
-      display: flex;
-      gap: 8px;
-    }
+	.tabs {
+	  display: flex;
+	  justify-content: space-between;
+	  align-items: center;
+	  padding: 8px;
+	  border-bottom: 1px solid #ccc;
+	  background: #f7f7f7;
+	  /* Nouveau : s'assurer que tout est sur la même ligne */
+	}
+
+	.tab-group {
+	  display: flex;
+	  gap: 8px;
+	}
+
+	.counter-container {
+	  display: flex;
+	  align-items: center;
+	  /* Nouveau : pour éviter d'écraser le badge */
+	  min-width: 80px; /* ou ajuste selon le badge */
+	  margin-right: 12px;
+	  height: 32px; /* optionnel : ajuste si besoin */
+	}
+
     .tab {
       padding: 8px 32px;
       cursor: pointer;
@@ -60,8 +72,40 @@
       align-items: center;
       gap: 8px;
     }
+	.counter-tooltip-container {
+	  position: fixed;  /* Pour fixer la position sur l'écran */
+	  top: 16px;        /* Ajuste selon la hauteur de ta barre d'onglets */
+	  right: 24px;      /* Espace du bord droit */
+	  z-index: 2000;    /* Toujours au-dessus */
+	}
+
+	.custom-tooltip {
+	  display: none;
+	  position: absolute;
+	  right: 0;             /* Collé au bord droit du compteur */
+	  top: 130%;            /* Dessous le compteur */
+	  background: #222;
+	  color: #fff;
+	  padding: 6px 14px;
+	  border-radius: 8px;
+	  font-size: 0.93rem;   /* Texte plus petit */
+	  font-weight: 400;
+	  white-space: normal;  /* Autorise le retour à la ligne */
+	  z-index: 2100;
+	  box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+	  min-width: 180px;     /* Largeur minimale pour éviter que le texte soit coupé */
+	  max-width: 260px;     /* Largeur maximale pour éviter de dépasser l'écran */
+	  overflow-wrap: break-word;
+	}
+
+	.counter-tooltip-container:hover .custom-tooltip {
+	  display: block;
+	}
+
+
+
+
   </style>
-  <script src="https://cdn.counter.dev/script.js" data-id="a96ef71f-674f-467c-b354-9ba4c119f8a0" data-utcoffset="1"></script>
   <script>
     function show(id) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -79,6 +123,12 @@
       <button class="tab" id="tab-euro" onclick="show('euro')">Euro Millions</button>
       <button class="tab" id="tab-dreams" onclick="show('dreams')">Euro Dreams</button>
     </div>
+<div class="counter-tooltip-container">
+  <div class="counter-badge">
+	<script type="text/javascript" src="https://counter.websiteout.com/js/17/4/0/1"></script>    
+  </div>
+  <span class="custom-tooltip">Cette image montre le nombre de visiteurs uniques sur le site</span>
+</div>
   </div>
 
   <iframe src="loto.html" id="view-loto" class="view" title="Simulateur Loto"></iframe>
