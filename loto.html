@@ -1122,10 +1122,52 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       const reciprocalFormatted = pGlobal > 0
         ? (1 / pGlobal).toLocaleString('de-DE', { maximumFractionDigits: 0 })
         : "∞";
-      document.getElementById("chanceDisplay").innerHTML =
-        `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ◉) : ${percent}%<br>
-         1 chance sur ${reciprocalFormatted}`;
+	/* ---------- probabilité Code Loto ---------- */
+	// 10 codes gagnants tirés parmi N grilles jouées. On prend la moyenne
+	// « mercredi » (≈4,2 M) pour l’affichage indicatif.
+	const POSSIBILITIES = 4_200_000;
+	let totalSimpleGrids = 0;
+
+	if (mode === "flash") {
+	  const gridsPerTicket   = simpleGrids(numCount, starCount);
+	  totalSimpleGrids       = gridsPerTicket * numTickets;
+	} else {               // mode « personnalisé »
+	  const customGridsText  = document.getElementById("customGrids").value;
+	  const grids            = parseCustomGrids(customGridsText);
+	  grids.forEach(g => {
+		totalSimpleGrids += simpleGrids(g.numbers.length, g.stars.length);
+	  });
+	}
+
+	const pCodeLoto  = 1 - Math.pow(1 - 10 / POSSIBILITIES, totalSimpleGrids);
+	const pctCode    = (pCodeLoto * 100).toFixed(8);
+	const invCode    = pCodeLoto > 0
+	  ? (1 / pCodeLoto).toLocaleString('de-DE', { maximumFractionDigits: 0 })
+	  : "∞";
+
+	let lignes = [
+	  `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ◉) : ${percent}%`,
+	  `1 chance sur ${reciprocalFormatted}`
+	];
+
+	if (document.getElementById("myMillonCheckbox").checked) {
+lignes.push(
+  `1 chance sur ${invCode} (Code&nbsp;Loto)
+   <span class="info-icon"
+         title="Estimation approximative : 
+Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
+);
+
+	}
+
+	document.getElementById("chanceDisplay").innerHTML = lignes.join("<br>");
+
+
     }
+	
+	function simpleGrids(n, s) {
+	  return combination(n, 5) * combination(s, 1);   // 5 numéros + 1 Chance
+	}
 
     function formatTimeInDays(totalDays) {
       const joursTotal = Math.floor(totalDays);
@@ -1184,6 +1226,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
     document.getElementById("myMillonCheckbox").addEventListener("change", function() {
       document.getElementById("stopMyMillonWinGroup").style.display = this.checked ? "block" : "none";
       updateStatsDisplay();
+	  updateChanceDisplay();
     });
 	
 	document.getElementById("smartDrawCheckbox").addEventListener("change", function () {
