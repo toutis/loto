@@ -1510,6 +1510,11 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
                 addLooseImage("loose.png");
               }
 
+              if (gainChart) {
+              	gainChart.data.datasets[0].data.push({ x: count, y: balance });
+              	gainChart.update();
+              }
+
               stopFlag = true;
               simulationActive = false;
               document.getElementById("startBtn").style.display = "block";
