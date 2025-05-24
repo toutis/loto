@@ -1658,6 +1658,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
           updateTimePassed(count);
           updateStatsDisplay();
           updateGainDisplay();
+	  updateGainChart();
 
           const winningMatchNumbers = countMatches(winningTicket.numbers, draw.numbers);
           const winningMatchStars = countMatches(winningTicket.stars, draw.stars);
