@@ -20,7 +20,7 @@
 
 	.tab-group {
 	  display: flex;
-	  gap: 8px;
+	  gap: 16px;
 	}
 
 	.counter-container {
@@ -31,23 +31,30 @@
 	  margin-right: 12px;
 	  height: 32px; /* optionnel : ajuste si besoin */
 	}
-
-    .tab {
-      padding: 8px 32px;
-      cursor: pointer;
-      border: 1px solid #ccc;
-      border-radius: 999px;
-      background: #eaeaea;
-      font-size: 1rem;
-      font-weight: normal;
-      position: relative;
-      outline: none;
-      transition: background 0.2s, font-weight 0.2s;
-    }
-    .tab.active {
-      background: #fff;
-      font-weight: bold;
-    }
+	.tab {
+		flex: 1;
+		padding: 8px 32px;
+		cursor: pointer;
+		border: 1px solid #ccc;
+		border-radius: 999px;
+		background: #eaeaea;
+		font-size: 1rem;
+		font-weight: 400; /* texte normal partout */
+		flex: 0 0 auto;
+		transform: scale(1); /* par défaut */
+		transition: transform .2s;
+		transform-origin: center center;
+		 white-space: nowrap;
+	}
+	.tab.active {
+		background: #fff;
+		transform: scale(1.05); /* légèrement agrandi pour simuler l'accent visuel */
+		font-weight: 500; /* garde le poids identique */
+		transform: scale(1.1);
+			  text-shadow:
+		0.1px 0   currentColor,
+	   -0.1px 0   currentColor;
+	}
     .view {
       visibility: hidden;
       position: absolute;
@@ -80,7 +87,6 @@
 	  right: 24px;      /* Espace du bord droit */
 	  z-index: 2000;    /* Toujours au-dessus */
 	}
-
 	.custom-tooltip {
 	  display: none;
 	  position: absolute;
@@ -99,7 +105,6 @@
 	  max-width: 260px;     /* Largeur maximale pour éviter de dépasser l'écran */
 	  overflow-wrap: break-word;
 	}
-
 	.counter-tooltip-container:hover .custom-tooltip {
 	  display: block;
 	}
@@ -132,7 +137,7 @@
 
   <div class="counter-tooltip-container">
     <div class="counter-badge">
-      <script type="text/javascript" src="https://counter.websiteout.com/js/17/4/0/1"></script>    
+      <script type="text/javascript" src="https://counter.websiteout.com/js/17/5/0/1"></script>    
     </div>
     <span class="custom-tooltip">Cette image montre le nombre de visiteurs uniques qu'il y a eu sur le site</span>
   </div>
