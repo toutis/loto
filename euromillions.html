@@ -138,7 +138,7 @@
 	.icons-bar {
 	  display: inline-flex;
 	  align-items: center;
-	  gap: 4px; /* Ajuste la distance ici */
+	  gap: 4px;
 	}
     #stopMyMillonWinGroup {
       margin-left: 22px;
@@ -146,7 +146,6 @@
       font-size: 0.95em;
       display: none;
     }
-    /* Boules bleues pour numéros */
     .number-ball, .star-ball {
       display: inline-flex;
       justify-content: center;
@@ -165,15 +164,12 @@
       background: #187ad2;
       border-radius: 50%;
     }
-    /* Étoile jaune, vrai tracé d’étoile */
 	.star-ball {
 	  display: inline-flex;
 	  justify-content: center;
 	  align-items: center;
-	  /* mêmes dimensions que .number-ball si tu veux */
 	  width: 36px;
 	  height: 36px;
-	  /* supprime tout font-size custom, ou remets font-size identique à .number-ball */
 	  font-size: .85em !important;  
 	  font-family: Arial, sans-serif !important;
 	  font-weight: bold !important;   
@@ -195,36 +191,26 @@
 	.match {
 	  opacity: 1 !important;
 	}
-	/* Semi-transparence pour les numéros/étoiles non gagnants */
 	.semi {
 	  opacity: 0.45;
 	}
-	/* --- conteneur normal (1 ticket par ligne) -------------------- */
 	#ticketsContainer{
-	  /* layout par défaut : un ticket = une ligne, largeur auto  */
 	}
-
 	#ticketsContainer .ticket{
-	  display: inline-block;   /* largeur = contenu */
-	  margin: 6px 0;           /* petit espace vertical */
-	  box-sizing: border-box;  /* on garde la bordure dans la largeur calculée */
+	  display: inline-block;
+	  margin: 6px 0;
+	  box-sizing: border-box;
 	}
-
-	/* --- 2 colonnes quand la classe .cols-2 est présente ---------- */
 	#ticketsContainer.cols-2{
 	  display: grid;
 	  grid-template-columns: repeat(2, minmax(320px, 1fr));
 	  gap: 12px;
 	}
-
 	#ticketsContainer.cols-2 .ticket{
-	  /* dans la grille on veut remplir toute la cellule */
 	  display: block;
 	  width: 100%;
-	  margin: 0;               /* c’est le gap qui gère l’espace */
+	  margin: 0; 
 	}
-
-	/* ---------- bouton de bascule ---------- */
 	.display-toggle {
 	  cursor: pointer;
 	  margin-left: 0px; 
@@ -232,14 +218,12 @@
 	  user-select: none;
 	  vertical-align: middle;
 	}
-
-	/* ---------- mode “texte” ---------- */
 	body.plain-display .number-ball,
 	body.plain-display .star-ball {
 	  background: none !important;
-	  color: #111 !important;             /* Numéros/étoiles en noir */
-	  font-family: inherit !important;    /* Même police que My Million et le texte ticket */
-	  font-size: inherit !important;      /* Même taille */
+	  color: #111 !important; 
+	  font-family: inherit !important;
+	  font-size: inherit !important;
 	  font-weight: normal !important;
 	  letter-spacing: 0 !important;
 	  border-radius: 0 !important;
@@ -248,33 +232,31 @@
 	  height: auto !important;
 	  padding: 0 2px !important;
 	  margin: 0 2px !important;
-	  opacity: 1 !important;              /* Toujours bien visibles */
+	  opacity: 1 !important;
 	  vertical-align: baseline !important;
 	}
 
 	body.plain-display .number-ball.semi,
 	body.plain-display .star-ball.semi {
-	  color: #111 !important;             /* Numéros/étoiles NON gagnants en noir */
+	  color: #111 !important; 
 	  opacity: 1 !important;
 	}
 
 	body.plain-display .number-ball.match,
 	body.plain-display .star-ball.match {
-	  color: #159f13 !important;         /* Vert vif pour les bons numéros/étoiles */
-	  font-weight: bold !important;      /* Gras */
+	  color: #159f13 !important;
+	  font-weight: bold !important;
 	  opacity: 1 !important;
 	}
 
 	body.plain-display .star-ball::before {
-	  display: none !important;           /* Supprime le fond étoile graphique */
+	  display: none !important;
 	}
 	
 	body.plain-display .number-ball,
 	body.plain-display .star-ball {
 	  font-family: inherit !important;
 	  font-size: inherit !important;
-	  /* ... (ton reste de style) ... */
-	  /* ANTI-ESPACE ENTRE <span> */
 	  margin-right: 0 !important;
 	  word-spacing: 0 !important;
 	}
@@ -286,18 +268,15 @@
 
 	body.plain-display .number-ball,
 	body.plain-display .star-ball {
-	  /* On annule l'espace entre balises en mode texte */
 	  letter-spacing: 0 !important;
 	}
 
 	body.plain-display .ticket span {
-	  /* Empêche l'espace inter-balises dans .ticket */
 	  font-family: inherit !important;
 	  font-size: inherit !important;
 	}
 
 	body.plain-display .ticket {
-	  /* Empêche la coupure/espacement automatique */
 	  font-family: inherit;
 	  font-size: inherit;
 	  word-spacing: 0 !important;
@@ -306,7 +285,7 @@
 	body.plain-display .number-ball.match,
 	body.plain-display .star-ball.match,
 	body.plain-display .match {
-	  color: #159f13 !important;   /* Vert vif */
+	  color: #159f13 !important;
 	  font-weight: bold !important;
 	  opacity: 1 !important;
 	}
@@ -512,11 +491,10 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 		  datasets: [{
 			label: "Gain net (€)",
 			data: [],
-			fill: false,  // PAS de fond
+			fill: false,
 			borderWidth: 2,
 			pointRadius: 0,
 			tension: 0,
-			// Coloration segmentée
 			segment: {
 			  borderColor: ctx => ctx.p1.parsed.y >= 0 ? "#43a047" : "#e53935"
 			}
@@ -613,7 +591,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 
 	initGainChart();
 
-	/* ------------ My Million : conversion index → code “AA XXX XXXX” ------------ */
 	function indexToMyMillionCode(n) {
 	  const zeroBased   = n - 1;               
 	  const BLOCK_SIZE  = 20000;             
@@ -623,14 +600,11 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	  const firstLetter = String.fromCharCode(65 + Math.floor(scramble / 26));
 	  const secondLetter= String.fromCharCode(65 + (scramble % 26));
 
-	  const digits      = String(zeroBased).padStart(7, "0"); // ← modifié ici
+	  const digits      = String(zeroBased).padStart(7, "0");
 
 	  return `${firstLetter}${secondLetter} ${digits.slice(0,3)} ${digits.slice(3)}`;
 	}
 
-
-
-	/* Accepte soit un nombre, soit une chaîne “start à end” ––> formate joliment */
 	function formatMyMillion(val) {
 	  if (typeof val === "number")              return indexToMyMillionCode(val);
 	  if (typeof val === "string" && val.includes(" à ")) {
@@ -640,15 +614,11 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	  return val;
 	}
 
-	let fancyDisplay = true;   // true = boules/étoiles graphiques
+	let fancyDisplay = true;
 	function toggleDisplayStyle() {
 	  fancyDisplay = !fancyDisplay;
-
-	  // On change l’icône
 	  document.getElementById('displayFancyIcon').style.display  = fancyDisplay ? 'inline-block' : 'none';
 	  document.getElementById('displayPlainIcon').style.display  = fancyDisplay ? 'none' : 'inline-block';
-
-	  // On applique ou retire la classe sur <body>
 	  document.body.classList.toggle('plain-display', !fancyDisplay);
 	  
 	  refreshTicketsDisplay();
@@ -692,7 +662,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	  });
 	}
 
-    // --- VARIABLES GLOBALES ---
     let stats = {
       "5_2": 0, "5_1": 0, "5_0": 0,
       "4_2": 0, "4_1": 0, "4_0": 0,
@@ -721,7 +690,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
     const ticketCost = 2.5;
     let totalGrillesJouees = 0;
 
-    let simulationActive = false; // Indique si la simulation est en cours
+    let simulationActive = false;
     let simulationHasStarted = false;
 
     const prizeMapping = {
@@ -788,7 +757,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       return numbers.sort((a, b) => a - b);
     }
 
-    // Renvoie toutes les combinaisons de k éléments dans arr
     function getCombinations(arr, k) {
       const results = [];
       function combine(start, combo) {
@@ -807,7 +775,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
     }
 
     function generateTicket(numCount, starCount) {
-      // Clamp les valeurs pour garantir les bornes
       numCount = Math.max(5, Math.min(50, numCount));
       starCount = Math.max(2, Math.min(12, starCount));
 
@@ -816,27 +783,23 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       return { numbers: ticketNumbers, stars: ticketStars };
     }
 	
-	const freqNum  = Array(51).fill(0);   // 1‒50
-	const freqStar = Array(13).fill(0);   // 1‒12
-	const MAX_RECENT_DRAWS = 30;          // fenêtre glissante
-	const recentDraws = [];               // [{numbers:[…], stars:[…]}, …]
+	const freqNum  = Array(51).fill(0); 
+	const freqStar = Array(13).fill(0); 
+	const MAX_RECENT_DRAWS = 30;
+	const recentDraws = []; 
 
 	
 	function pickUnique(pool, k) {
-	  const sac  = [...pool];    // copie du pool pondéré
-	  const set  = new Set();    // pour garantir l’unicité
+	  const sac  = [...pool];
+	  const set  = new Set();
 	  while (set.size < k && sac.length) {
 		const idx = Math.floor(Math.random() * sac.length);
-		const val = sac.splice(idx, 1)[0];  // on retire l’entrée tirée
-		set.add(val);                       // doublon impossible avec un Set
+		const val = sac.splice(idx, 1)[0];
+		set.add(val);
 	  }
-	  // On retourne un tableau trié (comme avant)
 	  return [...set].sort((a, b) => a - b);
 	}
 
-	/* ------------------------------------------------------------------
-	   Construit un « lot commun » de boules/étoiles rares pour un tirage
-	   ------------------------------------------------------------------*/
 	function buildCommonRareSet(numCount = 5, starCount = 2) {
 	  const rareNumWanted = Math.min(
     parseInt(document.getElementById("rareNumbersCount")?.value) || 0,
@@ -847,38 +810,28 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
     starCount, 2
   );
 
-	  /* 1.  On classe par rareté (fréquences sur les 30 derniers tirages) */
 	  const numsByRarity  = [...Array(50).keys()].map(i => i + 1)
 							 .sort((a, b) => freqNum[a]  - freqNum[b]);
 	  const starsByRarity = [...Array(12).keys()].map(i => i + 1)
 							 .sort((a, b) => freqStar[a] - freqStar[b]);
-
 	  const minFreqNum  = freqNum [numsByRarity [0]];
 	  const minFreqStar = freqStar[starsByRarity[0]];
-
 	  const rareNumsPool  = numsByRarity.slice(0, rareNumWanted);
 	  const rareStarsPool = starsByRarity.slice(0, rareStarWanted);
 
 	  shuffle(rareNumsPool);
 	  shuffle(rareStarsPool);
 
-	  /* 3.  On retourne le lot fixé pour tout le tirage */
 	  return {
-		rareNums : rareNumsPool .slice(0, rareNumWanted),  // tableau
-		rareStars: rareStarsPool.slice(0, rareStarWanted)  // tableau
+		rareNums : rareNumsPool .slice(0, rareNumWanted),
+		rareStars: rareStarsPool.slice(0, rareStarWanted)
 	  };
 	}
 
-	/* ------------------------------------------------------------------
-	   version « commune » : on reçoit optionnellement un lotRares
-	   ------------------------------------------------------------------*/
 	function generateSmartTicket(numCount = 5, starCount = 2, lotRares = null) {
 
-	  /* ----- 1.  On part soit du lot commun, soit d'un tableau vide ----- */
 	  const chosenNums  = lotRares ? [...lotRares.rareNums ] : [];
 	  const chosenStars = lotRares ? [...lotRares.rareStars] : [];
-
-	  /* ----- 2.  On complète au hasard, sans doublon ------------------- */
 	  while (chosenNums.length < numCount) {
 		const n = 1 + Math.floor(Math.random() * 50);
 		if (!chosenNums.includes(n)) chosenNums.push(n);
@@ -894,8 +847,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	  };
 	}
 
-
-	/* Petit utilitaire pour mélanger un tableau in-place */
 	function shuffle(arr) {
 	  for (let i = arr.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));
@@ -909,15 +860,12 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 		stars  : generateNumbers(2, 12)
 	  };
 
-	  /* ----- 1.  On ajoute ce tirage dans les fréquences ----- */
 	  draw.numbers.forEach(n => freqNum[n]++);
 	  draw.stars  .forEach(s => freqStar[s]++);
 
-	  /* ----- 2.  Gestion de la fenêtre glissante ----- */
 	  recentDraws.push(draw);
 
 	  if (recentDraws.length > MAX_RECENT_DRAWS) {
-		// on retire le plus ancien tirage et on décrémente ses occurrences
 		const old = recentDraws.shift();
 		old.numbers.forEach(n => freqNum[n]--);
 		old.stars  .forEach(s => freqStar[s]--);
@@ -925,8 +873,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 
 	  return draw;
 	}
-
-
 
     function countMatches(arr1, arr2) {
       return arr1.filter(x => arr2.includes(x)).length;
@@ -954,25 +900,21 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       return tickets;
     }
 
-    // --- Affichage boules/étoiles avec mise en évidence ---
     function ballHTML(value, type){
       const cls = type === "star" ? "star-ball" : "number-ball";
       return `<span class="${cls}">${value}</span>`;
     }
 	
 	function refreshTicketsDisplay() {
-	  // Si aucun ticket affiché, ne rien faire
 	  if (!window._lastTicketsData) return;
 
 	  const { tickets, draw, myMillion } = window._lastTicketsData;
 
-	  // Vide le conteneur
 	  document.getElementById("ticketsContainer").innerHTML = "";
 
 	  tickets.forEach((ticket, index) => {
 		const div = document.createElement("div");
 		div.className = "ticket";
-		// Mode texte/graphique : highlightMatches s'occupe du format
 		const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
 		const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
 		div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
@@ -982,12 +924,10 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	  });
 	}
 
-
 	function highlightMatches(values, drawValues, type) {
 	  const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
 
 	  if (isPlain) {
-		// Mode texte : retourne du vrai texte avec juste <span class="match"> sur les bons numéros
 		return values.map((v, i) => {
 		  const isMatch = drawValues.includes(v);
 		  let str = isMatch
@@ -997,7 +937,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 		  return str;
 		}).join('');
 	  } else {
-		// Mode graphique (boules), on garde chaque numéro/étoile dans un span
 		return values.map(v => {
 		  const cls = drawValues.includes(v) ? 'match' : 'semi';
 		  const base = ballHTML(v, type);
@@ -1009,7 +948,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
     function balls(values, type){
       return values.map(v => ballHTML(v, type)).join(" ");
     }
-    // -----------------------------------
 
     function launchFireworks() {
       const container = document.getElementById('fireworksContainer');
@@ -1065,12 +1003,10 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       container.appendChild(img);
     }
 
-    // --- Affichage de la stat My Million avec % et couleur dynamique ---
     function updateStatsDisplay() {
       let total = 0;
       for (let combo in stats) total += stats[combo];
 
-      // My Million
       const elemMyMillion = document.getElementById("stats_myMillion");
       const valMyMillion = document.getElementById("stats_myMillion_value");
       const pctMyMillion = document.getElementById("stats_myMillion_pct");
@@ -1081,7 +1017,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       } else {
         elemMyMillion.style.display = "list-item";
         let percent = count > 0 ? (myMillionWinCount / count * 100) : 0;
-        // >>> ICI correction <<<
         if (myMillionWinCount === 0 && simulationHasStarted && count > 0) {
           valMyMillion.innerHTML = `<span style='color: red;'>0</span>`;
         } else {
@@ -1098,7 +1033,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
         }
       }
 
-      // Autres stats
       for (let combo in stats) {
         const elem = document.getElementById("stats_" + combo);
         if (elem) {
@@ -1166,14 +1100,12 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       const reciprocalFormatted = pGlobal > 0
         ? (1 / pGlobal).toLocaleString('de-DE', { maximumFractionDigits: 0 })
         : "∞";
-		/* ---------- PROBABILITÉ My Million ---------- */
-		// Moyenne simple entre mardi (~4 M) et vendredi (~8 M)
 		const POSSIBILITIES = 6_000_000;
 
 		let totalSimpleGrids = 0;
 		if (mode === "flash") {
 		  totalSimpleGrids = simpleGrids(numCount, starCount) * numTickets;
-		} else {                  // mode « personnalisé »
+		} else { 
 		  parseCustomGrids(document.getElementById("customGrids").value)
 			.forEach(g => totalSimpleGrids += simpleGrids(g.numbers.length, g.stars.length));
 		}
@@ -1184,7 +1116,6 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 		  ? (1 / pMy).toLocaleString('de-DE', { maximumFractionDigits: 0 })
 		  : "∞";
 
-		/* ---------- CONSTRUCTION DE L’AFFICHAGE ---------- */
 		const lignes = [
 		  `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ★) : ${percent}%`,
 		  `1 chance sur ${reciprocalFormatted}`
@@ -1280,33 +1211,24 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 	  const smartSet   = document.getElementById("smartDrawSettings");
 
 	  if (mode === "flash") {
-		// Affiche les réglages Flash
 		flash.style.display      = "block";
 		custom.style.display     = "none";
 		ticketsGrp.style.display = "block";
-
-		// Affiche Multichance et ses sous-réglages
 		multiGrp.style.display   = "block";
 		multiParts.style.display = document.getElementById("multichanceCheckbox").checked
 									 ? "block" : "none";
-
-		// Affiche Tirage intelligent et ses sous-réglages
 		smartChk.style.display   = "block";
 		smartSet.style.display   = document.getElementById("smartDrawCheckbox").checked
 									 ? "block" : "none";
 	  } else {
-		// Affiche les réglages Personnalisés
 		flash.style.display      = "none";
 		custom.style.display     = "block";
 		ticketsGrp.style.display = "none";
-
-		// Masque tout ce qui est Flash
 		multiGrp.style.display   = "none";
 		multiParts.style.display = "none";
 		smartChk.style.display   = "none";
 		smartSet.style.display   = "none";
 	  }
-
 	  updateChanceDisplay();
 	});
 
@@ -1372,7 +1294,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       const numTickets = mode === "flash"
         ? (parseInt(document.getElementById("numTickets").value) || 1)
         : (customTickets.length > 0 ? customTickets.length : 1);
-		let lotRares = null;   // par défaut : pas de lot
+		let lotRares = null;
 	if (document.getElementById("smartDrawCheckbox").checked) {
 	  lotRares = buildCommonRareSet(numCount, starCount);
 	}
@@ -1402,7 +1324,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			if (document.getElementById("smartDrawCheckbox").checked) {
 			  tickets.push(generateSmartTicket(numCount, starCount, lotRares));
 			} else {
-			  // Tirage flash classique (totalement aléatoire)
 			  tickets.push(generateTicket(numCount, starCount));
 			}
           } else {
@@ -1424,7 +1345,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
         }
         draw = generateDraw();
 
-        // Gestion de l'option My Millon
         let myMillionJustWon = false;
         if (document.getElementById("myMillonCheckbox").checked) {
           let possibilities = (count % 2 === 0) ? 4000000 : 8000000;
@@ -1548,9 +1468,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
           }
         }
 		updateGainChart(); 
-        // --- (le reste du code runLoop inchangé) ---
 
-        // Check arrêt par années
         if (stopAfterYearsChecked) {
           const currentYears = (count * 3.5) / 365;
           if (currentYears >= stopAfterYearsValue) {
@@ -1602,10 +1520,8 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
           const starGood = countMatches(ticket.stars, draw.stars);
           const starBad = s - starGood;
 
-          // Pour chaque possibilité de bons numéros (0 à 5) et étoiles (0 à 2)
           for (let nb = 0; nb <= Math.min(5, n); nb++) {
             for (let sb = 0; sb <= Math.min(2, s); sb++) {
-              // Combien de grilles simples (dans la grille multiple) font nb bons numéros et sb bonnes étoiles
               const waysNum = combination(numGood, nb) * combination(numBad, 5 - nb);
               const waysStar = combination(starGood, sb) * combination(starBad, 2 - sb);
               const countGrilles = waysNum * waysStar;
@@ -1619,7 +1535,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
                 balance += prize * countGrilles;
                 statsGain[key] += prize * countGrilles;
 
-                // Si au moins UNE des grilles simples franchit le seuil d'arrêt, on considère le ticket "gagnant"
                 if (!foundWinningTicket && nb >= stopNumbers && sb >= stopStars && countGrilles > 0) {
                   foundWinningTicket = true;
                   winningTicket = ticket;
@@ -1852,7 +1767,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 	  resetGainChart();
     });
 
-    // Initialisation pour cacher/montrer la ligne au chargement
     updateStatsDisplay();
 
     document.getElementById("ticketStarsCount").addEventListener("blur", function() {
