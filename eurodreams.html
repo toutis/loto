@@ -1513,6 +1513,11 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
                 addLooseImage("loose.png");
               }
 
+              if (gainChart) {
+        	gainChart.data.datasets[0].data.push({ x: count, y: balance });
+        	gainChart.update();
+              }
+
               stopFlag = true;
               simulationActive = false;
               document.getElementById("startBtn").style.display = "block";
