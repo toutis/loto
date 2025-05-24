@@ -520,27 +520,48 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 	  });
 	}
 			
-	// ---- Paramètres ----
-	const TIRAGES_SEUIL = 100;        // à partir de combien de tirages on espace les points
-	const INTERVALLE_POINTS = 100;      // tous les combien de points on garde après le seuil
 	const GAIN_SEUIL = 20000;           // valeur pour "gros gain" déclenchant un point même hors intervalle
 
 	function updateGainChart() {
 	  if (!gainChart) return;
 
+	  const gainNet = balance;
 	  let addPoint = false;
-	  let gainNet = balance;
 
-	  // Espacement croissant : tous les x tirages, x = arrondi(log10(count) * 10)
-	  let interval = 1;
-	  if (count > 1) {
-		interval = Math.max(1, Math.round(Math.log10(count) * 10));
+	  switch (true) {
+		case (count <= 50):
+		  addPoint = true;
+		  break;
+		case (count <= 200):
+		  addPoint = (count % 10 === 0);
+		  break;
+		case (count <= 1000):
+		  addPoint = (count % 50 === 0);
+		  break;
+		case (count <= 10000):
+		  addPoint = (count % 500 === 0);
+		  break;
+		case (count <= 100000):
+		  addPoint = (count % 2000 === 0);
+		  break;
+		case (count <= 1000000):
+		  addPoint = (count % 5000 === 0);
+		  break;
+		case (count <= 5000000):
+		  addPoint = (count % 10000 === 0);
+		  break;
+		case (count <= 20000000):
+		  addPoint = (count % 150000 === 0);
+		  break;
+		case (count <= 80000000):
+		  addPoint = (count % 500000 === 0);
+		  break;
+		default:
+		  addPoint = (count % 1000000 === 0);
+		  break;
 	  }
 
-	  if (count % interval === 0 || count <= 50) {
-		addPoint = true;
-	  }
-	  if (Math.abs(gainNet - lastY) >= GAIN_SEUIL) {
+	  if (gainNet > 0 && lastY !== undefined && Math.abs(gainNet - lastY) >= GAIN_SEUIL) {
 		addPoint = true;
 	  }
 
@@ -1529,11 +1550,11 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
               updateTimePassed(count);
               updateStatsDisplay();
               updateGainDisplay();
-			  updateGainChart(); 
               return;
             }
           }
         }
+		updateGainChart(); 
         // --- (le reste du code runLoop inchangé) ---
 
         // Check arrêt par années
