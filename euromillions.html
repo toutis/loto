@@ -1687,6 +1687,12 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
           return;
         }
 
+        if (gainChart) {
+            gainChart.data.datasets[0].data.push({ x: count, y: balance });
+            gainChart.update();
+	    lastY = balance;
+        }
+
         if (document.getElementById("stopNegativeGainCheckbox").checked) {
           const negThreshold = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
           if (balance < -negThreshold) {
