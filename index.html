@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <!-- Projet sous licence MIT – Voir fichier LICENSE.
+	Simulation pédagogique et indépendante, sans affiliation ni approbation de la Française des Jeux (FDJ).
+	Aucune mise réelle, aucun gain, aucune collecte de données personnelles. -->
   <meta charset="UTF-8">
   <title>Simulations Loto & EuroMillions</title>
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
@@ -13,7 +16,6 @@
 	  padding: 8px;
 	  border-bottom: 1px solid #ccc;
 	  background: #f7f7f7;
-	  /* Nouveau : s'assurer que tout est sur la même ligne */
 	}
 
 	.tab-group {
@@ -102,9 +104,6 @@
 	  display: block;
 	}
 
-
-
-
   </style>
   <script>
     function show(id) {
@@ -117,17 +116,26 @@
   </script>
 </head>
 <body>
-  <div class="tabs">
-    <div class="tab-group">
-      <button class="tab" id="tab-loto" onclick="show('loto')">Loto</button>
-      <button class="tab" id="tab-euro" onclick="show('euro')">Euro Millions</button>
-      <button class="tab" id="tab-dreams" onclick="show('dreams')">Euro Dreams</button>
-    </div>
-<div class="counter-tooltip-container">
-  <div class="counter-badge">
-	<script type="text/javascript" src="https://counter.websiteout.com/js/17/4/0/1"></script>    
+<div class="tabs">
+  <div class="tab-group">
+    <button class="tab" id="tab-loto" onclick="show('loto')">Loto</button>
+    <button class="tab" id="tab-euro" onclick="show('euro')">Euro Millions</button>
+    <button class="tab" id="tab-dreams" onclick="show('dreams')">Euro Dreams</button>
   </div>
-  <span class="custom-tooltip">Cette image montre le nombre de visiteurs uniques qu'il y a eu sur le site</span>
+
+  <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
+    <span style="font-size: 0.65rem; color: #666;">
+		Ce projet est une simulation indépendante, à but éducatif et statistique.<br>
+		Il n’est ni affilié, ni agréé, ni soutenu par la Française des Jeux (FDJ).
+    </span>
+  </div>
+
+  <div class="counter-tooltip-container">
+    <div class="counter-badge">
+      <script type="text/javascript" src="https://counter.websiteout.com/js/17/4/0/1"></script>    
+    </div>
+    <span class="custom-tooltip">Cette image montre le nombre de visiteurs uniques qu'il y a eu sur le site</span>
+  </div>
 </div>
   </div>
 
