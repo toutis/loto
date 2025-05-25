@@ -274,8 +274,23 @@
 	  font-weight: bold !important;
 	  opacity: 1 !important;
 	}
-	
-	
+	.compteur {
+	  white-space: nowrap;
+	}
+	.code-loto {
+	  white-space: nowrap;
+	  overflow-x: auto;
+	}
+	@media (max-width: 785px) {
+	  .main-container {
+		flex-direction: column;
+	  }
+	  .left-column,
+	  .right-column {
+		max-width: 100%;
+	  }
+	}
+
   </style>
 </head>
 <body>
@@ -1151,11 +1166,30 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       return parts.length === 0 ? "0 jour" : parts.join(", ");
     }
 
-    function updateTimePassed(drawCount) {
-      const days = drawCount * (7 / 3);
-      const formatted = formatTimeInDays(days);
-      document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
-    }
+	function updateTimePassed(drawCount) {
+	  const days = drawCount * (7 / 3);
+	  let formatted = formatTimeInDays(days);
+	  const w = window.innerWidth;
+
+	  if (w > 1000 && w < 1200 && /siècles?/.test(formatted)) {
+		formatted = formatted.replace(/, \d+ (jour|jours)$/, '');
+	  }
+
+	  if (w > 785 && w < 1000) {
+		formatted = formatted
+		  .replace(/siècles?/, 's')
+		  .replace(/ans?/,      'a')
+		  .replace(/mois/,      'm')
+		  .replace(/semaines?/, 's')
+		  .replace(/jours?/,    'j')
+		  .split(', ').join(', ');
+		formatted = formatted.replace(/(\d+)\s+([samj])/g, '$1$2');
+	  }
+
+	  document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
+	}
+
+	window.addEventListener("resize", () => updateTimePassed(count));
 
     function updateGainDisplay() {
       const formatted = balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
