@@ -1171,19 +1171,12 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 	  let formatted = formatTimeInDays(days);
 	  const w = window.innerWidth;
 
-	  if (w > 1000 && w < 1200 && /siècles?/.test(formatted)) {
-		formatted = formatted.replace(/, \d+ (jour|jours)$/, '');
-	  }
-
-	  if (w > 785 && w < 1000) {
+	  if (/siècles?/.test(formatted) && w > 785 && w < 1000) {
 		formatted = formatted
-		  .replace(/siècles?/, 's')
-		  .replace(/ans?/,      'a')
-		  .replace(/mois/,      'm')
-		  .replace(/semaines?/, 's')
-		  .replace(/jours?/,    'j')
-		  .split(', ').join(', ');
-		formatted = formatted.replace(/(\d+)\s+([samj])/g, '$1$2');
+		  .replace(/, \d+ (jour|jours)/, '')
+		  .replace(/, \d+ (semaine|semaines)/, '');
+	  } else if (/ans?/.test(formatted) && w > 785 && w < 1200) {
+		formatted = formatted.replace(/, \d+ (jour|jours)/, '');
 	  }
 
 	  document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
