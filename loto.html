@@ -1147,38 +1147,36 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 	  return combination(n, 5) * combination(s, 1);
 	}
 
-    function formatTimeInDays(totalDays) {
-      const joursTotal = Math.floor(totalDays);
-      let centuries = Math.floor(joursTotal / 36500);
-      let reste = joursTotal % 36500;
-      let years = Math.floor(reste / 365);
-      reste = reste % 365;
-      let months = Math.floor(reste / 30.4375);
-      reste = Math.floor(reste % 30.4375);
-      let weeks = Math.floor(reste / 7);
-      let days = reste % 7;
-      const parts = [];
-      if (centuries > 0) parts.push(centuries + " " + (centuries === 1 ? "siècle" : "siècles"));
-      if (years > 0) parts.push(years + " " + (years === 1 ? "an" : "ans"));
-      if (months > 0) parts.push(months + " mois");
-      if (weeks > 0) parts.push(weeks + " " + (weeks === 1 ? "semaine" : "semaines"));
-      if (days > 0) parts.push(days + " " + (days === 1 ? "jour" : "jours"));
-      return parts.length === 0 ? "0 jour" : parts.join(", ");
-    }
+	function formatTimeInDays(totalDays) {
+	  const joursTotal = Math.floor(totalDays);
+	  let centuries = Math.floor(joursTotal / 36500);
+	  let reste = joursTotal % 36500;
+	  let years = Math.floor(reste / 365);
+	  reste = reste % 365;
+	  let months = Math.floor(reste / 30.4375);
+	  reste = Math.floor(reste % 30.4375);
+	  let weeks = Math.floor(reste / 7);
+	  let days = reste % 7;
+
+	  const w = window.innerWidth;
+	  const parts = [];
+
+	  if (centuries > 0) parts.push(centuries + ' ' + (centuries === 1 ? 'siècle' : 'siècles'));
+	  if (years > 0)     parts.push(years + ' ' + (years === 1 ? 'an' : 'ans'));
+	  if (months > 0)    parts.push(months + ' mois');
+
+	  const showWeeks = !(w > 785 && w < 1000 && centuries > 0);
+	  const showDays  = !(w > 785 && ((w < 1000 && centuries > 0) || (w < 1200 && years > 0)));
+
+	  if (weeks > 0 && showWeeks) parts.push(weeks + ' ' + (weeks === 1 ? 'semaine' : 'semaines'));
+	  if (days > 0 && showDays) parts.push(days + ' ' + (days === 1 ? 'jour' : 'jours'));
+
+	  return parts.length === 0 ? "0 jour" : parts.join(", ");
+	}
 
 	function updateTimePassed(drawCount) {
 	  const days = drawCount * (7 / 3);
-	  let formatted = formatTimeInDays(days);
-	  const w = window.innerWidth;
-
-	  if (/siècles?/.test(formatted) && w > 785 && w < 1000) {
-		formatted = formatted
-		  .replace(/, \d+ (jour|jours)/, '')
-		  .replace(/, \d+ (semaine|semaines)/, '');
-	  } else if (/ans?/.test(formatted) && w > 785 && w < 1200) {
-		formatted = formatted.replace(/, \d+ (jour|jours)/, '');
-	  }
-
+	  const formatted = formatTimeInDays(days);
 	  document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
 	}
 
