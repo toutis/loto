@@ -326,10 +326,18 @@
           <label for="customGrids">
             Mes grilles personnalisées :<br>
             Entrez une grille par ligne au format "num1,num2,... ; chance1,..."<br>
-            Exemple: <em>3,15,22,37,42 ; 1</em>
+            Exemple: <em>1,2,3,4,5 ; 6</em>
           </label>
           <br>
           <textarea id="customGrids" rows="4" cols="50" placeholder="Une grille par ligne"></textarea>
+			<div style="margin-top: 2px; display: flex; align-items: center; gap: 4px; font-size: 1em; padding-bottom: 6px;">
+			  <label for="nbGrillesAuto">Générer x grilles :</label>
+			  <input type="number" id="nbGrillesAuto" value="3" min="1" max="100"
+					 style="width: 50px; padding: 3px 6px; font-size: 1em;">
+			  <button id="generateGridsBtn"
+					  style="padding: 4px 10px; font-size: 0.9em;">Générer</button>
+			  <button id="clearCustomGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Clear</button>
+			</div>
         </div>
         <div class="form-group" id="ticketsCountGroup">
           <label for="numTickets">Nombre de tickets par tirage :</label>
@@ -468,6 +476,29 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 
 	let gainChart = null;
 	let lastY;
+	
+	function generateRandomGridString() {
+	  const numbers = generateNumbers(5, 49);
+	  const chance = generateNumbers(1, 10);
+	  return `${numbers.join(",")} ; ${chance.join(",")}`;
+	}
+
+	document.getElementById("generateGridsBtn").addEventListener("click", () => {
+	  const nb = parseInt(document.getElementById("nbGrillesAuto").value, 10);
+	  if (isNaN(nb) || nb < 1) return;
+	  let result = "";
+	  for (let i = 0; i < nb; i++) {
+		result += generateRandomGridString() + "\n";
+	  }
+	  document.getElementById("customGrids").value = result.trim();
+	  updateChanceDisplay(); 
+	});
+	document.getElementById("clearCustomGridsBtn").addEventListener("click", () => {
+	  document.getElementById("customGrids").value = "";
+	  updateChanceDisplay();
+	});
+
+
 
 	function initGainChart() {
 	  const ctx = document.getElementById("gainChart").getContext("2d");
@@ -1096,8 +1127,20 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
         return probNum * probStars;
       }
 
-      const pTicket = computeChance(numCount, starCount, stopNumbers, stopStars);
-      const pGlobal = 1 - Math.pow(1 - pTicket, numTickets);
+		let pGlobal = 0;
+
+		if (mode === "flash") {
+		  const pTicket = computeChance(numCount, starCount, stopNumbers, stopStars);
+		  pGlobal = 1 - Math.pow(1 - pTicket, numTickets);
+		} else {
+		  const customGridsText = document.getElementById("customGrids").value;
+		  const grids = parseCustomGrids(customGridsText);
+		  for (let g of grids) {
+			const pTicket = computeChance(g.numbers.length, g.stars.length, stopNumbers, stopStars);
+			pGlobal += pTicket;
+		  }
+		}
+
       const percent = (pGlobal * 100).toFixed(8);
       const reciprocalFormatted = pGlobal > 0
         ? (1 / pGlobal).toLocaleString('de-DE', { maximumFractionDigits: 0 })
@@ -1458,9 +1501,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
               } else if (balance <= -1000000) {
                 playSound("bigloose.mp3");
                 addLooseImage("bigloose.jpeg");
-              } else {
-                playSound("loose.mp3");
-                addLooseImage("loose.png");
               }
 
               if (gainChart) {
@@ -1534,9 +1574,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
             } else if (balance <= -1000000) {
               playSound("bigloose.mp3");
               addLooseImage("bigloose.jpeg");
-            } else {
-              playSound("loose.mp3");
-              addLooseImage("loose.png");
             }
 
             stopFlag = true;
@@ -1631,9 +1668,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
             } else if (balance <= -1000000) {
               playSound("bigloose.mp3");
               addLooseImage("bigloose.jpeg");
-            } else {
-              playSound("loose.mp3");
-              addLooseImage("loose.png");
             }
 
           if (gainChart) {
@@ -1671,11 +1705,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
             } else if (balance <= -1000000) {
               playSound("bigloose.mp3");
               addLooseImage("bigloose.jpeg");
-            } else {
-              playSound("loose.mp3");
-              addLooseImage("loose.png");
             }
-
             stopFlag = true;
             simulationActive = false;
             document.getElementById("startBtn").style.display = "block";
