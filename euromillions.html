@@ -301,6 +301,31 @@
 		max-width: 100%;
 	  }
 	}
+	#prizesForm {
+	  display: grid;
+	  grid-template-columns: repeat(2, 1fr);
+	  gap: 10px 20px;
+	  max-height: 80vh;
+	  overflow-y: auto;
+	}
+
+	#prizesForm div {
+	  display: flex;
+	  justify-content: space-between;
+	  align-items: center;
+	  gap: 10px;
+	}
+
+	#prizesForm label {
+	  flex: 1;
+	  text-align: right;
+	  white-space: nowrap;
+	}
+
+	#prizesForm input {
+	  flex: 0 0 100px;
+	}
+
 	
 	
   </style>
@@ -462,11 +487,12 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       <div class="section display" id="ticketsContainer"></div>
 	  <canvas id="gainChart" height="150"></canvas>
       <div class="section display" id="statsContainer">
-        <h3>
+        <h3 style="margin-bottom: 0;">
 		  Statistiques de résultats
 		  <span class="info-icon" title="Les gains par rang sont fixes et déterminés à l’avance dans cette simulation. 
 Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc.">i</span>
 		</h3>
+		<a href="#" id="editPrizesLink" style="color: #187ad2; font-size: 0.95em;">Modifier les gains par rang</a>
         <ul>
           <li id="stats_myMillion" style="display: list-item;">
             My Million : <span id="stats_myMillion_value">0</span>
@@ -496,6 +522,18 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
     </div>
   </div>
   <div id="fireworksContainer"></div>
+	<div id="prizesModal" style="display:none; position: fixed; top: 50%; left: 50%;
+	transform: translate(-50%, -50%); background: white; padding: 20px;
+	border: 2px solid #444; z-index: 10000; width: 640px; max-height: none;
+	overflow-y: visible; box-shadow: 0 0 20px rgba(0,0,0,0.3);">
+	  <h3>Modifier les gains par rang</h3>
+	  <form id="prizesForm"></form>
+		<div style="margin-top: 10px;">
+		  <button id="closePrizesBtn" type="button">❌ Fermer</button>
+		  <button id="resetPrizesBtn" type="button">🔄 Reset</button>
+		</div>
+	</div>
+	<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 9999;"></div>
   <script>
   
 	function simpleGrids(n, s) {
@@ -504,6 +542,22 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 	let gainChart = null;
 	let lastY;
+	
+	function savePrizeFormData() {
+	  const form = document.getElementById("prizesForm");
+	  const inputs = form.querySelectorAll("input");
+	  inputs.forEach(input => {
+		const val = parseFloat(input.value);
+		if (!isNaN(val) && val >= 0) {
+		  prizeMappingEditable[input.name] = val;
+		}
+	  });
+
+	  for (const key in prizeMappingEditable) {
+		prizeMapping[key] = prizeMappingEditable[key];
+	  }
+	  prizeTableModified = true;
+	}
 	
 	function generateRandomGridString() {
 	  const numbers = generateNumbers(5, 50);
@@ -574,6 +628,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	}
 	
 	let GAIN_SEUIL = 20000;
+	let prizeTableModified = false;
 			
 	function updateGainChart() {
 	  if (!gainChart) return;
@@ -614,8 +669,8 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  break;
 	  }
 
-	  if (gainNet > 0 && lastY !== undefined && Math.abs(gainNet - lastY) >= GAIN_SEUIL) {
-		addPoint = true;
+	  if (!prizeTableModified && gainNet > 0 && lastY !== undefined && Math.abs(gainNet - lastY) >= GAIN_SEUIL) {
+	    addPoint = true;
 	  }
 
 	  if (addPoint) {
@@ -1834,6 +1889,105 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       if (v > 50) v = 50;
       this.value = v;
     });
+const prizeMappingEditable = { ...prizeMapping };
+
+document.getElementById("editPrizesLink").addEventListener("click", function (e) {
+  e.preventDefault();
+  const form = document.getElementById("prizesForm");
+  form.innerHTML = "";
+  form.style.display = "flex";
+  form.style.flexWrap = "wrap";
+  form.style.justifyContent = "center";
+  form.style.gap = "20px";
+
+const keys = Object.keys(prizeMappingEditable);
+const mid = Math.ceil(keys.length / 2);
+const leftKeys = keys.slice(0, mid);
+const rightKeys = keys.slice(mid);
+
+// Réorganise pour remplir colonne par colonne
+const reorderedKeys = [];
+for (let i = 0; i < mid; i++) {
+  if (leftKeys[i]) reorderedKeys.push(leftKeys[i]);
+  if (rightKeys[i]) reorderedKeys.push(rightKeys[i]);
+}
+
+reorderedKeys.forEach(key => {
+  const label = document.createElement("label");
+  label.textContent = `${key.replace("_", " n° + ")} ★ :`;
+
+  const input = document.createElement("input");
+  input.type = "number";
+  input.step = "1.0";
+  input.min = "0";
+  input.name = key;
+  input.value = prizeMappingEditable[key];
+  input.style.width = "120px";
+
+  const div = document.createElement("div");
+  div.style.display = "flex";
+  div.style.justifyContent = "space-between";
+  div.style.alignItems = "center";
+  div.style.gap = "10px";
+
+  div.appendChild(label);
+  div.appendChild(input);
+  form.appendChild(div);
+});
+
+
+  document.getElementById("prizesModal").style.display = "block";
+  document.getElementById("modalOverlay").style.display = "block";
+});
+
+document.getElementById("closePrizesBtn").addEventListener("click", function () {
+  savePrizeFormData();
+  document.getElementById("prizesModal").style.display = "none";
+  document.getElementById("modalOverlay").style.display = "none";
+});
+document.getElementById("resetPrizesBtn").addEventListener("click", function () {
+  const defaultPrizes = {
+      "5_2": 45000000,
+      "5_1": 400000,
+      "5_0": 50000,
+      "4_2": 1500,
+      "4_1": 150,
+      "4_0": 55,
+      "3_2": 75,
+      "3_1": 14,
+      "3_0": 11,
+      "2_2": 15,
+      "2_1": 8,
+      "2_0": 4,
+      "1_2": 7,
+      "1_1": 0,
+      "1_0": 0,
+      "0_2": 0,
+      "0_1": 0,
+      "0_0": 0
+  };
+
+  for (const key in defaultPrizes) {
+    prizeMappingEditable[key] = defaultPrizes[key];
+    prizeMapping[key] = defaultPrizes[key];
+  }
+
+  const form = document.getElementById("prizesForm");
+  const inputs = form.querySelectorAll("input");
+  inputs.forEach(input => {
+    if (defaultPrizes.hasOwnProperty(input.name)) {
+      input.value = defaultPrizes[input.name];
+    }
+  });
+  prizeTableModified = false;
+});
+
+document.getElementById("modalOverlay").addEventListener("click", function () {
+  savePrizeFormData();
+  document.getElementById("prizesModal").style.display = "none";
+  this.style.display = "none";
+  document.body.style.overflow = "";
+});
   </script>
 </body>
 </html>
