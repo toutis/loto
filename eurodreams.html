@@ -455,7 +455,7 @@ Exemple : 10 grilles multiples (6 numéros, 10 Chance), 1 à 10 parts sur 200">i
 			  Grille optimisée
 <span class="info-icon" title="Active une stratégie de sélection basée sur la rareté.
 
-Les numéros et Chance les moins souvent tirés au cours des 70 derniers tirages 
+Les numéros et dream les moins souvent tirés au cours des 70 derniers tirages 
 sont privilégiés, dans l’espoir qu’ils soient « en retard ». Cela repose sur 
 l’idée de compenser une sous-fréquence apparente.
 
@@ -1268,7 +1268,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	}
 
 	function updateTimePassed(drawCount) {
-	  const days = drawCount * (7 / 3);
+	  const days = drawCount * (7 / 2);
 	  const formatted = formatTimeInDays(days);
 	  document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
 	}
@@ -1933,7 +1933,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 	reorderedKeys.forEach(key => {
 	  const label = document.createElement("label");
-	  label.textContent = `${key.replace("_", " n° + ")} ★ :`;
+	  label.textContent = `${key.replace("_", " n° + ")} ◉ :`;
 
 	  const input = document.createElement("input");
 	  input.type = "number";
