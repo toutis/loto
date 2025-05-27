@@ -161,7 +161,7 @@
       user-select: none;
     }
     .number-ball {
-      background: #187ad2;
+      background: #047dff;
       border-radius: 50%;
     }
 	.star-ball {
@@ -435,7 +435,7 @@ Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420">
 			  Grille optimisée
 <span class="info-icon" title="Active une stratégie de sélection basée sur la rareté.
 
-Les numéros et étoiles les moins souvent tirés au cours des 30 derniers tirages 
+Les numéros et étoiles les moins souvent tirés au cours des 70 derniers tirages 
 sont privilégiés, dans l’espoir qu’ils soient « en retard ». Cela repose sur 
 l’idée de compenser une sous-fréquence apparente.
 
@@ -884,7 +884,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	
 	const freqNum  = Array(51).fill(0); 
 	const freqStar = Array(13).fill(0); 
-	const MAX_RECENT_DRAWS = 30;
+	const MAX_RECENT_DRAWS = 70;
 	const recentDraws = []; 
 
 	
