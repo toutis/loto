@@ -1565,8 +1565,10 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
               stopFlag = true;
               simulationActive = false;
-              document.getElementById("startBtn").style.display = "block";
-              document.getElementById("ticketsContainer").innerHTML = "";
+			  document.getElementById("startBtn").style.display = "inline-block";
+              document.getElementById("startBtn").textContent = "Nouvelle simulation";
+              document.getElementById("stopBtn").style.display = "inline-block";
+              document.getElementById("stopBtn").textContent = "Continuer";
               tickets.forEach((ticket, index) => {
                 const div = document.createElement("div");
 			 let isWinning;
@@ -1631,7 +1633,10 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
             stopFlag = true;
             simulationActive = false;
-            document.getElementById("startBtn").style.display = "block";
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("startBtn").textContent = "Nouvelle simulation";
+            document.getElementById("stopBtn").style.display = "inline-block";
+            document.getElementById("stopBtn").textContent = "Continuer";
             return;
           }
         }
@@ -1731,7 +1736,10 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
           stopFlag = true;
           simulationActive = false;
-          document.getElementById("startBtn").style.display = "block";
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("startBtn").textContent = "Nouvelle simulation";
+            document.getElementById("stopBtn").style.display = "inline-block";
+            document.getElementById("stopBtn").textContent = "Continuer";
           return;
         }
 
@@ -1768,7 +1776,10 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  
             stopFlag = true;
             simulationActive = false;
-            document.getElementById("startBtn").style.display = "block";
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("startBtn").textContent = "Nouvelle simulation";
+            document.getElementById("stopBtn").style.display = "inline-block";
+            document.getElementById("stopBtn").textContent = "Continuer";
             return;
           }
         }
@@ -1853,20 +1864,23 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
     document.getElementById("stopMyMillonWinGroup").style.display = "block";
 
     document.getElementById("startBtn").addEventListener("click", startDrawing);
-    document.getElementById("stopBtn").addEventListener("click", function() {
-      if (!stopFlag) {
-        stopFlag = true;
-        simulationActive = false;
-        clearTimeout(loopTimeout);
-        this.textContent = "Continuer";
-      } else {
-        stopFlag = false;
-        simulationActive = true;
-        this.textContent = "Stop";
-        runLoop();
-      }
-      updateStatsDisplay();
-    });
+	document.getElementById("stopBtn").addEventListener("click", function() {
+	  if (!stopFlag) {
+		stopFlag = true;
+		simulationActive = false;
+		clearTimeout(loopTimeout);
+		this.textContent = "Continuer";
+	  } else {
+		stopFlag = false;
+		simulationActive = true;
+		this.textContent = "Stop";
+		runLoop();
+		if (simulationActive) {
+		  document.getElementById("startBtn").style.display = "none";
+		}
+	  }
+	  updateStatsDisplay();
+	});
     document.getElementById("resetBtn").addEventListener("click", function() {
       stopFlag = true;
       simulationHasStarted = false;

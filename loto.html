@@ -1851,11 +1851,14 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		simulationActive = true;
 		this.textContent = "Stop";
 		runLoop();
-		// ICI → cacher le bouton "Nouvelle simulation"
-		document.getElementById("startBtn").style.display = "none";
+		// NE CACHE "Nouvelle simulation" QUE SI LA SIMU CONTINUE
+		if (simulationActive) {
+		  document.getElementById("startBtn").style.display = "none";
+		}
 	  }
 	  updateStatsDisplay();
 	});
+
 
     document.getElementById("resetBtn").addEventListener("click", function() {
       stopFlag = true;
