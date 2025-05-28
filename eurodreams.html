@@ -411,7 +411,7 @@
         </div>
         <div class="form-group">
           <input type="checkbox" id="stopNegativeGainCheckbox">
-          <label for="stopNegativeGainCheckbox">Stopper si le gain net est négatif à :</label>
+          <label for="stopNegativeGainCheckbox">Stopper si le Solde est négatif à :</label>
           <input type="number" id="stopNegativeGainThreshold" value="10000" step="0.01" style="width:100px;">
         </div>
         <div class="form-group">
@@ -503,7 +503,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
       <div class="compteur" id="counter">Tirages : 0</div>
       <div class="compteur" id="timePassed">Temps écoulé : 0 jour</div>
       <div class="compteur" id="grillesPlayed">Grilles jouées : 0</div>
-      <div class="compteur" id="gainDisplay">Gain net : 0 €</div>
+      <div class="compteur" id="gainDisplay">Solde : 0 €</div>
       <div class="section display" id="ticketsContainer"></div>
 	  <canvas id="gainChart" height="150"></canvas>
       <div class="section display" id="statsContainer">
@@ -514,6 +514,16 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		</h3>
 		<a href="#" id="editPrizesLink" style="color: #187ad2; font-size: 0.95em;">Modifier les gains par rang</a>
         <ul>
+		<div id="gainLossSummary" style="margin:12px 0 8px 0;">
+		  <div>
+			<span style="color:#222; font-weight:normal; margin-right:4px;">Bilan&nbsp;:</span>
+			<span id="spentValue"></span>
+			<span style="margin:0 4px; color:#888;">/</span>
+			<span id="gainValue"></span>
+			<span id="percentValue" style="margin-left:4px;"></span>
+		  </div>
+		  <div style="height:7px;"></div>
+		</div>
           <li id="stats_myMillion" style="display: list-item;">
             Code loto : <span id="stats_myMillion_value">0</span>
             <span id="stats_myMillion_pct"></span>
@@ -599,7 +609,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		type: "line",
 		data: {
 		  datasets: [{
-			label: "Gain net (€)",
+			label: "Solde (€)",
 			data: [],
 			fill: false,
 			borderWidth: 2,
@@ -1181,6 +1191,27 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
           }
         }
       }
+	  let totalGain = 0;
+	  for (let combo in statsGain) totalGain += statsGain[combo];
+	  totalGain += myMillionTotalGain;
+
+	  let solde = balance;
+	  let totalSpent = totalGain - solde;
+
+	  let losses = -Math.abs(totalSpent);
+	  let gains  = Math.abs(totalGain);
+
+	  document.getElementById('spentValue').innerHTML =
+		`<span style="color:red;">${losses.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}&nbsp;€</span>`;
+	  document.getElementById('gainValue').innerHTML =
+		`<span style="color:green;">+${gains.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}&nbsp;€</span>`;
+
+	  let percentLossVal = (totalSpent > 0)
+		? ((totalGain / totalSpent - 1) * 100)
+		: 0;
+	  let percentString = `(${percentLossVal >= 0 ? "+" : ""}${percentLossVal.toFixed(2)}%)`;
+	  document.getElementById('percentValue').innerHTML =
+		`<span style="color:#888;">${percentString}</span>`;
     }
 
     function updateChanceDisplay() {
@@ -1284,9 +1315,9 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
         imageContainer.id = "looseImageContainer";
       }
       if (balance >= 0) {
-        gainElem.innerHTML = `Gain net : <span style='color: green;'>${formatted} €</span>`;
+        gainElem.innerHTML = `Solde : <span style='color: green;'>${formatted} €</span>`;
       } else {
-        gainElem.innerHTML = `Gain net : <span style='color: red;'>${formatted} €</span>`;
+        gainElem.innerHTML = `Solde : <span style='color: red;'>${formatted} €</span>`;
       }
       gainElem.appendChild(imageContainer);
 	  updateGainChart(); 
@@ -1759,7 +1790,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
             updateTimePassed(count);
             updateStatsDisplay();
             updateGainDisplay();
-            alert("Le gain net est inférieur au seuil défini (-" + negThreshold + " €). La simulation est arrêtée.");
+            alert("Le Solde est inférieur au seuil défini (-" + negThreshold + " €). La simulation est arrêtée.");
 
             if (balance >= 1) {
               playSound("win.mp3");
@@ -1846,7 +1877,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       document.getElementById("counter").textContent = "Tirages : 0";
       document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
       document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
-      document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Gain net : 0,00 €</span>";
+      document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Solde : 0,00 €</span>";
       document.getElementById("ticketsContainer").innerHTML = "";
       document.getElementById("resultat").innerHTML = `<strong>Tirage :</strong><br>Numéros : --<br>Dream : --`;
       document.getElementById("stopBtn").textContent = "Stop";
@@ -1898,7 +1929,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       document.getElementById("counter").textContent = "Tirages : 0";
       document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
       document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
-      document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Gain net : 0,00 €</span>";
+      document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Solde : 0,00 €</span>";
       document.getElementById("ticketsContainer").innerHTML = "";
       document.getElementById("resultat").innerHTML = `<strong>Tirage :</strong><br>Numéros : --<br>Dream : --`;
       document.getElementById("stopBtn").textContent = "Stop";
