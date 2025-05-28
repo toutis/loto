@@ -1542,8 +1542,11 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 
               stopFlag = true;
               simulationActive = false;
-              document.getElementById("startBtn").style.display = "block";
-              document.getElementById("ticketsContainer").innerHTML = "";
+              document.getElementById("startBtn").style.display = "inline-block";
+              document.getElementById("startBtn").textContent = "Nouvelle simulation";
+              document.getElementById("stopBtn").style.display = "inline-block";
+              document.getElementById("stopBtn").textContent = "Continuer";
+
               tickets.forEach((ticket, index) => {
                 const div = document.createElement("div");
 			 let isWinning;
@@ -1607,9 +1610,13 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
               addLooseImage("bigloose.jpeg");
             }
 
-            stopFlag = true;
-            simulationActive = false;
-            document.getElementById("startBtn").style.display = "block";
+			stopFlag = true;
+			simulationActive = false;
+              document.getElementById("startBtn").style.display = "inline-block";
+              document.getElementById("startBtn").textContent = "Nouvelle simulation";
+              document.getElementById("stopBtn").style.display = "inline-block";
+              document.getElementById("stopBtn").textContent = "Continuer";
+
             return;
           }
         }
@@ -1707,9 +1714,13 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 	     lastY = balance;
           }
 
-          stopFlag = true;
-          simulationActive = false;
-          document.getElementById("startBtn").style.display = "block";
+			stopFlag = true;
+			simulationActive = false;
+              document.getElementById("startBtn").style.display = "inline-block";
+              document.getElementById("startBtn").textContent = "Nouvelle simulation";
+              document.getElementById("stopBtn").style.display = "inline-block";
+              document.getElementById("stopBtn").textContent = "Continuer";
+
           return;
         }
 
@@ -1737,9 +1748,13 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
               playSound("bigloose.mp3");
               addLooseImage("bigloose.jpeg");
             }
-            stopFlag = true;
-            simulationActive = false;
-            document.getElementById("startBtn").style.display = "block";
+			stopFlag = true;
+			simulationActive = false;
+              document.getElementById("startBtn").style.display = "inline-block";
+              document.getElementById("startBtn").textContent = "Nouvelle simulation";
+              document.getElementById("stopBtn").style.display = "inline-block";
+              document.getElementById("stopBtn").textContent = "Continuer";
+
             return;
           }
         }
@@ -1824,20 +1839,24 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
     document.getElementById("stopMyMillonWinGroup").style.display = "block";
 
     document.getElementById("startBtn").addEventListener("click", startDrawing);
-    document.getElementById("stopBtn").addEventListener("click", function() {
-      if (!stopFlag) {
-        stopFlag = true;
-        simulationActive = false;
-        clearTimeout(loopTimeout);
-        this.textContent = "Continuer";
-      } else {
-        stopFlag = false;
-        simulationActive = true;
-        this.textContent = "Stop";
-        runLoop();
-      }
-      updateStatsDisplay();
-    });
+	document.getElementById("stopBtn").addEventListener("click", function() {
+	  if (!stopFlag) {
+		stopFlag = true;
+		simulationActive = false;
+		clearTimeout(loopTimeout);
+		this.textContent = "Continuer";
+		// Ici, "Nouvelle simulation" doit rester visible
+	  } else {
+		stopFlag = false;
+		simulationActive = true;
+		this.textContent = "Stop";
+		runLoop();
+		// ICI → cacher le bouton "Nouvelle simulation"
+		document.getElementById("startBtn").style.display = "none";
+	  }
+	  updateStatsDisplay();
+	});
+
     document.getElementById("resetBtn").addEventListener("click", function() {
       stopFlag = true;
       simulationHasStarted = false;
@@ -1858,9 +1877,10 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Gain net : 0,00 €</span>";
       document.getElementById("ticketsContainer").innerHTML = "";
       document.getElementById("resultat").innerHTML = `<strong>Tirage :</strong><br>Numéros : --<br>Chance : --`;
-      document.getElementById("stopBtn").textContent = "Stop";
-      document.getElementById("startBtn").style.display = "block";
+      document.getElementById("startBtn").textContent = "Démarrer la simulation";
+      document.getElementById("startBtn").style.display = "inline-block";
       document.getElementById("stopBtn").style.display = "none";
+
       removeLooseImages();
 	  resetGainChart();
     });
