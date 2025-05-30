@@ -1600,6 +1600,9 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
               document.getElementById("startBtn").textContent = "Nouvelle simulation";
               document.getElementById("stopBtn").style.display = "inline-block";
               document.getElementById("stopBtn").textContent = "Continuer";
+			  
+			  document.getElementById("ticketsContainer").innerHTML = "";
+			  
               tickets.forEach((ticket, index) => {
                 const div = document.createElement("div");
 			 let isWinning;

@@ -1577,6 +1577,8 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
               document.getElementById("startBtn").textContent = "Nouvelle simulation";
               document.getElementById("stopBtn").style.display = "inline-block";
               document.getElementById("stopBtn").textContent = "Continuer";
+			  
+			  document.getElementById("ticketsContainer").innerHTML = "";
 
               tickets.forEach((ticket, index) => {
                 const div = document.createElement("div");

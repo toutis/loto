@@ -413,7 +413,7 @@
 		  <div>
 			<input type="checkbox" id="myMillonCheckbox" checked>
 			<label for="myMillonCheckbox">
-			  My Million <span class="info-icon" title="L'option My Millon : Chaque mardi en France, environ 4 millions de grilles sont jouées, et 8 millions le vendredi.
+			  My Million <span class="info-icon" title="L'option My Millon : Chaque mardi en France, environ 4 millions de grilles sont jouées, et 6 millions le vendredi.
 À chaque tirage, un numéro aléatoire est attribué parmi l'ensemble des grilles jouées.
 Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 000 000 € !">i</span>
 			</label>
@@ -1241,7 +1241,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       const reciprocalFormatted = pGlobal > 0
         ? (1 / pGlobal).toLocaleString('de-DE', { maximumFractionDigits: 0 })
         : "∞";
-		const POSSIBILITIES = 6_000_000;
+		const POSSIBILITIES = 5_000_000;
 
 		let totalSimpleGrids = 0;
 		if (mode === "flash") {
@@ -1498,7 +1498,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 
         let myMillionJustWon = false;
         if (document.getElementById("myMillonCheckbox").checked) {
-          let possibilities = (count % 2 === 0) ? 4000000 : 8000000;
+          let possibilities = (count % 2 === 0) ? 4000000 : 6000000;
           let assignedRanges = [];
           tickets.forEach(ticket => {
             let n = ticket.numbers.length;
@@ -1578,6 +1578,9 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
               document.getElementById("startBtn").textContent = "Nouvelle simulation";
               document.getElementById("stopBtn").style.display = "inline-block";
               document.getElementById("stopBtn").textContent = "Continuer";
+			  
+			  document.getElementById("ticketsContainer").innerHTML = "";
+			  
               tickets.forEach((ticket, index) => {
                 const div = document.createElement("div");
                 let isWinning = false;
