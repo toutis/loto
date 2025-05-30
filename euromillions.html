@@ -1558,7 +1558,8 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 
             myMillionJustWon = true;
             if (stopMyMillonWin) {
-              alert("Option My Millon gagnée !\nTirage My Million : " + formatMyMillion(draw.myMillon) + "\nGain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
+			  const tempsEcoule = formatTimeInDays(count * (7 / 2));
+              alert("Option My Millon gagnée !\n" + "Temps écoulé : " + tempsEcoule + "\n" + "My Million : " + formatMyMillion(draw.myMillon) + "\nGain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
 
               if (balance >= 1) {
                 playSound("win.mp3");
@@ -1736,10 +1737,12 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
           if (winningMatchNumbers === 5 && winningMatchStars === 2) {
             launchFireworks();
           }
+		  const tempsEcoule = formatTimeInDays(count * (7 / 2));
           alert("Seuil atteint !\n" +
                 "Ticket gagnant : " + winningTicket.numbers.join(", ") + " | " + winningTicket.stars.join(", ") + "\n" +
                 "Tirage : " + draw.numbers.join(", ") + " | " + draw.stars.join(", ") + "\n" +
                 "Nombre de tirages : " + count.toLocaleString('de-DE') + "\n" +
+				"Temps écoulé : " + tempsEcoule + "\n" +
                 "Gain : " + winningGain.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
 
           if (balance >= 1) {

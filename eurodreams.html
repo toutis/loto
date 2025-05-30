@@ -1749,10 +1749,12 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
           if (winningMatchNumbers === 5 && winningMatchStars === 1) {
             launchFireworks();
           }
+		  const tempsEcoule = formatTimeInDays(count * (7 / 2));
           alert("Seuil atteint !\n" +
                 "Ticket gagnant : " + winningTicket.numbers.join(", ") + " | " + winningTicket.stars.join(", ") + "\n" +
                 "Tirage : " + draw.numbers.join(", ") + " | " + draw.stars.join(", ") + "\n" +
                 "Nombre de tirages : " + count.toLocaleString('de-DE') + "\n" +
+				"Temps écoulé : " + tempsEcoule + "\n" +
                 "Gain : " + winningGain.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
 
           if (balance >= 1) {
