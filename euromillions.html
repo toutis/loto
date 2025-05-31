@@ -325,9 +325,29 @@
 	#prizesForm input {
 	  flex: 0 0 100px;
 	}
-
-	
-	
+	#examplesModal {
+	  display: none;
+	  position: fixed;
+	  top: 50%;
+	  left: 50%;
+	  transform: translate(-50%, -50%);
+	  background: #fff;
+	  padding: 20px;
+	  border: 2px solid #444;
+	  box-shadow: 0 0 20px rgba(0,0,0,.3);
+	  z-index: 10000;
+	  width: 500px;
+	  max-height: none;
+	  overflow-y: auto;
+	}
+	#examplesModal ul li { 
+	  margin-bottom: 0.7em;
+	}
+	#examplesModal ul {
+	  list-style: none;
+	  padding-left: 0;
+	}
+			
   </style>
 </head>
 <body>
@@ -544,6 +564,12 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		</div>
 	</div>
 	<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 9999;"></div>
+	<div id="examplesModal">
+	  <div id="examplesContent"></div>
+
+	  <div style="margin-top:10px">
+		<button id="closeExamplesBtn" type="button">❌ Fermer</button>
+	  </div>
   <script>
   
 	function simpleGrids(n, s) {
@@ -552,6 +578,140 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 	let gainChart = null;
 	let lastY;
+		let lastOdds = Infinity;
+		
+	function formatTimeInDays(totalDays) {
+	  const joursTotal = Math.floor(totalDays);
+	  let centuries = Math.floor(joursTotal / 36500);
+	  let reste = joursTotal % 36500;
+	  let years = Math.floor(reste / 365);
+	  reste = reste % 365;
+	  let months = Math.floor(reste / 30.4375);
+	  reste = Math.floor(reste % 30.4375);
+	  let weeks = Math.floor(reste / 7);
+	  let days = reste % 7;
+
+	  const parts = [];
+	  if (centuries > 0) parts.push(centuries + ' ' + (centuries === 1 ? 'siècle' : 'siècles'));
+	  if (years > 0)     parts.push(years + ' ' + (years === 1 ? 'an' : 'ans'));
+	  if (months > 0)    parts.push(months + ' mois');
+	  if (weeks > 0)     parts.push(weeks + ' ' + (weeks === 1 ? 'semaine' : 'semaines'));
+	  if (days > 0)      parts.push(days + ' ' + (days === 1 ? 'jour' : 'jours'));
+
+	  return parts.length === 0 ? "0 jour" : parts.join(", ");
+	}
+
+	function generateProbabilityExamples(N) {
+	  if (!Number.isFinite(N) || N <= 0) return [];
+
+	  const F = new Intl.NumberFormat("fr-FR");
+	  const examples = [];
+
+	  const seconds = N;
+	  if (seconds >= 60) {
+		const minutes = seconds / 60;
+		if (minutes < 60) {
+		  examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(Math.round(minutes))} ${minutes < 2 ? "minute" : "minutes"}`);
+		} else {
+		  const hours = minutes / 60;
+		  if (hours < 24) {
+			examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(Math.round(hours))} ${hours < 2 ? "heure" : "heures"}`);
+		  } else {
+			const days = hours / 24;
+			if (days < 365) {
+			  examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(Math.round(days))} ${days < 2 ? "jour" : "jours"}`);
+			} else {
+			  const years = days / 365;
+			  examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(years.toFixed(1))} ans`);
+			}
+		  }
+		}
+    }
+
+	  const flips = Math.round(Math.log2(N));
+	  if (flips > 1) {
+		examples.push(`🪙 Réussir ${flips} lancers de pile ou face d’affilée`);
+	  }
+
+	  const km = N / 100_000;
+	  if (km >= 1) {
+		examples.push(`📏 Retrouver un centimètre précis sur une route de ${F.format(Math.round(km))} km`);
+	  } else {
+		const m = N / 100;
+		if (m >= 1) {
+		  examples.push(`📏 Retrouver un centimètre précis sur une règle de ${F.format(Math.round(m))} m`);
+		}
+	  }
+
+	  const BOOKS_PER_LIBRARY = 100_000;
+	  if (N >= 10_000 && N < BOOKS_PER_LIBRARY * 2) {
+		examples.push(`📚 Piocher au hasard le bon livre parmi ${F.format(Math.round(N))} ouvrages`);
+	  } else if (N >= BOOKS_PER_LIBRARY * 2) {
+		const libraries = Math.round(N / BOOKS_PER_LIBRARY);
+		examples.push(`📚 Trouver le bon livre parmi ${libraries} bibliothèques de ${F.format(BOOKS_PER_LIBRARY)} ouvrages`);
+	  } else if (N >= 100) {
+		examples.push(`🎱 Tirer la seule bille rouge parmi ${F.format(Math.round(N))} billes blanches`);
+	  }
+
+	  const stadiumCap = 80_000;
+	  if (N >= stadiumCap / 2 && N < stadiumCap * 2) {
+		examples.push(`🏟️ Être tiré au sort parmi ${F.format(Math.round(N))} personnes`);
+	  } else if (N >= stadiumCap * 2 && N < 10_000_000) {
+		const stades = Math.round(N / stadiumCap);
+		examples.push(`🏟️ Être tiré au sort parmi ${stades} stades de ${stadiumCap.toLocaleString("fr-FR")} personnes`);
+	  }
+
+	  const screenPix = 2_000 * 1_000;
+	  if (N >= screenPix / 2 && N < BOOKS_PER_LIBRARY) {
+		const ecrans = Math.round(N / screenPix);
+		examples.push(`🖥️ Allumer au hasard le bon pixel parmi ${ecrans} écrans Full HD`);
+	  }
+
+	  const dropPerLitre = 20_000;
+	  if (N >= dropPerLitre * 500 && N < 1e9) {
+		const litres = Math.round(N / dropPerLitre);
+		examples.push(`💧 Identifier une goutte d’eau précise dans ${litres.toLocaleString("fr-FR")} litres`);
+	  }
+	  
+	  const tiragesParAn = 104;
+	  const daysPerDraw = 365.25 / tiragesParAn;
+	  const totalDays = N * daysPerDraw;
+	  const temps = formatTimeInDays(totalDays);
+	  examples.push(`⏳&nbsp;En jouant à chaque tirage, il faudrait en moyenne :<br><strong style="margin-left: 1.5em;">${temps}</strong>`);
+
+	  return examples;
+	}
+
+	function openExamplesModal(N) {
+	  const modal    = document.getElementById("examplesModal");
+	  const overlay  = document.getElementById("modalOverlay");
+	  const content  = document.getElementById("examplesContent");
+
+	  const listHTML = generateProbabilityExamples(N)
+						 .map(t => `<li>${t}</li>`)
+						 .join("");
+
+	  const entier = Math.round(N);
+	content.innerHTML =
+	  `<p style="font-size:1.3em; font-weight:bold; margin-top:5px; margin-bottom:16px;">
+		1 chance sur ${entier.toLocaleString("fr-FR")}
+	  </p>` +
+	  `<ul>${listHTML}</ul>`;
+
+
+	  modal.style.display   = "block";
+	  overlay.style.display = "block";
+	}
+
+
+	document.getElementById("closeExamplesBtn").addEventListener("click", () => {
+	  document.getElementById("examplesModal").style.display = "none";
+	  document.getElementById("modalOverlay").style.display  = "none";
+	});
+
+	document.getElementById("modalOverlay").addEventListener("click", function () {
+	  document.getElementById("examplesModal").style.display = "none";
+	});
 	
 	function savePrizeFormData() {
 	  const form = document.getElementById("prizesForm");
@@ -1238,9 +1398,10 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  }
 		}
       const percent = (pGlobal * 100).toFixed(8);
-      const reciprocalFormatted = pGlobal > 0
-        ? (1 / pGlobal).toLocaleString('de-DE', { maximumFractionDigits: 0 })
-        : "∞";
+	  const reciprocalFormatted = pGlobal > 0
+	  ? Math.floor(1 / pGlobal).toLocaleString('fr-FR')
+	  : "∞";
+	  lastOdds = pGlobal > 0 ? 1 / pGlobal : Infinity;
 		const POSSIBILITIES = 5_000_000;
 
 		let totalSimpleGrids = 0;
@@ -1258,9 +1419,16 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  : "∞";
 
 		const lignes = [
-		  `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ★) : ${percent}%`,
-		  `1 chance sur ${reciprocalFormatted}`
+		  `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ◉) : ${percent}%`
 		];
+
+		const probLine =
+		  `1 chance sur ${reciprocalFormatted}`
+		  + (isFinite(lastOdds)
+			  ? ` <a id="examplesLink" href="#" style="color:#187ad2;">(voir des exemples)</a>`
+			  : "");
+
+		lignes.push(probLine);
 
 		if (document.getElementById("myMillonCheckbox").checked) {
 		  lignes.push(
@@ -1272,6 +1440,13 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		}
 
 		document.getElementById("chanceDisplay").innerHTML = lignes.join("<br>");
+		const link = document.getElementById("examplesLink");
+		if (link) {
+		  link.addEventListener("click", function(e) {
+			e.preventDefault();
+			openExamplesModal(lastOdds);
+		  });
+		}
 
     }
 
@@ -2039,6 +2214,14 @@ document.getElementById("modalOverlay").addEventListener("click", function () {
   this.style.display = "none";
   document.body.style.overflow = "";
 });
+
+const link = document.getElementById("examplesLink");
+if (link) {
+  link.addEventListener("click", function(e) {
+    e.preventDefault();
+    openExamplesModal(lastOdds);
+  });
+}
   </script>
 </body>
 </html>
