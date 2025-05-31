@@ -326,9 +326,9 @@
         </div>
         <div class="form-group" id="customSettings" style="display:none;">
           <label for="customGrids">
-            Mes grilles personnalisées :<br>
-            Entrez une grille par ligne au format "num1,num2,... ; chance1,..."<br>
-            Exemple: <em>1,2,3,4,5 ; 6</em>
+			Mes grilles personnalisées :<br>
+			• Grille complète : <em>1,2,3,4,5 ; 1</em><br>
+			• Ou bien : identifiant unique, ex. <em>12345678</em>
           </label>
           <br>
           <textarea id="customGrids" rows="4" cols="42" placeholder="Une grille par ligne"></textarea>
@@ -415,7 +415,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 <div style="margin-top:8px;">
   <input type="checkbox" id="showCombinationNumber">
   <label for="showCombinationNumber">
-    Numéro unique
+    Identifiant unique
 <span class="info-icon" title="Afficher pour chaque grille ou tirage son identifiant unique.
 Permet d’identifier précisément une combinaison parmi les 19 068 840 possibles au loto classique.
 
@@ -533,17 +533,15 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	let lastY;
 	let lastOdds = Infinity;
 	
-	// Calcule le rang lexicographique d'une combinaison
+
 	function combinationIndex(numbers, star, numMax = 49, starMax = 10) {
-	  // numbers trié croissant, star = entier (1-based)
-	  function C(n, k) { // nombre de combinaisons n parmi k
+	  function C(n, k) { 
 		if (k > n) return 0;
 		let r = 1;
 		for (let i = 0; i < k; i++) r *= (n - i) / (i + 1);
 		return r;
 	  }
 
-	  // Index des numéros (combinaison lexicographique)
 	  let idx = 0;
 	  let k = numbers.length;
 	  let prev = 0;
@@ -555,13 +553,33 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		prev = ni;
 	  }
 
-	  // Ajoute l’index lié à la chance
 	  idx = idx * starMax + (star - 1);
 
-	  return idx + 1; // 1-based
+	  return idx + 1;
+	}
+	
+	function combinationFromIndex(idx, numMax = 49, starMax = 10) {
+	  if (idx < 1 || idx > combination(numMax, 5) * starMax)
+		throw new RangeError("Index hors bornes");
+
+	  idx--;
+	  const star = (idx % starMax) + 1;
+	  let rank   = Math.floor(idx / starMax);
+
+	  const nums = [];
+	  let prev = 0;
+	  for (let k = 5; k >= 1; k--) {
+		let n = prev + 1;
+		while (combination(numMax - n, k - 1) <= rank) {
+		  rank -= combination(numMax - n, k - 1);
+		  n++;
+		}
+		nums.push(n);
+		prev = n;
+	  }
+	  return { numbers: nums, stars: [star] };
 	}
 
-		
 	function formatTimeInDays(totalDays) {
 	  const joursTotal = Math.floor(totalDays);
 	  let centuries = Math.floor(joursTotal / 36500);
@@ -1152,21 +1170,35 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
                 .filter(n => !isNaN(n));
     }
 
-    function parseCustomGrids(str) {
-      const lines = str.split('\n').filter(line => line.trim() !== '');
-      const tickets = [];
-      lines.forEach(line => {
-        const parts = line.split(';');
-        if (parts.length === 2) {
-          const numbers = parseCustomInput(parts[0]);
-          const stars = parseCustomInput(parts[1]);
-          if (numbers.length > 0 && stars.length > 0) {
-            tickets.push({ numbers: numbers.sort((a, b) => a - b), stars: stars.sort((a, b) => a - b) });
-          }
-        }
-      });
-      return tickets;
-    }
+	function parseCustomGrids(str) {
+	  const lines = str.split('\n').filter(l => l.trim() !== '');
+	  const tickets = [];
+
+	  lines.forEach(line => {
+		const trimmed = line.trim();
+
+		if (trimmed.includes(';')) {
+		  const [numsPart, starPart] = trimmed.split(';');
+		  const numbers = parseCustomInput(numsPart);
+		  const stars   = parseCustomInput(starPart);
+		  if (numbers.length && stars.length) {
+			tickets.push({ numbers: numbers.sort((a,b)=>a-b),
+						   stars  : stars.sort((a,b)=>a-b) });
+		  }
+		  return;
+		}
+
+		if (/^\d+$/.test(trimmed)) {
+		  const idx = parseInt(trimmed, 10);
+		  try {
+			tickets.push(combinationFromIndex(idx));
+		  } catch { /* index hors bornes : on ignore */ }
+		}
+	  });
+
+	  return tickets;
+	}
+
 
     function ballHTML(value, type){
       const cls = type === "star" ? "star-ball" : "number-ball";
@@ -1192,19 +1224,16 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
 						 Numéros : ${highlightedNums}<br>
 						 Chance : ${highlightedStars}${myMillion ? `<br>Code Loto : ${formatMyMillion(ticket.myMillon)}` : ""}`;
-						 
-		  // === AJOUTE ÇA ICI ===
-  const showIdx = document.getElementById("showCombinationNumber")?.checked;
-  if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 5) {
-    const combIdx = combinationIndex(ticket.numbers, ticket.stars[0]);
-    div.innerHTML += `<br><small style="color:gray;">N° unique : ${combIdx.toLocaleString('fr-FR')}</small>`;
-  }
-  // =====================
+
+	  const showIdx = document.getElementById("showCombinationNumber")?.checked;
+	  if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 5) {
+		const combIdx = combinationIndex(ticket.numbers, ticket.stars[0]);
+		div.innerHTML += `<br><small style="color:gray;">N° unique : ${combIdx.toLocaleString('fr-FR')}</small>`;
+	  }
 						 
 		document.getElementById("ticketsContainer").appendChild(div);
 	  });
 	}
-
 
 	function highlightMatches(values, drawValues, type) {
 	  const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
@@ -1794,7 +1823,7 @@ if (link) {
               if (gainChart) {
               	gainChart.data.datasets[0].data.push({ x: count, y: balance });
               	gainChart.update();
-		lastY = balance;
+				lastY = balance;
               }
 
               stopFlag = true;
@@ -1819,21 +1848,41 @@ if (link) {
                 const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
                 const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
                 let myMillionDisplay = formatMyMillion(ticket.myMillon);
-                if (isWinning) {
-                  myMillionDisplay = `<span style="color: green; font-weight: bold;">${formatMyMillion(ticket.myMillon)}</span>`;
-                }
-                div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
-                                 Numéros : ${highlightedNums}<br>
-                                 Chance : ${highlightedStars}<br>
-                                 Code Loto : ${myMillionDisplay}`;
+				  let ticketLabel = `<strong>Ticket ${index + 1}</strong>`;
+			  if (document.getElementById("showCombinationNumber")?.checked 
+				  && ticket.stars.length === 1 
+				  && ticket.numbers.length === 5) {
+				const combIdx = combinationIndex(ticket.numbers, ticket.stars[0]);
+				ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
+			  }
+				if (isWinning) {
+					myMillionDisplay = `<span style="color: green; font-weight: bold;">${formatMyMillion(ticket.myMillon)}</span>`;
+				}
+			  div.innerHTML = `
+				${ticketLabel} :<br>
+				Numéros : ${highlightedNums}<br>
+				Chance  : ${highlightedStars}<br>
+				Code Loto : ${myMillionDisplay}
+			  `;
                 document.getElementById("ticketsContainer").appendChild(div);
               });
-	const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
-	document.getElementById("resultat").innerHTML =
-	  `<strong>Tirage :</strong><br>
-	   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
-	   Chance : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}<br>
-	   Code Loto : ${formatCodesList(draw.myMillon)}`;
+			let tirageLabel = `<strong>Tirage</strong>`;
+			if (
+			  document.getElementById("showCombinationNumber")?.checked &&
+			  draw.numbers.length === 5 &&
+			  draw.stars.length === 1
+			) {
+			  const idx = combinationIndex(draw.numbers, draw.stars[0]);
+			  tirageLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${idx.toLocaleString('fr-FR')})</span>`;
+			}
+
+			const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+			document.getElementById("resultat").innerHTML =
+			  `${tirageLabel} :<br>` +
+			  `Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>` +
+			  `Chance  : ${isPlain ? simpleTextList(draw.stars)   : balls(draw.stars,   "star")}<br>` +
+			  `Code Loto : ${formatCodesList(draw.myMillon)}`;
+
               document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
               document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
               updateTimePassed(count);
@@ -1924,19 +1973,41 @@ if (link) {
             div.className = "ticket";
             const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
             const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
-            div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
-                             Numéros : ${highlightedNums}<br>
-                             Chance : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(ticket.myMillon) : ""}`;
+		let ticketLabel = `<strong>Ticket ${index + 1}</strong>`;
+		const showIdx = document.getElementById("showCombinationNumber")?.checked;
+		if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 5) {
+		  const combIdx = combinationIndex(ticket.numbers, ticket.stars[0]);
+		  ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
+		}
+		div.innerHTML = `${ticketLabel} :<br>
+						 Numéros : ${highlightedNums}<br>
+						 Chance : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(ticket.myMillon) : ""}`;
+						 document.getElementById("ticketsContainer").appendChild(div);
             if (ticket === winningTicket) {
               div.classList.add("winning");
             }
             document.getElementById("ticketsContainer").appendChild(div);
           });
-			const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
-			document.getElementById("resultat").innerHTML =
-			  `<strong>Tirage :</strong><br>
-			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
-			   Chance : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatCodesList(draw.myMillon) : ""}`;
+		  
+		let tirageLabel = `<strong>Tirage</strong>`;  
+		if (  
+		  document.getElementById("showCombinationNumber")?.checked  
+		  && draw.numbers.length === 5  
+		  && draw.stars.length === 1  
+		) {  
+		  const idx = combinationIndex(draw.numbers, draw.stars[0]);  
+		  tirageLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${idx.toLocaleString('fr-FR')})</span>`;  
+		}
+
+		const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;  
+		document.getElementById("resultat").innerHTML =  
+		  `${tirageLabel} :<br>` +  
+		  `Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>` +  
+		  `Chance  : ${isPlain ? simpleTextList(draw.stars)   : balls(draw.stars,   "star")}` +  
+		  (document.getElementById("myMillonCheckbox").checked  
+			? `<br>Code Loto : ${formatCodesList(draw.myMillon)}`  
+			: "");  
+
 
           document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
           document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
@@ -2037,16 +2108,14 @@ if (link) {
 		div.innerHTML = `${ticketLabel} :<br>
 						 Numéros : ${highlightedNums}<br>
 						 Chance : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(ticket.myMillon) : ""}`;
-
-
-				document.getElementById("ticketsContainer").appendChild(div);
+						document.getElementById("ticketsContainer").appendChild(div);
       });
 	  
-	    window._lastTicketsData = {
-    tickets: tickets,
-    draw: draw,
-    myMillion: document.getElementById("myMillonCheckbox").checked
-  };
+	window._lastTicketsData = {
+	  tickets: tickets,
+	  draw: draw,
+	  myMillion: document.getElementById("myMillonCheckbox").checked
+	};
 	  
 	const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
 	document.getElementById("resultat").innerHTML =
