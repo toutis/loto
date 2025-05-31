@@ -7,148 +7,6 @@
   <meta charset="UTF-8">
   <title>Simulation Loto</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    serverTimestamp,
-    getDocs,
-    query,
-    orderBy
-  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBkDJ8QEXxngtAAnaoeAIcQvzNHQtKgvRk",
-    authDomain: "loto-9cc1a.firebaseapp.com",
-    projectId: "loto-9cc1a",
-    storageBucket: "loto-9cc1a.firebasestorage.app",
-    messagingSenderId: "723702345446",
-    appId: "1:723702345446:web:02cb125e77d08f57361527"
-  };
-  
-  window.query = query;
-  window.orderBy = orderBy;
-  window.collection = collection;
-  window.getDocs = getDocs;
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  window.db = db;
-
-window.recordWin = async function(pseudo, info) {
-  try {
-    await addDoc(
-      collection(db, "ClassementLoto"),
-      {
-        pseudo:           pseudo,
-        tirages:          info.tirages,
-        tickets:          info.tickets,
-        grillesSimples:   info.grillesSimples,
-        temps:            info.temps,
-        createdAt:        serverTimestamp()
-      }
-    );
-    console.log("✔️ Score enregistré pour", pseudo, "avec", info.tirages, "tirages et", info.tickets, "tickets.");
-    loadLeaderboard();
-  } catch (e) {
-    console.error("❌ Erreur lors de l’enregistrement :", e);
-  }
-};
-
-async function loadLeaderboard() {
-  try {
-	const q = query(
-	  collection(db, "ClassementLoto"),
-	  orderBy("tickets", "asc"),
-	  orderBy("tirages", "asc")
-	);
-    const querySnapshot = await getDocs(q);
-
-    const tbody = document.querySelector("#leaderboard tbody");
-    tbody.innerHTML = ""; 
-
-    let rang = 1;
-    querySnapshot.forEach((docSnap) => {
-	if (rang > 20) return;
-    const data = docSnap.data();
-
-    if (typeof data.grillesSimples === "undefined") return;
-	if (data.tickets <= 0) return;
-	  
-    const tr = document.createElement("tr");
-
-	const tdRank = document.createElement("td");
-	tdRank.classList.add("rang");
-
-	switch (rang) {
-	  case 1:
-		tdRank.style.color = "#d4af37";
-		break;
-	  case 2:
-		tdRank.style.color = "#a8a9ad";
-		break;
-	  case 3:
-		tdRank.style.color = "#b87333";
-		break;
-	  default:
-		tdRank.style.color = "#444";
-		break;
-	}
-
-
-	tdRank.textContent = rang + ".";
-	tr.appendChild(tdRank);
-
-
-      const tdPseudo = document.createElement("td");
-      tdPseudo.classList.add("pseudo");
-      tdPseudo.textContent = (typeof data.pseudo === "string" && data.pseudo.length > 20) ? "Anonyme" : data.pseudo;
-      tr.appendChild(tdPseudo);
-
-      const tdTickets = document.createElement("td");
-      tdTickets.textContent = data.tickets;
-      tr.appendChild(tdTickets);
-
-      const tdTirages = document.createElement("td");
-      tdTirages.textContent = Number(data.tirages).toLocaleString('de-DE');
-      tr.appendChild(tdTirages);
-
-      const tdTemps = document.createElement("td");
-      tdTemps.textContent = data.temps;
-      tr.appendChild(tdTemps);
-
-      tdRank.setAttribute("data-label", "Rang");
-      tdPseudo.setAttribute("data-label", "Pseudo");
-      tdTickets.setAttribute("data-label", "Tickets");
-      tdTirages.setAttribute("data-label", "Tirages");
-      tdTemps.setAttribute("data-label", "Temps");
-
-      tbody.appendChild(tr);
-
-      rang++;
-    });
-
-    if (tbody.children.length === 0) {
-      const trEmpty = document.createElement("tr");
-      const tdEmpty = document.createElement("td");
-      tdEmpty.setAttribute("colspan", 5);
-      tdEmpty.classList.add("empty");
-      tdEmpty.textContent = "Il n'y a pas encore de gagnant.";
-      trEmpty.appendChild(tdEmpty);
-      tbody.appendChild(trEmpty);
-    }
-
-  } catch (err) {
-    console.error("Erreur lors du chargement du classement :", err);
-  }
-}
-
-  loadLeaderboard();
-</script>
-
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   <style>
     body {
@@ -428,95 +286,6 @@ async function loadLeaderboard() {
 		max-width: 100%;
 	  }
 	}
-	
-	.leaderboard-table {
-	  width: 100%;
-	  border-collapse: collapse;
-	  margin-top: 12px;
-	  font-size: 0.95rem;
-	  background-color: #fff;
-	  border-radius: 6px;
-	  overflow: hidden;
-	  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-	}
-
-	.leaderboard-table thead {
-	  background-color: #aeb6bf;
-	}
-	
-	#leaderboard {
-	  margin-bottom: 160px;
-	}
-
-	.leaderboard-table th {
-	  color: #fff;
-	  padding: 10px 12px;
-	  text-align: left;
-	  font-weight: 500;
-	}
-	.leaderboard-table tbody tr {
-	  border-bottom: 1px solid #e0e0e0;
-	}
-	.leaderboard-table tbody tr:last-child {
-	  border-bottom: none;
-	}
-	.leaderboard-table td {
-	  padding: 10px 12px;
-	  color: #333;
-	}
-	.leaderboard-table tbody tr:hover {
-	  background-color: #f0f8ff;
-	}
-	.leaderboard-table td.rang {
-	  font-weight: bold;
-	  color: #2980b9;
-	  width: 50px
-	}
-	.leaderboard-table td.pseudo {
-	  color: #2c3e50;
-	  font-weight: 500;
-	}
-	@media (max-width: 600px) {
-	  .leaderboard-table,
-	  .leaderboard-table thead,
-	  .leaderboard-table tbody,
-	  .leaderboard-table th,
-	  .leaderboard-table td,
-	  .leaderboard-table tr {
-		display: block;
-	  }
-	  .leaderboard-table thead {
-		position: absolute;
-		top: -9999px;
-		left: -9999px;
-	  }
-	  .leaderboard-table tr {
-		margin-bottom: 12px;
-	  }
-	  .leaderboard-table td {
-		display: flex;
-		justify-content: space-between;
-		padding: 8px;
-		border-bottom: 1px solid #e0e0e0;
-		position: relative;
-		text-align: right;
-	  }
-	  .leaderboard-table td::before {
-		content: attr(data-label);
-		flex-basis: 50%;
-		text-align: left;
-		font-weight: bold;
-		color: #555;
-	  }
-	  .leaderboard-table td:last-child {
-		border-bottom: none;
-	  }
-	}
-	#classement-title {
-	  margin-top: 140px;
-	  font-size: 1.40em;
-	}
-
 
   </style>
 </head>
@@ -660,33 +429,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
           <button id="resetBtn">Reset</button>
         </div>
       </div>
-		<h3 id="classement-title">
-		  🏆 Classement des meilleurs joueurs
-		  <span class="info-icon" style="margin-left:6px;" title="Ce classement présente les 20 meilleurs résultats de la simulation : 
-Les joueurs ayant remporté le gros lot avec le plus petit nombre de grilles jouées 
-et de tirages nécessaires.
-
-Pour chaque joueur, sont affichés : le pseudo, le nombre total de grilles, de tirages, 
-ainsi que le temps virtuel requis pour y parvenir.
-
-⚠️ Cette fonctionnalité est actuellement en phase de test et pourrait être retirée à l’avenir.">i</span></h3>
-
-<table id="leaderboard" class="leaderboard-table">
-  <thead>
-    <tr>
-      <th>Rang</th>
-      <th>Pseudo</th>
-      <th>Tickets</th>
-      <th>Tirages</th>
-      <th>Temps</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Les lignes du classement seront injectées ici via JavaScript -->
-  </tbody>
-</table>
-</div>
-
+    </div>
     <div class="right-column">
       <div id="chanceDisplay"></div>
       <div class="section display" id="resultat">
@@ -1021,7 +764,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
     let totalGrillesJouees = 0;
 
     let simulationActive = false; 
-	let lastPseudo = null;
     let simulationHasStarted = false;
 
 	const prizeMapping = {
@@ -1643,7 +1385,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       updateSpeedFromSlider(this.value);
     });
 
-    async function runLoop() {
+    function runLoop() {
       removeLooseImages();
       if (stopFlag) return;
       simulationActive = true;
@@ -1994,51 +1736,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
                 "Nombre de tirages : " + count.toLocaleString('de-DE') + "\n" +
 				"Temps écoulé : " + tempsEcoule + "\n" +
                 "Gain : " + winningGain.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
-
-			const numTickets = parseInt(document.getElementById("numTickets").value) || 1;
-			const numCount   = parseInt(document.getElementById("ticketNumbersCount").value) || 5;
-			const starCount  = parseInt(document.getElementById("ticketStarsCount").value) || 1;
-			const simpleGridsPerTicket = combination(numCount, 5) * combination(starCount, 1);
-			const totalSimpleGrids = simpleGridsPerTicket * numTickets;
-
-			if (winningMatchNumbers === 5 && winningMatchStars === 1) {
-			  const q = query(
-				collection(db, "ClassementLoto"),
-				orderBy("tickets", "asc"),
-				orderBy("tirages", "asc")
-			  );
-			  const querySnapshot = await getDocs(q);
-			  const results = [];
-
-			  querySnapshot.forEach(docSnap => {
-				const data = docSnap.data();
-				if (typeof data.grillesSimples === "undefined") return;
-				results.push(data);
-			  });
-
-			  // Vérifie si le score actuel est meilleur que le 20e
-			  const isInTop20 = results.length < 20 ||
-				results.length >= 20 && (
-				  tickets < results[19].tickets ||
-				  (tickets === results[19].tickets && count < results[19].tirages)
-				);
-
-			  if (isInTop20) {
-				if (!lastPseudo) {
-				  let inputPseudo = prompt("Bravo ! Quel pseudo pour le classement ?") || "Anonyme";
-				  if (inputPseudo.length > 20) inputPseudo = "Anonyme";
-				  lastPseudo = inputPseudo;
-				}
-				const pseudo = lastPseudo;
-				await recordWin(pseudo, {
-				  tirages: count,
-				  tickets: totalSimpleGrids,
-				  grillesSimples: totalSimpleGrids,
-				  temps: tempsEcoule
-				});
-			  }
-			}
-
 
           if (balance >= 1) {
             playSound("win.mp3");
