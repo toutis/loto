@@ -1571,9 +1571,9 @@ function combinationIndexToTicket(idx, numMax = 40, starMax = 5, nNum = 5, nStar
 	  lastOdds = pGlobal > 0 ? 1 / pGlobal : Infinity;
 		const lignes = [
 		  `Taux de chance (pour au moins ${stopNumbers} n° et ${stopStars} ◉) : ${percent}%`,
-		  `1 chance sur ${reciprocalFormatted}` +
+		  `1 chance sur ${reciprocalFormatted} - ` +
 			(isFinite(lastOdds)
-			  ? ` <a id="examplesLink" href="#" style="color:#187ad2;">(voir des exemples)</a>`
+			  ? ` <a id="examplesLink" href="#" style="color:#187ad2;">Exemples concrets</a>`
 			  : "")
 		];
 
