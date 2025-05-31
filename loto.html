@@ -2000,13 +2000,13 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			const simpleGridsPerTicket = combination(numCount, 5) * combination(starCount, 1);
 			const totalSimpleGrids = simpleGridsPerTicket * numTickets;
 
-			if (!lastPseudo) {
-			  lastPseudo = prompt("Bravo ! Quel pseudo pour le classement ?") || "Anonyme";
-			}
-			const pseudo = lastPseudo;
-
-
 			if (winningMatchNumbers === 5 && winningMatchStars === 1) {
+			
+			  if (!lastPseudo) {
+			    lastPseudo = prompt("Bravo ! Quel pseudo pour le classement ?") || "Anonyme";
+			  }
+			  const pseudo = lastPseudo;
+
 			  const q = query(
 				collection(db, "ClassementLoto"),
 				orderBy("tickets", "asc"),
