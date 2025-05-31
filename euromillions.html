@@ -413,7 +413,7 @@
 		</div>
         <div class="form-group">
           <input type="checkbox" id="stopNegativeGainCheckbox">
-          <label for="stopNegativeGainCheckbox">Stopper si le Solde est négatif à :</label>
+          <label for="stopNegativeGainCheckbox">Stopper si le solde est négatif à :</label>
           <input type="number" id="stopNegativeGainThreshold" value="10000" step="0.01" style="width:100px;">
         </div>
         <div class="form-group">
@@ -443,7 +443,7 @@ Le gagnant dont le numéro correspond exactement à celui du tirage remporte 1 0
 		  <div>
 			<input type="checkbox" id="multichanceCheckbox">
 			<label for="multichanceCheckbox">
-			  Multichance <span class="info-icon" title="L'option Multichance : Il permet de réduire votre mise en répartissant votre investissement sur plusieurs parts.
+			  Multichance <span class="info-icon" title="L'option MultiÉtoiles : Il permet de réduire votre mise en répartissant votre investissement sur plusieurs parts.
 Cela diminue le coût par ticket, mais réduit également les gains proportionnellement au nombre de parts détenues.
 Cette option est utilisée seulement avec une dizaine de grilles multiples.
 Exemple : 10 grilles multiples (7 numéros, 4 étoiles), 1 à 10 parts sur 420">i</span>
@@ -472,7 +472,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 		<div style="margin-top:8px;">
 		  <input type="checkbox" id="showCombinationNumber">
 		  <label for="showCombinationNumber">
-			Numéro unique
+			Identité unique
 		<span class="info-icon" title="Afficher pour chaque grille ou tirage son identifiant unique.
 Permet d’identifier précisément une combinaison parmi les 19 068 840 possibles au loto classique.
 
@@ -2031,7 +2031,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		}
 		div.innerHTML = `${ticketLabel} :<br>
 						 Numéros : ${highlightedNums}<br>
-						 Chance : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(ticket.myMillon) : ""}`;
+						 Étoiles : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(ticket.myMillon) : ""}`;
 						 document.getElementById("ticketsContainer").appendChild(div);
             if (ticket === winningTicket) {
               div.classList.add("winning");
@@ -2053,7 +2053,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		document.getElementById("resultat").innerHTML =
 		  `${tirageLabel} :<br>` +
 		  `Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>` +
-		  `Chance  : ${isPlain ? simpleTextList(draw.stars)   : balls(draw.stars,   "star")}` +
+		  `Étoiles : ${isPlain ? simpleTextList(draw.stars)   : balls(draw.stars,   "star")}` +
 		  (document.getElementById("myMillonCheckbox").checked
 			? `<br>My Million : ${formatMyMillion(draw.myMillon)}`
 			: "");
@@ -2115,7 +2115,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			document.getElementById("resultat").innerHTML =
 			  `<strong>Tirage :</strong><br>
 			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
-			   Chance : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(draw.myMillon) : ""}`
+			   Étoiles : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(draw.myMillon) : ""}`
 
             document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
             document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');

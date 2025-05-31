@@ -405,9 +405,9 @@
         </div>
         <div class="form-group" id="customSettings" style="display:none;">
           <label for="customGrids">
-            Mes grilles personnalisées :<br>
-            Entrez une grille par ligne au format "num1,num2,... ; dream1,..."<br>
-            Exemple: <em>1,2,3,4,5,6 ; 1</em>
+			Mes grilles personnalisées :<br>
+			• Grille complète : <em>1,2,3,4,5,6 ; 1</em><br>
+			• Ou bien : identifiant unique, ex. <em>12345678</em>
           </label>
           <br>
           <textarea id="customGrids" rows="4" cols="42" placeholder="Une grille par ligne"></textarea>
@@ -424,17 +424,18 @@
           <label for="numTickets">Nombre de tickets par tirage :</label>
           <input type="number" id="numTickets" value="1" min="1">
         </div>
-        <div class="form-group">
-          <label for="stopNumbers">Stopper si au moins X numéros corrects :</label>
-          <input type="number" id="stopNumbers" value="6" min="0" max="6">
-        </div>
-        <div class="form-group">
-          <label for="stopStars">Stopper si au moins Y dream correctes :</label>
-          <input type="number" id="stopStars" value="1" min="0" max="1">
-        </div>
+		<div class="form-group" style="align-items: center; gap: 8px;">
+		  <label for="stopNumbers" style="margin-right: 6px;">
+			Stopper si au moins&nbsp;X numéros corrects&nbsp;:
+		  </label>
+		  <input type="number" id="stopNumbers" value="6" min="0" max="6"
+				 style="width: 37px;">
+		  <input type="number" id="stopStars" value="1" min="0" max="1"
+				 style="width: 37px;">
+		</div>
         <div class="form-group">
           <input type="checkbox" id="stopNegativeGainCheckbox">
-          <label for="stopNegativeGainCheckbox">Stopper si le Solde est négatif à :</label>
+          <label for="stopNegativeGainCheckbox">Stopper si le solde est négatif à :</label>
           <input type="number" id="stopNegativeGainThreshold" value="10000" step="0.01" style="width:100px;">
         </div>
         <div class="form-group">
@@ -471,11 +472,11 @@ Cette option est utilisée seulement avec une dizaine de grilles multiples.
 Exemple : 10 grilles multiples (6 numéros, 10 Chance), 1 à 10 parts sur 200">i</span>
 			</label>
 		  </div>
-
-		  <div>
-			<input type="checkbox" id="smartDrawCheckbox">
-			<label for="smartDrawCheckbox" style="margin-left: 4px;">
-			  Grille optimisée
+			<div style="display: flex; align-items: center; gap: 24px; margin-bottom: 6px;">
+			  <span>
+				<input type="checkbox" id="smartDrawCheckbox">
+				<label for="smartDrawCheckbox" style="margin-left: 4px;">
+				  Grille optimisée
 <span class="info-icon" title="Active une stratégie de sélection basée sur la rareté.
 
 Les numéros et dream les moins souvent tirés au cours des 70 derniers tirages 
@@ -485,10 +486,21 @@ l’idée de compenser une sous-fréquence apparente.
 ⚠️ En réalité, chaque tirage est totalement indépendant des précédents, 
 et tous les numéros ont toujours exactement la même probabilité de sortir.
 Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
+				</label>
+			  </span>
+			  <span>
+				<input type="checkbox" id="showCombinationNumber">
+				<label for="showCombinationNumber">
+				  Identité unique
+					<span class="info-icon" title="Afficher pour chaque grille ou tirage son identifiant unique.
+Permet d’identifier précisément une combinaison parmi les 19 068 840 possibles au loto classique.
 
-			</label>
-
-		  </div>
+Utile pour analyser, comparer, et réaliser le nombre immense de combinaisons possibles.">
+					  i
+					</span>
+				</label>
+			  </span>
+			</div>
 		</div>
 
 		<div class="form-group" id="stopMyMillonWinGroup" style="margin-left: 10px; margin-bottom: 10px;">
@@ -594,6 +606,109 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	let gainChart = null;
 	let lastY;
 	let lastOdds = Infinity;
+
+
+		
+	function isValidCombinationIndex(idx) {
+	  return Number.isInteger(idx) && idx >= 1 && idx <= combination(40, 5) * combination(5, 1);
+	}
+		
+// Génère l'index unique pour n'importe quelle combinaison numéros + chance
+function combinationIndex(numbers, stars, numMax = 40, starMax = 5, nNum = numbers.length, nStar = stars.length) {
+  if (!Array.isArray(numbers) || numbers.length !== nNum) return null;
+  if (!Array.isArray(stars)   || stars.length   !== nStar) return null;
+
+  // Index des numéros (combinaison ordonnée croissante)
+  let idxNum = 0, prev = 0;
+  for (let i = 0; i < nNum; i++) {
+    for (let n = prev + 1; n < numbers[i]; n++) {
+      idxNum += combination(numMax - n, nNum - (i + 1));
+    }
+    prev = numbers[i];
+  }
+
+  // Index de la chance (simple si une seule)
+  let idxStar = 0;
+  if (nStar === 1) {
+    idxStar = stars[0] - 1; // de 0 à starMax-1
+  } else {
+    // Pour plusieurs chances, lexicographique aussi
+    let temp = [...stars].sort((a, b) => a - b);
+    let prevS = 0;
+    for (let i = 0; i < nStar; i++) {
+      for (let s = prevS + 1; s < temp[i]; s++) {
+        idxStar += combination(starMax - s, nStar - (i + 1));
+      }
+      prevS = temp[i];
+    }
+  }
+
+  return idxNum * combination(starMax, nStar) + idxStar + 1; // 1-based
+}
+
+// Inverse : à partir de l’index, retrouve la grille
+function combinationIndexToTicket(idx, numMax = 40, starMax = 5, nNum = 5, nStar = 1) {
+  idx--; // 0-based
+  const STAR_COMBOS = combination(starMax, nStar);
+  const starIdx = idx % STAR_COMBOS;
+  let rank = Math.floor(idx / STAR_COMBOS);
+
+  // Numéros
+  let nums = [];
+  let prev = 0;
+  for (let k = nNum; k >= 1; k--) {
+    let n = prev + 1;
+    while (combination(numMax - n, k - 1) <= rank) {
+      rank -= combination(numMax - n, k - 1);
+      n++;
+    }
+    nums.push(n);
+    prev = n;
+  }
+
+  // Chance(s)
+  let stars = [];
+  let pool = [];
+  for (let i = 1; i <= starMax; i++) pool.push(i);
+  let left = nStar;
+  let sIdx = starIdx;
+  for (let i = 0; i < nStar; i++) {
+    let s = pool[0];
+    let j = 0;
+    while (combination(starMax - s, left - 1) <= sIdx) {
+      sIdx -= combination(starMax - s, left - 1);
+      s++;
+      j++;
+    }
+    stars.push(s);
+    pool.splice(j, 1);
+    left--;
+  }
+  return { numbers: nums, stars: stars };
+}
+
+
+	function combinationFromIndex(idx, numMax = 40, starMax = 1) {
+	  if (idx < 1 || idx > combination(numMax, 5) * starMax)
+		throw new RangeError("Index hors bornes");
+
+	  idx--;
+	  const star = (idx % starMax) + 1;
+	  let rank   = Math.floor(idx / starMax);
+
+	  const nums = [];
+	  let prev = 0;
+	  for (let k = 5; k >= 1; k--) {
+		let n = prev + 1;
+		while (combination(numMax - n, k - 1) <= rank) {
+		  rank -= combination(numMax - n, k - 1);
+		  n++;
+		}
+		nums.push(n);
+		prev = n;
+	  }
+	  return { numbers: nums, stars: [star] };
+	}
 		
 	function formatTimeInDays(totalDays) {
 	  const joursTotal = Math.floor(totalDays);
@@ -1168,38 +1283,62 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	  return draw;
 	}
 
-
-
     function countMatches(arr1, arr2) {
       return arr1.filter(x => arr2.includes(x)).length;
     }
-
-    function parseCustomInput(str) {
+	
+	function parseCustomInput(str) {
       return str.split(',')
                 .map(s => parseInt(s.trim()))
                 .filter(n => !isNaN(n));
     }
 
-    function parseCustomGrids(str) {
-      const lines = str.split('\n').filter(line => line.trim() !== '');
-      const tickets = [];
-      lines.forEach(line => {
-        const parts = line.split(';');
-        if (parts.length === 2) {
-          const numbers = parseCustomInput(parts[0]);
-          const stars = parseCustomInput(parts[1]);
-          if (numbers.length > 0 && stars.length > 0) {
-            tickets.push({ numbers: numbers.sort((a, b) => a - b), stars: stars.sort((a, b) => a - b) });
-          }
-        }
-      });
-      return tickets;
-    }
+	function parseCustomGrids(str) {
+	  const lines = str.split('\n').filter(line => line.trim() !== '');
+	  const tickets = [];
+	  lines.forEach(line => {
+		const raw = line.trim();
+
+		if (/^\d+$/.test(raw)) {
+		  const idx = parseInt(raw, 10);
+		  // Ici, on force bien la borne sur EuroDreams : 6 numéros (1-40), 1 dream (1-5)
+		  const maxIndex = combination(40, 6) * 5; // 5 dreams possibles
+		  if (idx >= 1 && idx <= maxIndex) {
+			const comb = combinationIndexToTicket(idx, 40, 5, 6, 1);
+			tickets.push(comb);
+			return;
+		  }
+		}
+
+		const parts = raw.split(';');
+		if (parts.length === 2) {
+		  const numbers = parseCustomInput(parts[0]);
+		  const stars = parseCustomInput(parts[1]);
+
+		  if (
+			numbers.length === 6 &&
+			stars.length === 1 &&
+			numbers.every(n => Number.isInteger(n) && n >= 1 && n <= 40) &&
+			stars.every(s => Number.isInteger(s) && s >= 1 && s <= 5)
+		  ) {
+			tickets.push({
+			  numbers: numbers.sort((a, b) => a - b),
+			  stars: stars
+			});
+		  }
+		}
+	  });
+	  return tickets;
+	}
 
     function ballHTML(value, type){
       const cls = type === "star" ? "star-ball" : "number-ball";
       return `<span class="${cls}">${value}</span>`;
     }
+	
+	function combinationBallHTML(val) {
+	  return `<span class="number-ball" style="margin-left:6px; background:#047dff; color:white; font-size:0.88em; min-width:36px;" title="Numéro unique">${val.toLocaleString('fr-FR')}</span>`;
+	}
 	
 	function refreshTicketsDisplay() {
 	  if (!window._lastTicketsData) return;
@@ -1806,14 +1945,34 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
                 if (isWinning) {
                   myMillionDisplay = `<span style="color: green; font-weight: bold;">${formatMyMillion(ticket.myMillon)}</span>`;
                 }
-                div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
-                                 Numéros : ${highlightedNums}<br>
-                                 Dream : ${highlightedStars}`;
-                document.getElementById("ticketsContainer").appendChild(div);
-              });
-	const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
-	document.getElementById("resultat").innerHTML =
-	  `<strong>Tirage :</strong><br>
+		  let ticketIndexHTML = "";
+		  if (
+			ticket.numbers?.length === 6 &&
+			ticket.stars?.length   === 1 &&
+			document.getElementById("showCombinationNumber")?.checked
+		  ) {
+			const idxUnikTicket = combinationIndex(ticket.numbers, ticket.stars);
+			ticketIndexHTML = ` <span style="color:gray; font-size:0.95em; font-weight:normal;">
+								 (${idxUnikTicket.toLocaleString('fr-FR')})
+							   </span>`;
+		  }
+
+		  div.innerHTML = `
+			<strong>Ticket ${index + 1}${ticketIndexHTML} :</strong><br>
+			Numéros : ${highlightedNums}<br>
+			Étoiles  : ${highlightedStars}<br>
+			My Million : ${myMillionDisplay}`;
+
+		  document.getElementById("ticketsContainer").appendChild(div);
+		});
+
+	   const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+	   document.getElementById("resultat").innerHTML =
+	   			  `<strong>
+				  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+					? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+					: ""} :
+			   </strong><br>
 	   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
 	   Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}<br>
 	   Code Loto : ${formatCodesList(draw.myMillon)}`;
@@ -1834,7 +1993,11 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
             document.getElementById("ticketsContainer").innerHTML = "";
 			const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
 			document.getElementById("resultat").innerHTML =
-			  `<strong>Tirage :</strong><br>
+			 			  			  `<strong>
+				  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+					? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+					: ""} :
+			   </strong><br>
 			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
 			   Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}`;
 
@@ -1906,9 +2069,16 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
             div.className = "ticket";
             const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
             const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
-            div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
-                             Numéros : ${highlightedNums}<br>
-                             Dream : ${highlightedStars}`;
+			let ticketLabel = `<strong>Ticket ${index + 1}</strong>`;
+			const showIdx = document.getElementById("showCombinationNumber")?.checked;
+			if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 6) {
+			  const combIdx = combinationIndex(ticket.numbers, ticket.stars);
+			  ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
+			}
+			div.innerHTML = `${ticketLabel} :<br>
+							 Numéros : ${highlightedNums}<br>
+							 Dreams : ${highlightedStars}`;
+							 document.getElementById("ticketsContainer").appendChild(div);
             if (ticket === winningTicket) {
               div.classList.add("winning");
             }
@@ -1916,7 +2086,11 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
           });
 			const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
 			document.getElementById("resultat").innerHTML =
-			  `<strong>Tirage :</strong><br>
+			  	  `<strong>
+				  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+					? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+					: ""} :
+			   </strong><br>
 			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
 			   Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}`;
 
@@ -1973,7 +2147,11 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			adjustTicketColumns(tickets);
 			const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
 			document.getElementById("resultat").innerHTML =
-			  `<strong>Tirage :</strong><br>
+			  	  `<strong>
+				  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+					? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+					: ""} :
+			   </strong><br>
 			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
 			   Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}`;
 
@@ -2015,10 +2193,16 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
         div.className = "ticket";
         const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
         const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
-        div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
-                         Numéros : ${highlightedNums}<br>
-                         Dreams : ${highlightedStars}`;
-        document.getElementById("ticketsContainer").appendChild(div);
+		let ticketLabel = `<strong>Ticket ${index + 1}</strong>`;
+		const showIdx = document.getElementById("showCombinationNumber")?.checked;
+		if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 6) {
+		  const combIdx = combinationIndex(ticket.numbers, ticket.stars);
+		  ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
+		}
+		div.innerHTML = `${ticketLabel} :<br>
+						 Numéros : ${highlightedNums}<br>
+						 Dreams : ${highlightedStars}`;
+						 document.getElementById("ticketsContainer").appendChild(div);
       });
 	  
 	    window._lastTicketsData = {
@@ -2029,7 +2213,11 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	  
 	const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
 	document.getElementById("resultat").innerHTML =
-	  `<strong>Tirage :</strong><br>
+	  	  `<strong>
+			  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+				? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+				: ""} :
+		   </strong><br>
 	   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
 	   Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}`;
 
