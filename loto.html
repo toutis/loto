@@ -345,14 +345,16 @@
           <label for="numTickets">Nombre de tickets par tirage :</label>
           <input type="number" id="numTickets" value="1" min="1">
         </div>
-        <div class="form-group">
-          <label for="stopNumbers">Stopper si au moins X numéros corrects :</label>
-          <input type="number" id="stopNumbers" value="5" min="0" max="5">
-        </div>
-        <div class="form-group">
-          <label for="stopStars">Stopper si au moins Y chance correctes :</label>
-          <input type="number" id="stopStars" value="1" min="0" max="1">
-        </div>
+<div class="form-group" style="align-items: center; gap: 8px;">
+  <label for="stopNumbers" style="margin-right: 6px;">
+    Stopper si au moins&nbsp;X numéros corrects&nbsp;:
+  </label>
+  <input type="number" id="stopNumbers" value="5" min="0" max="5"
+         style="width: 37px;">
+  <input type="number" id="stopStars" value="1" min="0" max="1"
+         style="width: 37px;">
+</div>
+
         <div class="form-group">
           <input type="checkbox" id="stopNegativeGainCheckbox">
           <label for="stopNegativeGainCheckbox">Stopper si le Solde est négatif à :</label>
@@ -2026,18 +2028,18 @@ if (link) {
         div.className = "ticket";
         const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
         const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
-let ticketLabel = `Ticket ${index + 1}`;
-const showIdx = document.getElementById("showCombinationNumber")?.checked;
-if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 5) {
-  const combIdx = combinationIndex(ticket.numbers, ticket.stars[0]);
-  ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
-}
-div.innerHTML = `${ticketLabel} :<br>
-                 Numéros : ${highlightedNums}<br>
-                 Chance : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(ticket.myMillon) : ""}`;
+		let ticketLabel = `<strong>Ticket ${index + 1}</strong>`;
+		const showIdx = document.getElementById("showCombinationNumber")?.checked;
+		if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 5) {
+		  const combIdx = combinationIndex(ticket.numbers, ticket.stars[0]);
+		  ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
+		}
+		div.innerHTML = `${ticketLabel} :<br>
+						 Numéros : ${highlightedNums}<br>
+						 Chance : ${highlightedStars}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatMyMillion(ticket.myMillon) : ""}`;
 
 
-        document.getElementById("ticketsContainer").appendChild(div);
+				document.getElementById("ticketsContainer").appendChild(div);
       });
 	  
 	    window._lastTicketsData = {
