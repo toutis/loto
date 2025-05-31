@@ -73,11 +73,12 @@ async function loadLeaderboard() {
     let rang = 1;
     querySnapshot.forEach((docSnap) => {
 	if (rang > 20) return;
-      const data = docSnap.data();
+    const data = docSnap.data();
 
-      if (typeof data.grillesSimples === "undefined") return;
-
-      const tr = document.createElement("tr");
+    if (typeof data.grillesSimples === "undefined") return;
+	if (data.tickets <= 0) return;
+	  
+    const tr = document.createElement("tr");
 
 	const tdRank = document.createElement("td");
 	tdRank.classList.add("rang");
@@ -104,7 +105,7 @@ async function loadLeaderboard() {
 
       const tdPseudo = document.createElement("td");
       tdPseudo.classList.add("pseudo");
-      tdPseudo.textContent = data.pseudo;
+      tdPseudo.textContent = (typeof data.pseudo === "string" && data.pseudo.length > 20) ? "Anonyme" : data.pseudo;
       tr.appendChild(tdPseudo);
 
       const tdTickets = document.createElement("td");
@@ -2001,12 +2002,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			const totalSimpleGrids = simpleGridsPerTicket * numTickets;
 
 			if (winningMatchNumbers === 5 && winningMatchStars === 1) {
-			
-			  if (!lastPseudo) {
-			    lastPseudo = prompt("Bravo ! Quel pseudo pour le classement ?") || "Anonyme";
-			  }
-			  const pseudo = lastPseudo;
-
 			  const q = query(
 				collection(db, "ClassementLoto"),
 				orderBy("tickets", "asc"),
@@ -2029,6 +2024,12 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 				);
 
 			  if (isInTop20) {
+				if (!lastPseudo) {
+				  let inputPseudo = prompt("Bravo ! Quel pseudo pour le classement ?") || "Anonyme";
+				  if (inputPseudo.length > 20) inputPseudo = "Anonyme";
+				  lastPseudo = inputPseudo;
+				}
+				const pseudo = lastPseudo;
 				await recordWin(pseudo, {
 				  tirages: count,
 				  tickets: totalSimpleGrids,
