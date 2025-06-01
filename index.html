@@ -33,12 +33,9 @@
 		.counter-container {
 			display: flex;
 			align-items: center;
-			/* Nouveau : pour éviter d'écraser le badge */
 			min-width: 80px;
-			/* ou ajuste selon le badge */
 			margin-right: 12px;
 			height: 32px;
-			/* optionnel : ajuste si besoin */
 		}
 
 		.tab {
@@ -50,10 +47,8 @@
 			background: #eaeaea;
 			font-size: 1rem;
 			font-weight: 400;
-			/* texte normal partout */
 			flex: 0 0 auto;
 			transform: scale(1);
-			/* par défaut */
 			transition: transform .2s;
 			transform-origin: center center;
 			white-space: nowrap;
@@ -62,9 +57,7 @@
 		.tab.active {
 			background: #fff;
 			transform: scale(1.05);
-			/* légèrement agrandi pour simuler l'accent visuel */
 			font-weight: 500;
-			/* garde le poids identique */
 			transform: scale(1.1);
 			text-shadow:
 				0.1px 0 currentColor,
@@ -103,37 +96,27 @@
 
 		.counter-tooltip-container {
 			position: fixed;
-			/* Pour fixer la position sur l'écran */
 			top: 16px;
-			/* Ajuste selon la hauteur de ta barre d'onglets */
 			right: 24px;
-			/* Espace du bord droit */
 			z-index: 2000;
-			/* Toujours au-dessus */
 		}
 
 		.custom-tooltip {
 			display: none;
 			position: absolute;
 			right: 0;
-			/* Collé au bord droit du compteur */
 			top: 130%;
-			/* Dessous le compteur */
 			background: #222;
 			color: #fff;
 			padding: 6px 14px;
 			border-radius: 8px;
 			font-size: 0.93rem;
-			/* Texte plus petit */
 			font-weight: 400;
 			white-space: normal;
-			/* Autorise le retour à la ligne */
 			z-index: 2100;
 			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
 			min-width: 180px;
-			/* Largeur minimale pour éviter que le texte soit coupé */
 			max-width: 260px;
-			/* Largeur maximale pour éviter de dépasser l'écran */
 			overflow-wrap: break-word;
 		}
 

@@ -346,6 +346,7 @@
       list-style: none;
       padding-left: 0;
     }
+
   </style>
 </head>
 
@@ -747,17 +748,55 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
           .join("");
 
         const entier = Math.round(N);
-        content.innerHTML =
-          `<p style="font-size:1.3em; font-weight:bold; margin-top:5px; margin-bottom:16px;">
-		1 chance sur ${entier.toLocaleString("fr-FR")}
-	  </p>` +
-          `<ul>${listHTML}</ul>`;
-
-
+		content.innerHTML =
+		  `<p style="font-size:1.3em; font-weight:bold; margin-top:5px; margin-bottom:16px;">
+			<span id="chanceDisplayText">1 chance sur ${entier.toLocaleString("fr-FR")}</span>
+			<span id="editOddsIcon" title="Modifier" style="cursor:pointer; margin-left:8px; vertical-align:middle;">
+			  <svg width="18" height="18" fill="gray" viewBox="0 0 24 24">
+				<path d="M3 17.25V21h3.75l11.02-11.02-3.75-3.75L3 17.25zM20.71 
+				  7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 
+				  1.83 3.75 3.75 1.84-1.82z"/>
+			  </svg>
+			</span>
+		  </p>
+		  <ul>${listHTML}</ul>`;
         modal.style.display = "block";
         overlay.style.display = "block";
-      }
+		
+		const editIcon = document.getElementById('editOddsIcon');
+		editIcon.onclick = function () {
+		  const span = document.getElementById('chanceDisplayText');
+		  const prevVal = span.textContent.match(/\d[\d\s]*$/);
+		  const val = prevVal ? prevVal[0].replace(/\s/g, '') : '117';
+		  const currentOdds = N;
 
+		  // Affichage du champ d'édition
+		  span.innerHTML = `
+			1 chance sur 
+			<input id="editOddsInput" type="number" min="1" value="${val}" 
+			  style="font-size:0.8em;width:150px;text-align:center;">
+			<button id="editOddsOk" style="margin-left:2px;font-size:0.6em;">✔</button>
+			<button id="editOddsCancel" style="margin-left:2px;font-size:0.6em;">✖</button>
+		  `;
+
+		  // Cache le crayon pendant l’édition
+		  document.getElementById('editOddsIcon').style.display = 'none';
+
+		  document.getElementById('editOddsInput').focus();
+
+		  document.getElementById('editOddsOk').onclick = function () {
+			const nv = parseInt(document.getElementById('editOddsInput').value) || 1;
+			// Remet le crayon visible
+			document.getElementById('editOddsIcon').style.display = '';
+			openExamplesModal(nv);
+		  };
+		  document.getElementById('editOddsCancel').onclick = function () {
+			// Remet le crayon visible
+			document.getElementById('editOddsIcon').style.display = '';
+			openExamplesModal(currentOdds); // On remet la valeur courante de la modale
+		  };
+		};
+      }
 
       document.getElementById("closeExamplesBtn").addEventListener("click", () => {
         document.getElementById("examplesModal").style.display = "none";
