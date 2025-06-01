@@ -487,14 +487,20 @@
 					<input type="number" id="stopStars" value="1" min="0" max="1" style="width: 37px;">
 				</div>
 				<div class="form-group">
-					<input type="checkbox" id="stopNegativeGainCheckbox">
-					<label for="stopNegativeGainCheckbox">Stopper si le solde est négatif à :</label>
-					<input type="number" id="stopNegativeGainThreshold" value="10000" step="0.01" style="width:100px;">
-				</div>
-				<div class="form-group">
 					<input type="checkbox" id="stopAfterYearsCheckbox">
 					<label for="stopAfterYearsCheckbox">Stopper si on dépasse X années :</label>
 					<input type="number" id="stopAfterYearsInput" value="50" min="1" style="width:80px;">
+				</div>
+				<div class="form-group">
+				  <input type="checkbox" id="stopNegativeGainCheckbox">
+				  <label for="stopNegativeGainCheckbox">Stopper si le solde est à :</label>
+				  <input
+					type="number"
+					id="stopNegativeGainThreshold"
+					value="-10000"
+					step="0.01"
+					style="width:100px;"
+					title="Pour un seuil positif, saisir +1000 ou 1000 ; pour un seuil négatif, saisir -10000">
 				</div>
 				<div class="form-group" id="speedControlGroup">
 					<label for="speedSlider">Vitesse :</label>
@@ -548,7 +554,7 @@ Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
 							<label for="showCombinationNumber">
 								Identifiant unique
 								<span class="info-icon" title="Afficher pour chaque grille ou tirage son identifiant unique.
-Permet d’identifier précisément une combinaison parmi les 19 068 840 possibles au loto classique.
+Permet d’identifier précisément une combinaison parmi les 19 191 900 possibles à l'euro dreams.
 
 Utile pour analyser, comparer, et réaliser le nombre immense de combinaisons possibles.">
 									i
@@ -665,18 +671,14 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			let lastY;
 			let lastOdds = Infinity;
 
-
-
 			function isValidCombinationIndex(idx) {
 				return Number.isInteger(idx) && idx >= 1 && idx <= combination(40, 5) * combination(5, 1);
 			}
 
-			// Génère l'index unique pour n'importe quelle combinaison numéros + chance
 			function combinationIndex(numbers, stars, numMax = 40, starMax = 5, nNum = numbers.length, nStar = stars.length) {
 				if (!Array.isArray(numbers) || numbers.length !== nNum) return null;
 				if (!Array.isArray(stars) || stars.length !== nStar) return null;
 
-				// Index des numéros (combinaison ordonnée croissante)
 				let idxNum = 0, prev = 0;
 				for (let i = 0; i < nNum; i++) {
 					for (let n = prev + 1; n < numbers[i]; n++) {
@@ -685,12 +687,10 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 					prev = numbers[i];
 				}
 
-				// Index de la chance (simple si une seule)
 				let idxStar = 0;
 				if (nStar === 1) {
-					idxStar = stars[0] - 1; // de 0 à starMax-1
+					idxStar = stars[0] - 1;
 				} else {
-					// Pour plusieurs chances, lexicographique aussi
 					let temp = [...stars].sort((a, b) => a - b);
 					let prevS = 0;
 					for (let i = 0; i < nStar; i++) {
@@ -701,17 +701,15 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 					}
 				}
 
-				return idxNum * combination(starMax, nStar) + idxStar + 1; // 1-based
+				return idxNum * combination(starMax, nStar) + idxStar + 1;
 			}
 
-			// Inverse : à partir de l’index, retrouve la grille
 			function combinationIndexToTicket(idx, numMax = 40, starMax = 5, nNum = 5, nStar = 1) {
-				idx--; // 0-based
+				idx--;
 				const STAR_COMBOS = combination(starMax, nStar);
 				const starIdx = idx % STAR_COMBOS;
 				let rank = Math.floor(idx / STAR_COMBOS);
 
-				// Numéros
 				let nums = [];
 				let prev = 0;
 				for (let k = nNum; k >= 1; k--) {
@@ -724,7 +722,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 					prev = n;
 				}
 
-				// Chance(s)
 				let stars = [];
 				let pool = [];
 				for (let i = 1; i <= starMax; i++) pool.push(i);
@@ -902,7 +899,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			  const val = prevVal ? prevVal[0].replace(/\s/g, '') : '117';
 			  const currentOdds = N;
 
-			  // Affichage du champ d'édition
 			  span.innerHTML = `
 				1 chance sur 
 				<input id="editOddsInput" type="number" min="1" value="${val}" 
@@ -911,21 +907,18 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				<button id="editOddsCancel" style="margin-left:2px;font-size:0.6em;">✖</button>
 			  `;
 
-			  // Cache le crayon pendant l’édition
 			  document.getElementById('editOddsIcon').style.display = 'none';
 
 			  document.getElementById('editOddsInput').focus();
 
 			  document.getElementById('editOddsOk').onclick = function () {
 				const nv = parseInt(document.getElementById('editOddsInput').value) || 1;
-				// Remet le crayon visible
 				document.getElementById('editOddsIcon').style.display = '';
 				openExamplesModal(nv);
 			  };
 			  document.getElementById('editOddsCancel').onclick = function () {
-				// Remet le crayon visible
 				document.getElementById('editOddsIcon').style.display = '';
-				openExamplesModal(currentOdds); // On remet la valeur courante de la modale
+				openExamplesModal(currentOdds);
 			  };
 			};
 		  }
@@ -1398,8 +1391,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 					if (/^\d+$/.test(raw)) {
 						const idx = parseInt(raw, 10);
-						// Ici, on force bien la borne sur EuroDreams : 6 numéros (1-40), 1 dream (1-5)
-						const maxIndex = combination(40, 6) * 5; // 5 dreams possibles
+						const maxIndex = combination(40, 6) * 5;
 						if (idx >= 1 && idx <= maxIndex) {
 							const comb = combinationIndexToTicket(idx, 40, 5, 6, 1);
 							tickets.push(comb);
@@ -1674,7 +1666,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 						: "")
 				];
 
-				// Ajout conditionnel du bloc MyMillion/Code Loto (optionnel, adapte selon ce que tu veux)
 				const invMy = "0";
 				if (document.getElementById("myMillonCheckbox")?.checked) {
 					lignes.push(
@@ -2238,49 +2229,95 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 					}
 
 					if (document.getElementById("stopNegativeGainCheckbox").checked) {
-						const negThreshold = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
-						if (balance < -negThreshold) {
-							document.getElementById("ticketsContainer").innerHTML = "";
-							adjustTicketColumns(tickets);
-							const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
-							document.getElementById("resultat").innerHTML =
-								`<strong>
-				  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
-									? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
-									: ""} :
-			   </strong><br>
-			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
-			   Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}`;
+					  const seuil = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
 
-							document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
-							document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
-							updateTimePassed(count);
-							updateStatsDisplay();
-							updateGainDisplay();
-							alert("Le Solde est inférieur au seuil défini (-" + negThreshold + " €). La simulation est arrêtée.");
+					  if (seuil < 0) {
+						if (balance < seuil) {
+						  document.getElementById("ticketsContainer").innerHTML = "";
+						  adjustTicketColumns(tickets);
+						  const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+						  document.getElementById("resultat").innerHTML =
+							`<strong>
+					 Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+								 ? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+								 : ""} :
+					 </strong><br>
+					 Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
+					 Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}`;
 
-							if (balance >= 1) {
-								playSound("win.mp3");
-							} else if (balance <= -1000000) {
-								playSound("bigloose.mp3");
-								addLooseImage("bigloose.jpeg");
-							}
+						  document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+						  document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+						  updateTimePassed(count);
+						  updateStatsDisplay();
+						  updateGainDisplay();
+						  alert("Le solde est passé en dessous du seuil défini (" + seuil + " €). La simulation est arrêtée.");
 
-							if (gainChart) {
-								gainChart.data.datasets[0].data.push({ x: count, y: balance });
-								gainChart.update();
-								lastY = balance;
-							}
+						  if (balance >= 1) {
+							playSound("win.mp3");
+						  } else if (balance <= -1000000) {
+							playSound("bigloose.mp3");
+							addLooseImage("bigloose.jpeg");
+						  }
 
-							stopFlag = true;
-							simulationActive = false;
-							document.getElementById("startBtn").style.display = "inline-block";
-							document.getElementById("startBtn").textContent = "Nouvelle simulation";
-							document.getElementById("stopBtn").style.display = "inline-block";
-							document.getElementById("stopBtn").textContent = "Continuer";
-							return;
+						  if (gainChart) {
+							gainChart.data.datasets[0].data.push({ x: count, y: balance });
+							gainChart.update();
+							lastY = balance;
+						  }
+
+						  stopFlag = true;
+						  simulationActive = false;
+						  document.getElementById("startBtn").style.display = "inline-block";
+						  document.getElementById("startBtn").textContent = "Nouvelle simulation";
+						  document.getElementById("stopBtn").style.display = "inline-block";
+						  document.getElementById("stopBtn").textContent = "Continuer";
+						  return;
 						}
+					  } else {
+						if (balance > seuil) {
+						  document.getElementById("ticketsContainer").innerHTML = "";
+						  adjustTicketColumns(tickets);
+						  const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+						  document.getElementById("resultat").innerHTML =
+							`<strong>
+					 Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+								 ? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+								 : ""} :
+					 </strong><br>
+					 Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
+					 Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}`;
+
+						  document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+						  document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+						  updateTimePassed(count);
+						  updateStatsDisplay();
+						  updateGainDisplay();
+						  alert("Le solde a dépassé le seuil défini (" + seuil + " €). La simulation est arrêtée.");
+
+						  if (balance >= 1) {
+							playSound("win.mp3");
+						  } else if (balance <= -1000000) {
+							playSound("bigloose.mp3");
+							addLooseImage("bigloose.jpeg");
+						  }
+
+						  if (gainChart) {
+							gainChart.data.datasets[0].data.push({ x: count, y: balance });
+							gainChart.update();
+							lastY = balance;
+						  }
+
+						  stopFlag = true;
+						  simulationActive = false;
+						  document.getElementById("startBtn").style.display = "inline-block";
+						  document.getElementById("startBtn").textContent = "Nouvelle simulation";
+						  document.getElementById("stopBtn").style.display = "inline-block";
+						  document.getElementById("stopBtn").textContent = "Continuer";
+						  return;
+						}
+					  }
 					}
+
 				}
 
 				document.getElementById("ticketsContainer").innerHTML = "";
@@ -2446,7 +2483,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				const leftKeys = keys.slice(0, mid);
 				const rightKeys = keys.slice(mid);
 
-				// Réorganise pour remplir colonne par colonne
 				const reorderedKeys = [];
 				for (let i = 0; i < mid; i++) {
 					if (leftKeys[i]) reorderedKeys.push(leftKeys[i]);

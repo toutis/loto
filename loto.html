@@ -406,17 +406,22 @@
           <input type="number" id="stopNumbers" value="5" min="0" max="5" style="width: 37px;">
           <input type="number" id="stopStars" value="1" min="0" max="1" style="width: 37px;">
         </div>
-
-        <div class="form-group">
-          <input type="checkbox" id="stopNegativeGainCheckbox">
-          <label for="stopNegativeGainCheckbox">Stopper si le solde est négatif à :</label>
-          <input type="number" id="stopNegativeGainThreshold" value="10000" step="0.01" style="width:100px;">
-        </div>
         <div class="form-group">
           <input type="checkbox" id="stopAfterYearsCheckbox">
           <label for="stopAfterYearsCheckbox">Stopper si on dépasse X années :</label>
           <input type="number" id="stopAfterYearsInput" value="50" min="1" style="width:80px;">
         </div>
+		<div class="form-group">
+		  <input type="checkbox" id="stopNegativeGainCheckbox">
+		  <label for="stopNegativeGainCheckbox">Stopper si le solde est à :</label>
+		  <input
+			type="number"
+			id="stopNegativeGainThreshold"
+			value="-10000"
+			step="0.01"
+			style="width:100px;"
+			title="Pour un seuil positif, saisir +1000 ou 1000 ; pour un seuil négatif, saisir -10000">
+		</div>
         <div class="form-group" id="speedControlGroup">
           <label for="speedSlider">Vitesse :</label>
           <input type="range" id="speedSlider" min="1" max="100" value="50" list="tickmarks">
@@ -770,7 +775,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  const val = prevVal ? prevVal[0].replace(/\s/g, '') : '117';
 		  const currentOdds = N;
 
-		  // Affichage du champ d'édition
 		  span.innerHTML = `
 			1 chance sur 
 			<input id="editOddsInput" type="number" min="1" value="${val}" 
@@ -779,21 +783,18 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			<button id="editOddsCancel" style="margin-left:2px;font-size:0.6em;">✖</button>
 		  `;
 
-		  // Cache le crayon pendant l’édition
 		  document.getElementById('editOddsIcon').style.display = 'none';
 
 		  document.getElementById('editOddsInput').focus();
 
 		  document.getElementById('editOddsOk').onclick = function () {
 			const nv = parseInt(document.getElementById('editOddsInput').value) || 1;
-			// Remet le crayon visible
 			document.getElementById('editOddsIcon').style.display = '';
 			openExamplesModal(nv);
 		  };
 		  document.getElementById('editOddsCancel').onclick = function () {
-			// Remet le crayon visible
 			document.getElementById('editOddsIcon').style.display = '';
-			openExamplesModal(currentOdds); // On remet la valeur courante de la modale
+			openExamplesModal(currentOdds);
 		  };
 		};
       }
@@ -2152,40 +2153,72 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
             return;
           }
 
-          if (document.getElementById("stopNegativeGainCheckbox").checked) {
-            const negThreshold = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
-            if (balance < -negThreshold) {
-              document.getElementById("ticketsContainer").innerHTML = "";
-              adjustTicketColumns(tickets);
-              const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
-              document.getElementById("resultat").innerHTML =
-                `<strong>Tirage :</strong><br>
-			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
-			   Chance : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatCodesList(draw.myMillon) : ""}`;
+		if (document.getElementById("stopNegativeGainCheckbox").checked) {
+		  const seuil = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
+		  if (seuil < 0) {
+			if (balance < seuil) {
+			  document.getElementById("ticketsContainer").innerHTML = "";
+			  adjustTicketColumns(tickets);
+			  const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+			  document.getElementById("resultat").innerHTML =
+				`<strong>Tirage :</strong><br>
+				 Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
+				 Chance  : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatCodesList(draw.myMillon) : ""}`;
 
-              document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
-              document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
-              updateTimePassed(count);
-              updateStatsDisplay();
-              updateGainDisplay();
-              alert("Le Solde est inférieur au seuil défini (-" + negThreshold + " €). La simulation est arrêtée.");
+			  document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+			  document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+			  updateTimePassed(count);
+			  updateStatsDisplay();
+			  updateGainDisplay();
+			  alert("Le solde est passé en dessous du seuil (" + seuil + " €). La simulation est arrêtée.");
 
-              if (balance >= 1) {
-                playSound("win.mp3");
-              } else if (balance <= -1000000) {
-                playSound("bigloose.mp3");
-                addLooseImage("bigloose.jpeg");
-              }
-              stopFlag = true;
-              simulationActive = false;
-              document.getElementById("startBtn").style.display = "inline-block";
-              document.getElementById("startBtn").textContent = "Nouvelle simulation";
-              document.getElementById("stopBtn").style.display = "inline-block";
-              document.getElementById("stopBtn").textContent = "Continuer";
+			  if (balance >= 1) {
+				playSound("win.mp3");
+			  } else if (balance <= -1000000) {
+				playSound("bigloose.mp3");
+				addLooseImage("bigloose.jpeg");
+			  }
+			  stopFlag = true;
+			  simulationActive = false;
+			  document.getElementById("startBtn").style.display = "inline-block";
+			  document.getElementById("startBtn").textContent = "Nouvelle simulation";
+			  document.getElementById("stopBtn").style.display = "inline-block";
+			  document.getElementById("stopBtn").textContent = "Continuer";
+			  return;
+			}
+		  } else {
+			if (balance > seuil) {
+			  document.getElementById("ticketsContainer").innerHTML = "";
+			  adjustTicketColumns(tickets);
+			  const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+			  document.getElementById("resultat").innerHTML =
+				`<strong>Tirage :</strong><br>
+				 Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
+				 Chance  : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}${document.getElementById("myMillonCheckbox").checked ? "<br>Code Loto : " + formatCodesList(draw.myMillon) : ""}`;
 
-              return;
-            }
-          }
+			  document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+			  document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+			  updateTimePassed(count);
+			  updateStatsDisplay();
+			  updateGainDisplay();
+			  alert("Le solde a dépassé le seuil (" + seuil + " €). La simulation est arrêtée.");
+
+			  if (balance >= 1) {
+				playSound("win.mp3");
+			  } else if (balance <= -1000000) {
+				playSound("bigloose.mp3");
+				addLooseImage("bigloose.jpeg");
+			  }
+			  stopFlag = true;
+			  simulationActive = false;
+			  document.getElementById("startBtn").style.display = "inline-block";
+			  document.getElementById("startBtn").textContent = "Nouvelle simulation";
+			  document.getElementById("stopBtn").style.display = "inline-block";
+			  document.getElementById("stopBtn").textContent = "Continuer";
+			  return;
+			}
+		  }
+		}
         }
 
         document.getElementById("ticketsContainer").innerHTML = "";
