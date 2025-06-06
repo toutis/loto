@@ -1909,7 +1909,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 										baseNumber <= range.end && (baseNumber + numGrilles - 1) >= range.start
 									);
 								} while (conflict && attempt < maxAttempts);
-								let rangeEnd = baseNumber + numGrilles - 1;
+								let rangeEnd = baseNumber + numGrilles;
 								assignedRanges.push({ start: baseNumber, end: rangeEnd });
 								ticket.myMillon = baseNumber + " à " + rangeEnd;
 							} else {
