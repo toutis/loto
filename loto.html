@@ -785,7 +785,17 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 		  document.getElementById('editOddsIcon').style.display = 'none';
 
-		  document.getElementById('editOddsInput').focus();
+			const inputField = document.getElementById('editOddsInput');
+			inputField.focus();
+			inputField.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					document.getElementById('editOddsOk').click();
+				} else if (e.key === 'Escape') {
+					e.preventDefault();
+					document.getElementById('editOddsCancel').click();
+				}
+			});
 
 		  document.getElementById('editOddsOk').onclick = function () {
 			const nv = parseInt(document.getElementById('editOddsInput').value) || 1;
