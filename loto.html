@@ -531,7 +531,8 @@ Utile pour analyser, comparer, et réaliser le nombre immense de combinaisons po
           <span class="info-icon" title="Les gains par rang sont fixes et déterminés à l’avance dans cette simulation. 
 Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc.">i</span>
         </h3>
-        <a href="#" id="editPrizesLink" style="color: #187ad2; font-size: 0.95em;">Modifier les gains par rang</a><br>
+        <a href="#" id="editPrizesLink" style="color: #187ad2; font-size: 0.95em;">Modifier les gains par rang</a> | 
+		<a href="#" id="showDetails" style="color: #187ad2; font-size: 0.95em;">voir plus de détails</a>
         <ul>
           <div id="gainLossSummary" style="margin:12px 0 8px 0;">
             <div>
@@ -589,11 +590,66 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
     <div style="margin-top:10px">
       <button id="closeExamplesBtn" type="button">❌ Fermer</button>
     </div>
+	
+	  </div> <!-- fin de #examplesModal -->
+
+  <!-- DÉTAILS PALIER (hors de #examplesModal !) -->
+  <div id="detailsModal" style="display:none; position:fixed; top:50%; left:50%;
+       transform:translate(-50%,-50%); background:#fff; padding:20px;
+       border:2px solid #444; box-shadow:0 0 20px rgba(0,0,0,0.3); z-index:10001; width:400px; max-height:80vh; overflow-y:auto;">
+    <h3>Détails des paliers obtenus</h3>
+    <ul id="detailsList" style="padding-left:1em;"></ul>
+    <button id="closeDetailsBtn" style="margin-top:10px;">❌ Fermer</button>
+  </div>
+  <div id="modalOverlayDetails" style="display:none; position:fixed; top:0; left:0;
+       width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000;"></div>
+
+</body>
+
+	
     <script>
 
       let gainChart = null;
       let lastY;
       let lastOdds = Infinity;
+	  let firstOccurrence = {};
+	  let lastDetailsModalState = "";
+	  
+	function updateDetailsModalIfOpen() {
+	  const modal = document.getElementById('detailsModal');
+	  if (modal.style.display !== 'block') return;
+
+	  const allPaliers = [
+		{n: 5, s: 1}, {n: 5, s: 0},
+		{n: 4, s: 1}, {n: 4, s: 0},
+		{n: 3, s: 1}, {n: 3, s: 0},
+		{n: 2, s: 1}, {n: 2, s: 0},
+		{n: 1, s: 1}, {n: 1, s: 0},
+		{n: 0, s: 1}, {n: 0, s: 0}
+	  ];
+	  const state = allPaliers.map(({n, s}) => firstOccurrence[`${n}_${s}`] || 0);
+
+	  const currentState = JSON.stringify(state);
+	  if (currentState === lastDetailsModalState) return;
+	  lastDetailsModalState = currentState;
+
+	  const list = document.getElementById('detailsList');
+	  list.innerHTML = '';
+	  allPaliers.forEach(({n, s}) => {
+		const key = `${n}_${s}`;
+		const label = `${n} n° + ${s} ◉`;
+		const li = document.createElement('li');
+		if (firstOccurrence[key]) {
+		  const days = firstOccurrence[key] * (7/3);
+		  const when = formatTimeInDays(days, { skipSmallUnitsIfYearOrCentury: true });
+		  li.textContent = `${label} : obtenu en ${when}`;
+		} else {
+		  li.innerHTML = `<span style="color:gray">${label} : jamais obtenu</span>`;
+		}
+		list.appendChild(li);
+	  });
+	}
+
 
 	  function updatePrix() {
 		const n   = parseInt(document.getElementById("ticketNumbersCount").value) || 5;
@@ -682,26 +738,42 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
         return { numbers: nums, stars: [star] };
       }
 
-      function formatTimeInDays(totalDays) {
-        const joursTotal = Math.floor(totalDays);
-        let centuries = Math.floor(joursTotal / 36500);
-        let reste = joursTotal % 36500;
-        let years = Math.floor(reste / 365);
-        reste = reste % 365;
-        let months = Math.floor(reste / 30.4375);
-        reste = Math.floor(reste % 30.4375);
-        let weeks = Math.floor(reste / 7);
-        let days = reste % 7;
+	function formatTimeInDays(totalDays, options = {}) {
+	  const { skipSmallUnitsIfYearOrCentury = false } = options;
+	  const joursTotal = Math.floor(totalDays);
+	  let centuries = Math.floor(joursTotal / 36500);
+	  let reste = joursTotal % 36500;
+	  let years = Math.floor(reste / 365);
+	  reste = reste % 365;
+	  let months = Math.floor(reste / 30.4375);
+	  reste = Math.floor(reste % 30.4375);
+	  let weeks = Math.floor(reste / 7);
+	  let days = reste % 7;
 
-        const parts = [];
-        if (centuries > 0) parts.push(centuries + ' ' + (centuries === 1 ? 'siècle' : 'siècles'));
-        if (years > 0) parts.push(years + ' ' + (years === 1 ? 'an' : 'ans'));
-        if (months > 0) parts.push(months + ' mois');
-        if (weeks > 0) parts.push(weeks + ' ' + (weeks === 1 ? 'semaine' : 'semaines'));
-        if (days > 0) parts.push(days + ' ' + (days === 1 ? 'jour' : 'jours'));
+	  const w = typeof window !== "undefined" ? window.innerWidth : 1200;
+	  const parts = [];
 
-        return parts.length === 0 ? "0 jour" : parts.join(", ");
-      }
+	  if (centuries > 0) parts.push(centuries + ' ' + (centuries === 1 ? 'siècle' : 'siècles'));
+	  if (years > 0) parts.push(years + ' ' + (years === 1 ? 'an' : 'ans'));
+	  if (months > 0) parts.push(months + ' mois');
+
+	  const hasBigUnit = centuries > 0 || years > 0;
+	  let showWeeks = true, showDays = true;
+	  if (skipSmallUnitsIfYearOrCentury && hasBigUnit) {
+		showWeeks = false;
+		showDays = false;
+	  } else {
+		if (w > 785 && w < 1000 && centuries > 0) showWeeks = false;
+		if (w > 785 && ((w < 1000 && centuries > 0) || (w < 1200 && years > 0))) showDays = false;
+	  }
+
+	  if (weeks > 0 && showWeeks) parts.push(weeks + ' ' + (weeks === 1 ? 'semaine' : 'semaines'));
+	  if (days > 0 && showDays) parts.push(days + ' ' + (days === 1 ? 'jour' : 'jours'));
+
+	  return parts.length === 0 ? "0 jour" : parts.join(", ");
+	}
+
+
 
       function generateProbabilityExamples(N) {
         if (!Number.isFinite(N) || N <= 0) return [];
@@ -1654,33 +1726,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
         return combination(n, 5) * combination(s, 1);
       }
 
-      function formatTimeInDays(totalDays) {
-        const joursTotal = Math.floor(totalDays);
-        let centuries = Math.floor(joursTotal / 36500);
-        let reste = joursTotal % 36500;
-        let years = Math.floor(reste / 365);
-        reste = reste % 365;
-        let months = Math.floor(reste / 30.4375);
-        reste = Math.floor(reste % 30.4375);
-        let weeks = Math.floor(reste / 7);
-        let days = reste % 7;
-
-        const w = window.innerWidth;
-        const parts = [];
-
-        if (centuries > 0) parts.push(centuries + ' ' + (centuries === 1 ? 'siècle' : 'siècles'));
-        if (years > 0) parts.push(years + ' ' + (years === 1 ? 'an' : 'ans'));
-        if (months > 0) parts.push(months + ' mois');
-
-        const showWeeks = !(w > 785 && w < 1000 && centuries > 0);
-        const showDays = !(w > 785 && ((w < 1000 && centuries > 0) || (w < 1200 && years > 0)));
-
-        if (weeks > 0 && showWeeks) parts.push(weeks + ' ' + (weeks === 1 ? 'semaine' : 'semaines'));
-        if (days > 0 && showDays) parts.push(days + ' ' + (days === 1 ? 'jour' : 'jours'));
-
-        return parts.length === 0 ? "0 jour" : parts.join(", ");
-      }
-
       function updateTimePassed(drawCount) {
         const days = drawCount * (7 / 3);
         const formatted = formatTimeInDays(days);
@@ -2095,7 +2140,14 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
                 const countGrilles = waysNum * waysStar;
                 if (countGrilles > 0) {
                   const key = nb + "_" + sb;
-                  if (stats.hasOwnProperty(key)) stats[key] += countGrilles;
+				if (stats.hasOwnProperty(key)) {
+				  const prevCount = stats[key];
+				  stats[key] += countGrilles;
+				  if (prevCount === 0 && countGrilles > 0) {
+					firstOccurrence[key] = count;
+					updateDetailsModalIfOpen();
+				  }
+				}
                   let prize = prizeMapping[key] || 0;
                   if (document.getElementById("multichanceCheckbox").checked) {
                     prize *= multichanceRatio;
@@ -2390,6 +2442,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
           stats[combo] = 0;
           statsGain[combo] = 0;
         }
+		firstOccurrence = {};
         myMillionWinCount = 0;
         myMillionTotalGain = 0;
         simulationActive = false;
@@ -2503,6 +2556,48 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
           });
         }
       }, 0);
+		document.getElementById('showDetails').addEventListener('click', e => {
+		  e.preventDefault();
+		  const list = document.getElementById('detailsList');
+		  list.innerHTML = '';
+
+		const allPaliers = [
+		  {n: 5, s: 1}, {n: 5, s: 0},
+		  {n: 4, s: 1}, {n: 4, s: 0},
+		  {n: 3, s: 1}, {n: 3, s: 0},
+		  {n: 2, s: 1}, {n: 2, s: 0},
+		  {n: 1, s: 1}, {n: 1, s: 0},
+		  {n: 0, s: 1}, {n: 0, s: 0}
+		];
+
+		allPaliers.forEach(({n, s}) => {
+		  const key = `${n}_${s}`;
+		  const label = `${n} n° + ${s} ◉`;
+		  const li = document.createElement('li');
+		  if (firstOccurrence[key]) {
+			const days = firstOccurrence[key] * (7/3);
+			const when = formatTimeInDays(days, { skipSmallUnitsIfYearOrCentury: true });
+			li.textContent = `${label} : obtenu en ${when}`;
+		  } else {
+			li.innerHTML = `<span style="color:gray">${label} : jamais obtenu</span>`;
+		  }
+		  list.appendChild(li);
+		});
+
+
+		  document.getElementById('modalOverlayDetails').style.display = 'block';
+		  document.getElementById('detailsModal').style.display = 'block';
+		});
+
+		document.getElementById('closeDetailsBtn').addEventListener('click', () => {
+		  document.getElementById('detailsModal').style.display = 'none';
+		  document.getElementById('modalOverlayDetails').style.display = 'none';
+		});
+		document.getElementById('modalOverlayDetails').addEventListener('click', () => {
+		  document.getElementById('detailsModal').style.display = 'none';
+		  document.getElementById('modalOverlayDetails').style.display = 'none';
+		});
+
 
     </script>
   </div>
