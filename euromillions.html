@@ -2660,7 +2660,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		  const label = `${n} n° + ${s} ◉`;
 		  const li = document.createElement('li');
 		  if (firstOccurrence[key]) {
-			const days = firstOccurrence[key] * (7/3);
+			const days = firstOccurrence[key] * (7/2);
 			const when = formatTimeInDays(days, { skipSmallUnitsIfYearOrCentury: true });
 			li.textContent = `${label} : obtenu en ${when}`;
 		  } else {
