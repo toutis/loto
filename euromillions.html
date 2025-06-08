@@ -2267,10 +2267,10 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 						if (document.getElementById("multichanceCheckbox").checked) {
 							winningGain *= multichanceRatio;
 						}
-						if (winningMatchNumbers === 5 && winningMatchStars === 1) {
+						if (winningMatchNumbers === 5 && winningMatchStars === 2) {
 							launchFireworks();
 						}
-						const tempsEcoule = formatTimeInDays(count * (7 / 3));
+						const tempsEcoule = formatTimeInDays(count * (7 / 2));
 						alert("Seuil atteint !\n" +
 							"Ticket gagnant : " + winningTicket.numbers.join(", ") + " | " + winningTicket.stars.join(", ") + "\n" +
 							"Tirage : " + draw.numbers.join(", ") + " | " + draw.stars.join(", ") + "\n" +
