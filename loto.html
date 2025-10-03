@@ -351,19 +351,22 @@
 	  margin-bottom: .7em;
     }
 	
-	/* Couleur & fond de chaque ligne de l’historique */
 	.hist-pos  { background:#e6fae6; border-color:#159f13; }
 	.hist-neg  { background:#ffecec; border-color:#e53935; }
 
-	/* Couleur du chiffre “Solde” à l’intérieur de la ligne */
 	.hist-pos  .solde { color:#159f13; }
 	.hist-neg  .solde { color:#e53935; }
-	
-.history-advice{
-    font-size: 0.78em;          /* plus petit */
-    color: #888;                /* gris clair */
-    margin: 8px 0 4px;          /* un tout petit espace avant les boutons */
-}
+	.hist-jack  { background:#e6fae6; border-color:#fdd835; }
+	.hist-jack  .solde {                                          
+	  color:#159f13;
+	  font-weight:bold;
+	} 
+		
+	.history-advice {
+		font-size: 0.78em;
+		color: #888;
+		margin: 8px 0 4px;
+	}
 
 
   </style>
@@ -679,8 +682,12 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  const MM = String(d.getMinutes()).padStart(2, '0');
 		  return `${dd}/${mm}/${yy} - ${HH}:${MM}`;
 		}
+		
+		let historySaved = false;
 
 		function addCurrentRunToHistory() {
+		  if (historySaved) return;
+		
 		  if (!simulationHasStarted || (count === 0 && totalGrillesJouees === 0)) return;
 		  const ladder = [
 			"5_1", "5_0", "CODE_LOTO",
@@ -717,6 +724,8 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  hist.unshift(entry);
 		  saveHistory(hist);
 		  renderHistory();
+		  
+		  historySaved = true;
 		}
 
 		function renderHistory() {
@@ -737,18 +746,28 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			const li = document.createElement('li');
 
 			const soldeNum = parseFloat(item.solde);
-			li.classList.add(soldeNum >= 0 ? 'hist-pos' : 'hist-neg');
+			if (soldeNum >= 1_000_000)       li.classList.add('hist-jack');
+			else if (soldeNum >= 0)          li.classList.add('hist-pos');
+			else                             li.classList.add('hist-neg');
+
 
 			li.style.margin        = '6px 0';
 			li.style.border        = '1px solid #ddd';
 			li.style.padding       = '8px';
 			li.style.borderRadius  = '6px';
 
+			const ratioBrut    = Number(item.grilles) / Number(item.tirages);
+			const ratio        = Math.round(ratioBrut);
+			const ratioTxt     = ratio.toLocaleString('fr-FR');    
+			const plurielGrille = (ratio === 1) ? 'grille' : 'grilles';
+
 			li.innerHTML = `
 			  <div><strong>Date :</strong> ${item.date}</div>
 			  <div><strong>Tirages :</strong> ${Number(item.tirages).toLocaleString('fr-FR')}</div>
 			  <div><strong>Temps écoulé :</strong> ${item.temps}</div>
-			  <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}</div>
+			  <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}
+				   <span style="color:gray;">(${ratioTxt} ${plurielGrille} par tirage)</span>
+			  </div>
 			  <div><strong>Pallier :</strong> ${item.record}</div>
 			  <div><strong>Solde :</strong>
 				   <span class="solde">
@@ -758,7 +777,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				   </span>
 			  </div>
 			`;
-
 			list.appendChild(li);
 		  });
 		}
@@ -1634,7 +1652,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
             const idx = parseInt(trimmed, 10);
             try {
               tickets.push(combinationFromIndex(idx));
-            } catch { /* index hors bornes : on ignore */ }
+            } catch {}
           }
         });
 
@@ -2605,6 +2623,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       }
 
       function startDrawing() {
+	    historySaved = false;
 	    firstOccurrence = {};
 	    lastDetailsModalState = "";
 	    const list = document.getElementById("detailsList");
@@ -2847,32 +2866,38 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		});
 
 		document.addEventListener("DOMContentLoaded", () => {
-  // Ouvrir la modale
-  document.getElementById("historyLink").addEventListener("click", (e) => {
-    e.preventDefault();
-    renderHistory();
-    document.getElementById("historyModal").style.display = "block";
-  });
+		  document.getElementById("historyLink").addEventListener("click", (e) => {
+			e.preventDefault();
+			renderHistory();
+			document.getElementById("historyModal").style.display = "block";
+		  });
 
-  // Fermer la modale
-  document.getElementById("closeHistoryBtn").addEventListener("click", () => {
-    document.getElementById("historyModal").style.display = "none";
-  });
+		  document.getElementById("closeHistoryBtn").addEventListener("click", () => {
+			document.getElementById("historyModal").style.display = "none";
+		  });
 
-  // Fermer si on clique en dehors du contenu
-  document.getElementById("historyModal").addEventListener("click", (e) => {
-    if (e.target.id === "historyModal") {
-      document.getElementById("historyModal").style.display = "none";
-    }
-  });
-});
+		  document.getElementById("historyModal").addEventListener("click", (e) => {
+			if (e.target.id === "historyModal") {
+			  document.getElementById("historyModal").style.display = "none";
+			}
+		  });
+		});
 
+	function persistLastRun() {
+		try { addCurrentRunToHistory(); } catch {}
+	  }
+
+	window.addEventListener('beforeunload', persistLastRun);
+	window.addEventListener('pagehide',     persistLastRun);
 
     </script>
   </div>
 <div id="historyModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999;">
   <div style="background:#fff; max-width:450px; margin:80px auto; padding:20px; border-radius:8px; position:relative;">
-    <h3>Historique des simulations</h3>
+    <h3>Historique de vos simulations</h3>
+	<div id="historyTotals"
+       style="font-weight:bold; margin:6px 0 10px 0; color:#333;">
+	</div>
     <ul id="historyList" style="list-style:none; padding-left:0; margin:0; max-height:50vh; overflow:auto;">"></ul>
     <p id="historyEmptyMsg" style="color:#777; margin-top:6px; display:none;">
       (Aucun élément pour le moment)
@@ -2890,8 +2915,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
     </div>
   </div>
 </div>
-
-  
 </body>
 
 </html>
