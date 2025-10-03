@@ -350,6 +350,21 @@
 	#detailsList li:first-child {
 	  margin-bottom: .7em;
     }
+	
+	/* Couleur & fond de chaque ligne de l’historique */
+	.hist-pos  { background:#e6fae6; border-color:#159f13; }
+	.hist-neg  { background:#ffecec; border-color:#e53935; }
+
+	/* Couleur du chiffre “Solde” à l’intérieur de la ligne */
+	.hist-pos  .solde { color:#159f13; }
+	.hist-neg  .solde { color:#e53935; }
+	
+.history-advice{
+    font-size: 0.78em;          /* plus petit */
+    color: #888;                /* gris clair */
+    margin: 8px 0 4px;          /* un tout petit espace avant les boutons */
+}
+
 
   </style>
 </head>
@@ -536,7 +551,8 @@ Utile pour analyser, comparer, et réaliser le nombre immense de combinaisons po
 Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc.">i</span>
         </h3>
         <a href="#" id="editPrizesLink" style="color: #187ad2; font-size: 0.95em;">Modifier les gains par rang</a> | 
-		<a href="#" id="showDetails" style="color: #187ad2; font-size: 0.95em;">voir plus de détails</a>
+		<a href="#" id="showDetails" style="color: #187ad2; font-size: 0.95em;">voir plus de détails</a> |
+		<a href="#" id="historyLink" style="color: #187ad2; font-size: 0.95em;">voir l'historique</a>
         <ul>
           <div id="gainLossSummary" style="margin:12px 0 8px 0;">
             <div>
@@ -615,6 +631,131 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	  let firstOccurrence = {};
 	  let lastDetailsModalState = "";
 	  
+	  /* ==== Historique (cookie) ============================================== */
+const HISTORY_KEY = 'loto_history';
+const HISTORY_MAX = 100; // on limite pour rester léger
+
+function setCookie(name, value, options = {}) {
+  const opt = { path: '/', 'max-age': 60 * 60 * 24 * 365, SameSite: 'Lax', ...options }; // 1 an
+  let updated = encodeURIComponent(name) + '=' + encodeURIComponent(value);
+  if (opt['max-age']) updated += '; max-age=' + opt['max-age'];
+  if (opt.path)       updated += '; path=' + opt.path;
+  if (opt.SameSite)   updated += '; SameSite=' + opt.SameSite;
+  document.cookie = updated;
+}
+
+function getCookie(name) {
+  // Parcourt simplement document.cookie et renvoie la valeur décodée
+  const cookies = document.cookie.split(';').map(c => c.trim());
+  for (const c of cookies) {
+    const [key, ...v] = c.split('=');
+    if (key === name) {
+      return decodeURIComponent(v.join('='));
+    }
+  }
+  return null;
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(arr) {
+  try {
+    localStorage.setItem(HISTORY_KEY,
+      JSON.stringify(arr.slice(0, HISTORY_MAX)));
+  } catch {/* ignore */}
+}
+
+function formatDateFR(d = new Date()) {
+  // "DD/MM/YY - HH:MM"
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(-2);
+  const HH = String(d.getHours()).padStart(2, '0');
+  const MM = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yy} - ${HH}:${MM}`;
+}
+
+function addCurrentRunToHistory() {
+  // On n’ajoute que s’il y a eu une vraie simulation
+  if (!simulationHasStarted || (count === 0 && totalGrillesJouees === 0)) return;
+
+  const entry = {
+    date: formatDateFR(new Date()),
+    tirages: count,
+    temps: formatTimeInDays(count * (7/3)),
+    grilles: totalGrillesJouees,
+    solde: Number.parseFloat(String(balance)).toFixed(2)
+  };
+
+  const hist = loadHistory();
+  hist.unshift(entry);
+  saveHistory(hist);
+  renderHistory();
+}
+
+function renderHistory() {
+  const list  = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmptyMsg');
+  if (!list) return;
+
+  const hist = loadHistory();
+  list.innerHTML = '';
+
+  if (hist.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  hist.forEach(item => {
+    const li = document.createElement('li');
+
+    /* — Nouveau : style selon le solde — */
+    const soldeNum = parseFloat(item.solde);    // item.solde est déjà “-11872.00”
+    li.classList.add(soldeNum >= 0 ? 'hist-pos' : 'hist-neg');
+
+    li.style.margin        = '6px 0';
+    li.style.border        = '1px solid #ddd';
+    li.style.padding       = '8px';
+    li.style.borderRadius  = '6px';
+
+    li.innerHTML = `
+      <div><strong>Date :</strong> ${item.date}</div>
+      <div><strong>Tirages :</strong> ${Number(item.tirages).toLocaleString('fr-FR')}</div>
+      <div><strong>Temps écoulé :</strong> ${item.temps}</div>
+      <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}</div>
+      <div><strong>Solde :</strong>
+           <span class="solde">
+             ${(soldeNum).toLocaleString('fr-FR', {
+                 minimumFractionDigits:2, maximumFractionDigits:2
+             })} €
+           </span>
+      </div>`;
+    list.appendChild(li);
+  });
+}
+
+
+function clearHistory() {
+  saveHistory([]);
+  renderHistory();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderHistory();
+  const btn = document.getElementById('clearHistoryBtn');
+  if (btn) btn.addEventListener('click', clearHistory);
+});
+/* ====================================================================== */
+
+	  
 	function updateDetailsModalIfOpen() {
 	  const modal = document.getElementById('detailsModal');
 	  if (modal.style.display !== 'block') return;
@@ -650,7 +791,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		list.appendChild(li);
 	  });
 	}
-
 
 	  function updatePrix() {
 		const n   = parseInt(document.getElementById("ticketNumbersCount").value) || 5;
@@ -2494,7 +2634,12 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       document.getElementById("stopMyMillonWinCheckbox").checked = false;
       document.getElementById("stopMyMillonWinGroup").style.display = "block";
 
-      document.getElementById("startBtn").addEventListener("click", startDrawing);
+      document.getElementById("startBtn").addEventListener("click", function () {
+	  // Si on redémarre après avoir joué, on loggue la simulation écoulée
+	  addCurrentRunToHistory();
+	  startDrawing();
+	});
+
       document.getElementById("stopBtn").addEventListener("click", function () {
         if (!stopFlag) {
           stopFlag = true;
@@ -2515,6 +2660,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 
 
       document.getElementById("resetBtn").addEventListener("click", function () {
+	    addCurrentRunToHistory();
         stopFlag = true;
         simulationHasStarted = false;
         clearTimeout(loopTimeout);
@@ -2682,10 +2828,52 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		  document.getElementById('modalOverlayDetails').style.display = 'none';
 		});
 
+		document.addEventListener("DOMContentLoaded", () => {
+  // Ouvrir la modale
+  document.getElementById("historyLink").addEventListener("click", (e) => {
+    e.preventDefault();
+    renderHistory();
+    document.getElementById("historyModal").style.display = "block";
+  });
+
+  // Fermer la modale
+  document.getElementById("closeHistoryBtn").addEventListener("click", () => {
+    document.getElementById("historyModal").style.display = "none";
+  });
+
+  // Fermer si on clique en dehors du contenu
+  document.getElementById("historyModal").addEventListener("click", (e) => {
+    if (e.target.id === "historyModal") {
+      document.getElementById("historyModal").style.display = "none";
+    }
+  });
+});
+
 
     </script>
   </div>
+<div id="historyModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999;">
+  <div style="background:#fff; max-width:450px; margin:80px auto; padding:20px; border-radius:8px; position:relative;">
+    <h3>Historique des simulations</h3>
+    <ul id="historyList" style="list-style:none; padding-left:0; margin:0; max-height:50vh; overflow:auto;">"></ul>
+    <p id="historyEmptyMsg" style="color:#777; margin-top:6px; display:none;">
+      (Aucun élément pour le moment)
+    </p>
+	    <p class="history-advice">
+      Nous vous recommandons de rejouer <strong>strictement les mêmes paramètres</strong>
+      à chaque simulation.<br>
+      Vous pourrez ainsi comparer les résultats et estimer combien de personnes
+      auraient gagné dans des conditions identiques.
+    </p>
+    <div style="margin-top:12px; text-align:right;">
+	   <button id="clearHistoryBtn">🗑️ Effacer l'historique</button>
+	   <button id="closeHistoryBtn">❌ Fermer</button>
+
+    </div>
+  </div>
+</div>
+
+  
 </body>
 
 </html>
-
