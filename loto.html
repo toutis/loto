@@ -630,132 +630,151 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       let lastOdds = Infinity;
 	  let firstOccurrence = {};
 	  let lastDetailsModalState = "";
-	  
-	  /* ==== Historique (cookie) ============================================== */
-const HISTORY_KEY = 'loto_history';
-const HISTORY_MAX = 100; // on limite pour rester léger
 
-function setCookie(name, value, options = {}) {
-  const opt = { path: '/', 'max-age': 60 * 60 * 24 * 365, SameSite: 'Lax', ...options }; // 1 an
-  let updated = encodeURIComponent(name) + '=' + encodeURIComponent(value);
-  if (opt['max-age']) updated += '; max-age=' + opt['max-age'];
-  if (opt.path)       updated += '; path=' + opt.path;
-  if (opt.SameSite)   updated += '; SameSite=' + opt.SameSite;
-  document.cookie = updated;
-}
+		const HISTORY_KEY = 'loto_history';
+		const HISTORY_MAX = 100;
 
-function getCookie(name) {
-  // Parcourt simplement document.cookie et renvoie la valeur décodée
-  const cookies = document.cookie.split(';').map(c => c.trim());
-  for (const c of cookies) {
-    const [key, ...v] = c.split('=');
-    if (key === name) {
-      return decodeURIComponent(v.join('='));
-    }
-  }
-  return null;
-}
+		function setCookie(name, value, options = {}) {
+		  const opt = { path: '/', 'max-age': 60 * 60 * 24 * 365, SameSite: 'Lax', ...options };
+		  let updated = encodeURIComponent(name) + '=' + encodeURIComponent(value);
+		  if (opt['max-age']) updated += '; max-age=' + opt['max-age'];
+		  if (opt.path)       updated += '; path=' + opt.path;
+		  if (opt.SameSite)   updated += '; SameSite=' + opt.SameSite;
+		  document.cookie = updated;
+		}
 
-function loadHistory() {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
+		function getCookie(name) {
 
-function saveHistory(arr) {
-  try {
-    localStorage.setItem(HISTORY_KEY,
-      JSON.stringify(arr.slice(0, HISTORY_MAX)));
-  } catch {/* ignore */}
-}
+		  const cookies = document.cookie.split(';').map(c => c.trim());
+		  for (const c of cookies) {
+			const [key, ...v] = c.split('=');
+			if (key === name) {
+			  return decodeURIComponent(v.join('='));
+			}
+		  }
+		  return null;
+		}
 
-function formatDateFR(d = new Date()) {
-  // "DD/MM/YY - HH:MM"
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yy = String(d.getFullYear()).slice(-2);
-  const HH = String(d.getHours()).padStart(2, '0');
-  const MM = String(d.getMinutes()).padStart(2, '0');
-  return `${dd}/${mm}/${yy} - ${HH}:${MM}`;
-}
+		function loadHistory() {
+		  try {
+			const raw = localStorage.getItem(HISTORY_KEY);
+			return raw ? JSON.parse(raw) : [];
+		  } catch {
+			return [];
+		  }
+		}
 
-function addCurrentRunToHistory() {
-  // On n’ajoute que s’il y a eu une vraie simulation
-  if (!simulationHasStarted || (count === 0 && totalGrillesJouees === 0)) return;
+		function saveHistory(arr) {
+		  try {
+			localStorage.setItem(HISTORY_KEY,
+			  JSON.stringify(arr.slice(0, HISTORY_MAX)));
+		  } catch {}
+		}
 
-  const entry = {
-    date: formatDateFR(new Date()),
-    tirages: count,
-    temps: formatTimeInDays(count * (7/3)),
-    grilles: totalGrillesJouees,
-    solde: Number.parseFloat(String(balance)).toFixed(2)
-  };
+		function formatDateFR(d = new Date()) {
+		  const dd = String(d.getDate()).padStart(2, '0');
+		  const mm = String(d.getMonth() + 1).padStart(2, '0');
+		  const yy = String(d.getFullYear()).slice(-2);
+		  const HH = String(d.getHours()).padStart(2, '0');
+		  const MM = String(d.getMinutes()).padStart(2, '0');
+		  return `${dd}/${mm}/${yy} - ${HH}:${MM}`;
+		}
 
-  const hist = loadHistory();
-  hist.unshift(entry);
-  saveHistory(hist);
-  renderHistory();
-}
+		function addCurrentRunToHistory() {
+		  if (!simulationHasStarted || (count === 0 && totalGrillesJouees === 0)) return;
+		  const ladder = [
+			"5_1", "5_0", "CODE_LOTO",
+			"4_1", "4_0",
+			"3_1", "3_0",
+			"2_1", "2_0",
+			"1_1", "1_0",
+			"0_1", "0_0"
+		  ];
 
-function renderHistory() {
-  const list  = document.getElementById('historyList');
-  const empty = document.getElementById('historyEmptyMsg');
-  if (!list) return;
+		  let best = "—"; 
 
-  const hist = loadHistory();
-  list.innerHTML = '';
+		  for (const step of ladder) {
+			if (step === "CODE_LOTO") {
+			  if (myMillionWinCount > 0) {
+				best = "Code loto";
+				break;
+			  }
+			} else if (stats[step] > 0) {
+			  best = step.replace("_", " n° + ") + " ◉";
+			  break;
+			}
+		  }
+		  const entry = {
+			date:    formatDateFR(new Date()),
+			tirages: count,
+			temps:   formatTimeInDays(count * (7 / 3)),
+			grilles: totalGrillesJouees,
+			solde:   Number.parseFloat(String(balance)).toFixed(2),
+			record:  best
+		  };
 
-  if (hist.length === 0) {
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
+		  const hist = loadHistory();
+		  hist.unshift(entry);
+		  saveHistory(hist);
+		  renderHistory();
+		}
 
-  hist.forEach(item => {
-    const li = document.createElement('li');
+		function renderHistory() {
+		  const list  = document.getElementById('historyList');
+		  const empty = document.getElementById('historyEmptyMsg');
+		  if (!list) return;
 
-    /* — Nouveau : style selon le solde — */
-    const soldeNum = parseFloat(item.solde);    // item.solde est déjà “-11872.00”
-    li.classList.add(soldeNum >= 0 ? 'hist-pos' : 'hist-neg');
+		  const hist = loadHistory();
+		  list.innerHTML = '';
 
-    li.style.margin        = '6px 0';
-    li.style.border        = '1px solid #ddd';
-    li.style.padding       = '8px';
-    li.style.borderRadius  = '6px';
+		  if (hist.length === 0) {
+			empty.style.display = 'block';
+			return;
+		  }
+		  empty.style.display = 'none';
 
-    li.innerHTML = `
-      <div><strong>Date :</strong> ${item.date}</div>
-      <div><strong>Tirages :</strong> ${Number(item.tirages).toLocaleString('fr-FR')}</div>
-      <div><strong>Temps écoulé :</strong> ${item.temps}</div>
-      <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}</div>
-      <div><strong>Solde :</strong>
-           <span class="solde">
-             ${(soldeNum).toLocaleString('fr-FR', {
-                 minimumFractionDigits:2, maximumFractionDigits:2
-             })} €
-           </span>
-      </div>`;
-    list.appendChild(li);
-  });
-}
+		  hist.forEach(item => {
+			const li = document.createElement('li');
+
+			const soldeNum = parseFloat(item.solde);
+			li.classList.add(soldeNum >= 0 ? 'hist-pos' : 'hist-neg');
+
+			li.style.margin        = '6px 0';
+			li.style.border        = '1px solid #ddd';
+			li.style.padding       = '8px';
+			li.style.borderRadius  = '6px';
+
+			li.innerHTML = `
+			  <div><strong>Date :</strong> ${item.date}</div>
+			  <div><strong>Tirages :</strong> ${Number(item.tirages).toLocaleString('fr-FR')}</div>
+			  <div><strong>Temps écoulé :</strong> ${item.temps}</div>
+			  <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}</div>
+			  <div><strong>Pallier :</strong> ${item.record}</div>
+			  <div><strong>Solde :</strong>
+				   <span class="solde">
+					 ${(parseFloat(item.solde)).toLocaleString('fr-FR', {
+					   minimumFractionDigits:2, maximumFractionDigits:2
+					 })} €
+				   </span>
+			  </div>
+			`;
+
+			list.appendChild(li);
+		  });
+		}
 
 
-function clearHistory() {
-  saveHistory([]);
-  renderHistory();
-}
+		function clearHistory() {
+		  saveHistory([]);
+		  renderHistory();
+		}
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderHistory();
-  const btn = document.getElementById('clearHistoryBtn');
-  if (btn) btn.addEventListener('click', clearHistory);
-});
-/* ====================================================================== */
+		document.addEventListener('DOMContentLoaded', () => {
+		  renderHistory();
+		  const btn = document.getElementById('clearHistoryBtn');
+		  if (btn) btn.addEventListener('click', clearHistory);
+		});
 
-	  
 	function updateDetailsModalIfOpen() {
 	  const modal = document.getElementById('detailsModal');
 	  if (modal.style.display !== 'block') return;
@@ -2635,7 +2654,6 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       document.getElementById("stopMyMillonWinGroup").style.display = "block";
 
       document.getElementById("startBtn").addEventListener("click", function () {
-	  // Si on redémarre après avoir joué, on loggue la simulation écoulée
 	  addCurrentRunToHistory();
 	  startDrawing();
 	});
