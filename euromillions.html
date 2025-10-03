@@ -403,6 +403,11 @@
 			list-style: none;
 			padding-left: 0;
 		}
+		
+		#detailsList li:first-child {
+		  margin-bottom: .7em;
+		}
+		
 	</style>
 </head>
 
@@ -720,15 +725,16 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			  const modal = document.getElementById('detailsModal');
 			  if (modal.style.display !== 'block') return;
 
-			  const allPaliers = [
-				  {n: 5, s: 2}, {n: 5, s: 1}, {n: 5, s: 0},
-				  {n: 4, s: 2}, {n: 4, s: 1}, {n: 4, s: 0},
-				  {n: 3, s: 2}, {n: 3, s: 1}, {n: 3, s: 0},
-				  {n: 2, s: 2}, {n: 2, s: 1}, {n: 2, s: 0},
-				  {n: 1, s: 2}, {n: 1, s: 1}, {n: 1, s: 0},
-				  {n: 0, s: 2}, {n: 0, s: 1}, {n: 0, s: 0}
-			  ];
-			  const state = allPaliers.map(({n, s}) => firstOccurrence[`${n}_${s}`] || 0);
+			const allPaliers = [
+			  { key: 'myMillion', label: 'My Million' },
+			  {n: 5, s: 2}, {n: 5, s: 1}, {n: 5, s: 0},
+			  {n: 4, s: 2}, {n: 4, s: 1}, {n: 4, s: 0},
+			  {n: 3, s: 2}, {n: 3, s: 1}, {n: 3, s: 0},
+			  {n: 2, s: 2}, {n: 2, s: 1}, {n: 2, s: 0},
+			  {n: 1, s: 2}, {n: 1, s: 1}, {n: 1, s: 0},
+			  {n: 0, s: 2}, {n: 0, s: 1}, {n: 0, s: 0}
+			];
+			  const state = allPaliers.map(p => firstOccurrence[p.key || `${p.n}_${p.s}`] || 0)
 
 			  const currentState = JSON.stringify(state);
 			  if (currentState === lastDetailsModalState) return;
@@ -736,9 +742,9 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 			  const list = document.getElementById('detailsList');
 			  list.innerHTML = '';
-			  allPaliers.forEach(({n, s}) => {
-				const key = `${n}_${s}`;
-				const label = `${n} n° + ${s} ◉`;
+			  allPaliers.forEach(p => {
+				const key   = p.key   || `${p.n}_${p.s}`;
+				const label = p.label || `${p.n} n° + ${p.s} ★`;
 				const li = document.createElement('li');
 				if (firstOccurrence[key]) {
 				  const days = firstOccurrence[key] * (7/2);
@@ -1035,50 +1041,113 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			});
 
 			function initGainChart() {
-				const ctx = document.getElementById("gainChart").getContext("2d");
+			  const ctx = document.getElementById("gainChart").getContext("2d");
 
-				gainChart = new Chart(ctx, {
-					type: "line",
-					data: {
-						datasets: [{
-							label: "Solde (€)",
-							data: [],
-							fill: false,
-							borderWidth: 2,
-							pointRadius: 0,
-							tension: 0,
-							segment: {
-								borderColor: ctx => ctx.p1.parsed.y >= 0 ? "#43a047" : "#e53935"
-							}
-						}]
-					},
-					options: {
-						animation: false,
-						parsing: false,
-						spanGaps: true,
-						elements: {
-							line: {
-								borderCapStyle: 'round',
-								borderJoinStyle: 'round'
-							},
-							point: {
-								radius: 0
-							}
-						},
-						plugins: {
-							legend: { display: false },
-							decimation: {
-								enabled: true,
-								algorithm: 'min-max',
-								samples: 40000
-							}
-						},
-						scales: {
-							x: { type: "linear", title: { display: true, text: "Tirages" } },
-							y: { title: { display: false, text: "€" } }
-						}
+			  gainChart = new Chart(ctx, {
+				type: "line",
+				data: {
+				  datasets: [{
+					label: "Solde (€)",
+					data: [],
+					fill: false,
+					borderWidth: 2,
+					pointRadius: 0,
+					pointHitRadius: 12, 
+					pointHoverRadius: 5,
+					hoverBorderWidth: 2,
+					tension: 0,
+					segment: {
+					  borderColor: c => c.p1.parsed.y >= 0 ? "#43a047" : "#e53935"
 					}
-				});
+				  }]
+				},
+				options: {
+				  animation: false,
+				  parsing: false,
+				  spanGaps: true,
+				  elements: {
+					line: { borderCapStyle: "round", borderJoinStyle: "round" },
+					point: { radius: 0 }
+				  },
+				  plugins: {
+					legend: { display: false },
+					decimation: {
+					  enabled: true,
+					  algorithm: "min-max",
+					  samples: 40000
+					},
+					tooltip: {
+					  enabled: false,
+					  external({chart, tooltip}) {
+						let el = chart.canvas.parentNode.querySelector('.my-tooltip');
+						if (!el) {
+						  el = document.createElement('div');
+						  el.className = 'my-tooltip';
+						  Object.assign(el.style, {
+							position: 'absolute',
+							background: 'rgba(0,0,0,.8)',
+							color: '#fff',
+							borderRadius: '4px',
+							padding: '6px 8px',
+							font: '12px/1.2 sans-serif',
+							pointerEvents: 'none',
+							opacity: 0
+						  });
+						  chart.canvas.parentNode.appendChild(el);
+						}
+						if (tooltip.opacity === 0) {
+						  el.style.opacity = 0;
+						  return;
+						}
+						const p      = tooltip.dataPoints[0];
+						const tirage = p.parsed.x;
+						const jours  = tirage * 7 / 2;
+						const soldeN  = p.parsed.y;
+						const soldeT  = soldeN.toLocaleString('fr-FR');
+						const couleur = soldeN >= 0 ? '#4caf50' : '#e53935';
+
+						el.innerHTML = `
+						  <div><strong>Temps&nbsp;:</strong> ${formatTempsCourt(jours)}</div>
+						  <div><strong>Solde&nbsp;:</strong> <span style="color:${couleur}">${soldeT} €</span></div>
+						`;
+
+						const {offsetLeft, offsetTop} = chart.canvas;
+						el.style.opacity = 1;
+						el.style.left = offsetLeft + tooltip.caretX + 'px';
+						el.style.top  = offsetTop  + tooltip.caretY + 'px';
+					  }
+					}
+				  },
+				  scales: {
+					x: {
+					  type: "linear",
+					  title: { display: true, text: "Temps" },
+					  ticks: {
+						callback(value/*, idx, ticks*/) {
+						  const jours = value * 7 / 3;
+						  return formatTempsCourt(jours);
+						}
+					  }
+					},
+					y: { title: { display: false, text: "€" } }
+				  }
+				}
+			  });
+			}
+			
+			function formatTempsCourt(totalJours) {
+			  if (totalJours < 30) {
+				return Math.round(totalJours) + " jours";
+			  }
+			  if (totalJours < 30.4375 * 6) {
+				return Math.round(totalJours / 30.4375) + " mois";
+			  }
+			  const ans = totalJours / 365.25;
+			  if (ans < 100) {
+				return (ans < 10 ? ans.toFixed(1).replace(".0", "") : Math.round(ans)) + " ans";
+			  }
+			  const siecles = Math.round(ans / 100);
+			  return siecles + " siècles";
 			}
 
 			let GAIN_SEUIL = 20000;
@@ -1128,12 +1197,23 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				}
 
 				if (addPoint) {
-					gainChart.data.datasets[0].data.push({ x: count, y: gainNet });
-					gainChart.update();
+					addGainPoint(count, gainNet);
 					lastY = gainNet;
 				}
 			}
 
+
+		     function addGainPoint(x, y) {
+				  const data = gainChart.data.datasets[0].data;
+				  const last = data[data.length - 1];
+				  
+				  if (last && last.x === x) {
+					last.y = y;
+				  } else {
+					data.push({ x, y });
+				  }
+				  gainChart.update();
+		    }
 
 			function resetGainChart() {
 				if (!gainChart) return;
@@ -2035,6 +2115,10 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 							}
 							balance += myMillonPrize;
 							myMillionTotalGain += myMillonPrize;
+							if (!firstOccurrence.myMillion) {
+							    firstOccurrence.myMillion = count;
+							    updateDetailsModalIfOpen();
+						    }
 							updateStatsDisplay();
 
 							myMillionJustWon = true;
@@ -2050,8 +2134,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 								}
 
 								if (gainChart) {
-									gainChart.data.datasets[0].data.push({ x: count, y: balance });
-									gainChart.update();
+									addGainPoint(count, balence);
 								}
 
 								stopFlag = true;
@@ -2152,8 +2235,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 							}
 
 							if (gainChart) {
-								gainChart.data.datasets[0].data.push({ x: count, y: balance });
-								gainChart.update();
+								addGainPoint(count, balence);
 								lastY = balance;
 							}
 
@@ -2431,6 +2513,11 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			}
 
 			function startDrawing() {
+				firstOccurrence = {};
+				lastDetailsModalState = "";
+				const list = document.getElementById("detailsList");
+				if (list) list.innerHTML = ""; 
+			
 				simulationHasStarted = true;
 				resetGainChart();
 
@@ -2647,6 +2734,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		  list.innerHTML = '';
 
 		const allPaliers = [
+		  { key: 'myMillion', label: 'My Million' },
 		  {n: 5, s: 2}, {n: 5, s: 1}, {n: 5, s: 0},
 		  {n: 4, s: 2}, {n: 4, s: 1}, {n: 4, s: 0},
 		  {n: 3, s: 2}, {n: 3, s: 1}, {n: 3, s: 0},
@@ -2655,9 +2743,9 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		  {n: 0, s: 2}, {n: 0, s: 1}, {n: 0, s: 0}
 		];
 
-		allPaliers.forEach(({n, s}) => {
-		  const key = `${n}_${s}`;
-		  const label = `${n} n° + ${s} ◉`;
+		allPaliers.forEach(({n, s, key: k, label: l}) => {
+		  const key   = k || `${n}_${s}`;
+		  const label = l || `${n} n° + ${s} ★`;
 		  const li = document.createElement('li');
 		  if (firstOccurrence[key]) {
 			const days = firstOccurrence[key] * (7/2);
