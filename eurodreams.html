@@ -438,6 +438,14 @@
 		.history-advice{
 		  font-size:.78em; color:#888; margin:8px 0 4px;
 		}
+		
+		.wrench-icon{
+		  cursor:help;
+		  user-select:none;
+		  display:inline-block;
+		  line-height:1;
+		  font-size:1.25em;
+		}
 
 		
 	</style>
@@ -705,7 +713,9 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
     <p class="history-advice">
       Nous vous recommandons de rejouer <strong>strictement les mêmes paramètres</strong>
-      à chaque simulation afin de comparer les résultats.
+      à chaque simulation.<br>
+      Vous pourrez ainsi comparer les résultats et estimer combien de personnes
+      auraient gagné dans des conditions identiques.
     </p>
 
     <div style="margin-top:12px;text-align:right;">
@@ -733,6 +743,23 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			
 			const HISTORY_KEY = 'eurodreams_history';
 			const HISTORY_MAX = 100;
+			
+			const DEFAULT_PRIZES = {
+			  "6_1": 7200000, "6_0": 120000,
+			  "5_1": 150,      "5_0": 150,
+			  "4_1": 50,       "4_0": 50,
+			  "3_1": 6.5,      "3_0": 6.5,
+			  "2_1": 2.5,      "2_0": 2.5,
+			  "1_1": 0,        "1_0": 0,
+			  "0_1": 0,        "0_0": 0
+			};
+
+			function prizeTableIsModified(){
+			  for(const key in DEFAULT_PRIZES){
+				if(prizeMapping[key] !== DEFAULT_PRIZES[key]) return true;
+			  }
+			  return false;
+			}
 
 			function loadHistory(){
 			  try{ const raw = localStorage.getItem(HISTORY_KEY);
@@ -772,13 +799,14 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		  }
 
 		  const entry = {
-			date   : formatDateFR(new Date()),
-			tirages: count,
-			temps  : formatTimeInDays(count*(7/2)),
-			grilles: totalGrillesJouees,
-			solde  : Number(balance).toFixed(2),
-			record : best
-		  };
+			  date   : formatDateFR(new Date()),
+			  tirages: count,
+			  temps  : formatTimeInDays(count*(7/2)),
+			  grilles: totalGrillesJouees,
+			  solde  : Number(balance).toFixed(2),
+			  record : best,
+			  prizeModified: prizeTableIsModified()
+			};
 
 		  const hist = loadHistory();
 		  hist.unshift(entry);
@@ -807,10 +835,14 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			else                           li.classList.add('hist-neg');
 
 			li.style.cssText = 'margin:6px 0;border:1px solid #ddd;padding:8px;border-radius:6px;';
+			
+			const wrench = item.prizeModified
+			  ? ' <span class="wrench-icon" title="Les gains par rang ont été modifiés pour cette simulation">🔧</span>'
+			  : '';
 
 			const ratio = Math.round(item.grilles/item.tirages);
 			li.innerHTML = `
-			  <div><strong>Date :</strong> ${item.date}</div>
+			  <div><strong>Date :</strong> ${item.date}${wrench}</div>
 			  <div><strong>Tirages :</strong> ${item.tirages.toLocaleString('fr-FR')}</div>
 			  <div><strong>Temps écoulé :</strong> ${item.temps}</div>
 			  <div><strong>Grilles jouées :</strong> ${item.grilles.toLocaleString('fr-FR')}
