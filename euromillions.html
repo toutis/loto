@@ -422,6 +422,14 @@
 		
 		.hist-jack  { background:#e6fae6; border-color:#fdd835; }
 		.hist-jack  .solde { color:#159f13; font-weight:bold; }
+		
+		.wrench-icon{
+			cursor: help;
+			user-select:none;
+			display:inline-block;
+			line-height:1;
+			font-size:1.25em;   /* ↑ légèrement plus gros que le texte */
+		}
 
 	</style>
 </head>
@@ -739,6 +747,22 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			
 			const HISTORY_KEY = 'euromillions_history';
 			const HISTORY_MAX = 100;
+			
+			const DEFAULT_PRIZES = {
+			  "5_2": 45000000,  "5_1": 400000,  "5_0": 50000,
+			  "4_2": 1500,      "4_1": 150,     "4_0": 55,
+			  "3_2": 75,        "3_1": 14,      "3_0": 11,
+			  "2_2": 15,        "2_1": 8,       "2_0": 4,
+			  "1_2": 7,         "1_1": 0,       "1_0": 0,
+			  "0_2": 0,         "0_1": 0,       "0_0": 0
+			};
+			
+			function prizeTableIsModified(){
+			  for (const key in DEFAULT_PRIZES){
+				if (prizeMapping[key] !== DEFAULT_PRIZES[key]) return true;
+			  }
+			  return false;
+			}
 
 			function setCookie(name, value, options = {}) {
 			  const opt = { path: '/', 'max-age': 60 * 60 * 24 * 365, SameSite: 'Lax', ...options };
@@ -815,12 +839,13 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			  }
 
 			  const entry = {
-				date:    formatDateFR(new Date()),
-				tirages: count,
-				temps:   formatTimeInDays(count * (7/2)),
-				grilles: totalGrillesJouees,
-				solde:   Number.parseFloat(String(balance)).toFixed(2),
-				record:  best
+				  date   : formatDateFR(new Date()),
+				  tirages: count,
+				  temps  : formatTimeInDays(count * (7/2)),
+				  grilles: totalGrillesJouees,
+				  solde  : Number.parseFloat(String(balance)).toFixed(2),
+				  record : best,
+				  prizeModified: prizeTableIsModified()      //  ← nouvelle ligne
 			  };
 
 			  const hist = loadHistory();
@@ -856,9 +881,13 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				const pluriel      = ratio === 1 ? 'grille' : 'grilles';
 
 				li.style.cssText = 'margin:6px 0;border:1px solid #ddd;padding:8px;border-radius:6px;';
+				
+				const wrench = item.prizeModified
+				  ? ' <span class="wrench-icon" title="Les gains par rang ont été modifiés pour cette simulation">🔧</span>'
+				  : '';
 
 				li.innerHTML = `
-				  <div><strong>Date :</strong> ${item.date}</div>
+				  <div><strong>Date :</strong> ${item.date}${wrench}</div>
 				  <div><strong>Tirages :</strong> ${Number(item.tirages).toLocaleString('fr-FR')}</div>
 				  <div><strong>Temps écoulé :</strong> ${item.temps}</div>
 				  <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}
@@ -2963,7 +2992,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 		</script>
 		<div id="historyModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999;">
   <div style="background:#fff; max-width:450px; margin:80px auto; padding:20px; border-radius:8px; position:relative;">
-    <h3>Historique des simulations</h3>
+    <h3>Historique de vos simulations</h3>
     <ul id="historyList" style="list-style:none; padding-left:0; margin:0; max-height:50vh; overflow:auto;">"></ul>
     <p id="historyEmptyMsg" style="color:#777; margin-top:6px; display:none;">
       (Aucun élément pour le moment)
