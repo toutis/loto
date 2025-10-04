@@ -426,6 +426,20 @@
 			list-style: none;
 			padding-left: 0;
 		}
+		
+		.hist-pos  { background:#e6fae6; border-color:#159f13; }
+		.hist-neg  { background:#ffecec; border-color:#e53935; }
+		.hist-jack { background:#e6fae6; border-color:#fdd835; }
+
+		.hist-pos  .solde{ color:#159f13; }
+		.hist-neg  .solde{ color:#e53935; }
+		.hist-jack .solde{ color:#159f13; font-weight:bold; }
+
+		.history-advice{
+		  font-size:.78em; color:#888; margin:8px 0 4px;
+		}
+
+		
 	</style>
 </head>
 
@@ -609,8 +623,11 @@ Utile pour analyser, comparer, et réaliser le nombre immense de combinaisons po
 					<span class="info-icon" title="Les gains par rang sont fixes et déterminés à l’avance dans cette simulation. 
 Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc.">i</span>
 				</h3>
-				<a href="#" id="editPrizesLink" style="color: #187ad2; font-size: 0.95em;">Modifier les gains par
-					rang</a>
+				<a href="#" id="editPrizesLink" style="color:#187ad2;font-size:.95em;">Modifier les gains par rang</a> |
+				<a href="#" id="showDetails"   style="color:#187ad2;font-size:.95em;">voir plus de détails</a> | 
+				<a href="#" id="historyLink" style="color:#187ad2;font-size:.95em;">voir l'historique</a>
+
+
 				<ul>
 					<div id="gainLossSummary" style="margin:12px 0 8px 0;">
 						<div>
@@ -660,17 +677,156 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 	<div id="modalOverlay"
 		style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 9999;">
 	</div>
+	
+			
+		<div id="detailsModal" style="display:none;position:fixed;top:50%;left:50%;
+			 transform:translate(-50%,-50%);background:#fff;padding:20px;
+			 border:2px solid #444;box-shadow:0 0 20px rgba(0,0,0,.3);
+			 z-index:10001;width:400px;max-height:80vh;overflow-y:auto;">
+		  <h3>Détails des paliers obtenus</h3>
+		  <ul id="detailsList" style="padding-left:1em;"></ul>
+		  <button id="closeDetailsBtn" style="margin-top:10px;">❌ Fermer</button>
+		</div>
+
+		<div id="modalOverlayDetails" style="display:none;position:fixed;top:0;left:0;
+			 width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;"></div>
+
+
+<div id="historyModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+     background:rgba(0,0,0,.6);z-index:9999;">
+  <div style="background:#fff;max-width:450px;margin:80px auto;padding:20px;border-radius:8px;position:relative;">
+    <h3>Historique de vos simulations</h3>
+    <div id="historyTotals" style="font-weight:bold;margin:6px 0 10px;color:#333;"></div>
+
+    <ul id="historyList" style="list-style:none;padding-left:0;margin:0;max-height:50vh;overflow:auto;"></ul>
+    <p id="historyEmptyMsg" style="color:#777;margin-top:6px;display:none;">
+      (Aucun élément pour le moment)
+    </p>
+
+    <p class="history-advice">
+      Nous vous recommandons de rejouer <strong>strictement les mêmes paramètres</strong>
+      à chaque simulation afin de comparer les résultats.
+    </p>
+
+    <div style="margin-top:12px;text-align:right;">
+      <button id="clearHistoryBtn">🗑️ Effacer l'historique</button>
+      <button id="closeHistoryBtn">❌ Fermer</button>
+    </div>
+  </div>
+</div>
+
+	
 	<div id="examplesModal">
 		<div id="examplesContent"></div>
 
 		<div style="margin-top:10px">
 			<button id="closeExamplesBtn" type="button">❌ Fermer</button>
 		</div>
+		
 		<script>
 
+			let firstOccurrence      = {};
+			let lastDetailsModalState = "";
 			let gainChart = null;
 			let lastY;
 			let lastOdds = Infinity;
+			
+			const HISTORY_KEY = 'eurodreams_history';
+			const HISTORY_MAX = 100;
+
+			function loadHistory(){
+			  try{ const raw = localStorage.getItem(HISTORY_KEY);
+				   return raw ? JSON.parse(raw) : []; }
+			  catch{ return []; }
+			}
+			function saveHistory(arr){
+			  try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0,HISTORY_MAX))); }
+			  catch{}
+			}
+			function formatDateFR(d=new Date()){
+			  const dd=String(d.getDate()).padStart(2,'0');
+			  const mm=String(d.getMonth()+1).padStart(2,'0');
+			  const yy=String(d.getFullYear()).slice(-2);
+			  const HH=String(d.getHours()).padStart(2,'0');
+			  const MM=String(d.getMinutes()).padStart(2,'0');
+			  return `${dd}/${mm}/${yy} - ${HH}:${MM}`;
+			}
+			
+		let historySaved = false;
+		function addCurrentRunToHistory(){
+		  if(historySaved) return;
+		  if(!simulationHasStarted || (count===0 && totalGrillesJouees===0)) return;
+
+		  const ladder = ["6_1","6_0","CODE_LOTO",
+						  "5_1","5_0","4_1","4_0",
+						  "3_1","3_0","2_1","2_0",
+						  "1_1","1_0","0_1","0_0"];
+
+		  let best = "—";
+		  for(const step of ladder){
+			if(step==="CODE_LOTO"){
+			  if(myMillionWinCount>0){ best="Code loto"; break; }
+			}else if(stats[step]>0){
+			  best = step.replace("_"," n° + ")+" ◉"; break;
+			}
+		  }
+
+		  const entry = {
+			date   : formatDateFR(new Date()),
+			tirages: count,
+			temps  : formatTimeInDays(count*(7/2)),
+			grilles: totalGrillesJouees,
+			solde  : Number(balance).toFixed(2),
+			record : best
+		  };
+
+		  const hist = loadHistory();
+		  hist.unshift(entry);
+		  saveHistory(hist);
+		  renderHistory();
+		  historySaved = true;
+		}
+
+		function renderHistory(){
+		  const list  = document.getElementById('historyList');
+		  const empty = document.getElementById('historyEmptyMsg');
+		  if(!list) return;
+
+		  const hist = loadHistory();
+		  list.innerHTML = '';
+
+		  if(hist.length===0){ empty.style.display='block'; return; }
+		  empty.style.display='none';
+
+		  hist.forEach(item=>{
+			const li=document.createElement('li');
+
+			const soldeNum = parseFloat(item.solde);
+			if(soldeNum >= 1_000_000)      li.classList.add('hist-jack');
+			else if(soldeNum >= 0)         li.classList.add('hist-pos');
+			else                           li.classList.add('hist-neg');
+
+			li.style.cssText = 'margin:6px 0;border:1px solid #ddd;padding:8px;border-radius:6px;';
+
+			const ratio = Math.round(item.grilles/item.tirages);
+			li.innerHTML = `
+			  <div><strong>Date :</strong> ${item.date}</div>
+			  <div><strong>Tirages :</strong> ${item.tirages.toLocaleString('fr-FR')}</div>
+			  <div><strong>Temps écoulé :</strong> ${item.temps}</div>
+			  <div><strong>Grilles jouées :</strong> ${item.grilles.toLocaleString('fr-FR')}
+				   <span style="color:gray;">(${ratio.toLocaleString('fr-FR')} grille${ratio>1?'s':''} par tirage)</span>
+			  </div>
+			  <div><strong>Pallier :</strong> ${item.record}</div>
+			  <div><strong>Solde :</strong> <span class="solde">
+				${(soldeNum).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €
+			  </span></div>`;
+			list.appendChild(li);
+		  });
+		}
+		function clearHistory(){ saveHistory([]); renderHistory(); }
+
+			
+			
 			
 		  function updatePrix() {
 			const n = parseInt(document.getElementById("ticketNumbersCount").value) || 5;
@@ -899,6 +1055,47 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 				return examples;
 			}
+			
+			function updateDetailsModalIfOpen() {
+			  const modal = document.getElementById('detailsModal');
+			  if (modal.style.display !== 'block') return;
+
+			  const allPaliers = [
+				{ n: 6, s: 1 }, { n: 6, s: 0 },
+				{ n: 5, s: 1 }, { n: 5, s: 0 },
+				{ n: 4, s: 1 }, { n: 4, s: 0 },
+				{ n: 3, s: 1 }, { n: 3, s: 0 },
+				{ n: 2, s: 1 }, { n: 2, s: 0 },
+				{ n: 1, s: 1 }, { n: 1, s: 0 },
+				{ n: 0, s: 1 }, { n: 0, s: 0 }
+			  ];
+
+			  const state = JSON.stringify(
+				allPaliers.map(p => firstOccurrence[`${p.n}_${p.s}`] || 0)
+			  );
+			  if (state === lastDetailsModalState) return;
+			  lastDetailsModalState = state;
+
+			  const list = document.getElementById('detailsList');
+			  list.innerHTML = '';
+
+			  allPaliers.forEach(p => {
+				const key   = `${p.n}_${p.s}`;
+				const label = `${p.n} n° + ${p.s} ◉`;
+				const li    = document.createElement('li');
+
+				if (firstOccurrence[key]) {
+				  const jours = firstOccurrence[key] * (7 / 2);
+				  const quand = formatTimeInDays(jours,
+								{ skipSmallUnitsIfYearOrCentury:true });
+				  li.textContent = `${label} : obtenu en ${quand}`;
+				} else {
+				  li.innerHTML  = `<span style="color:gray">${label} : jamais obtenu</span>`;
+				}
+				list.appendChild(li);
+			  });
+			}
+
 
 		  function openExamplesModal(N) {
 			const modal = document.getElementById("examplesModal");
@@ -1014,51 +1211,119 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			});
 
 			function initGainChart() {
-				const ctx = document.getElementById("gainChart").getContext("2d");
+			  const ctx = document.getElementById("gainChart").getContext("2d");
 
-				gainChart = new Chart(ctx, {
-					type: "line",
-					data: {
-						datasets: [{
-							label: "Solde (€)",
-							data: [],
-							fill: false,
-							borderWidth: 2,
-							pointRadius: 0,
-							tension: 0,
-							segment: {
-								borderColor: ctx => ctx.p1.parsed.y >= 0 ? "#43a047" : "#e53935"
-							}
-						}]
-					},
-					options: {
-						animation: false,
-						parsing: false,
-						spanGaps: true,
-						elements: {
-							line: {
-								borderCapStyle: 'round',
-								borderJoinStyle: 'round'
-							},
-							point: {
-								radius: 0
-							}
-						},
-						plugins: {
-							legend: { display: false },
-							decimation: {
-								enabled: true,
-								algorithm: 'min-max',
-								samples: 40000
-							}
-						},
-						scales: {
-							x: { type: "linear", title: { display: true, text: "Tirages" } },
-							y: { title: { display: false, text: "€" } }
-						}
+			  gainChart = new Chart(ctx, {
+				type: "line",
+				data: {
+				  datasets: [{
+					label: "Solde (€)",
+					data: [],
+					fill: false,
+					borderWidth: 2,
+					pointRadius: 0,
+					pointHitRadius: 12,
+					pointHoverRadius: 5,
+					hoverBorderWidth: 2,
+					tension: 0,
+					segment: {
+					  borderColor: c => c.p1.parsed.y >= 0 ? "#43a047" : "#e53935"
 					}
-				});
+				  }]
+				},
+				options: {
+				  animation: false,
+				  parsing: false,
+				  spanGaps: true,
+				  elements: {
+					line: { borderCapStyle: "round", borderJoinStyle: "round" },
+					point: { radius: 0 }
+				  },
+				  plugins: {
+					legend: { display: false },
+					decimation: {
+					  enabled: true,
+					  algorithm: "min-max",
+					  samples: 40000
+					},
+					tooltip: {
+					  enabled: false,
+					  external({ chart, tooltip }) {
+						let el = chart.canvas.parentNode.querySelector('.my-tooltip');
+						if (!el) {
+						  el = document.createElement('div');
+						  el.className = 'my-tooltip';
+						  Object.assign(el.style, {
+							position: 'absolute',
+							background: 'rgba(0,0,0,.8)',
+							color: '#fff',
+							borderRadius: '4px',
+							padding: '6px 8px',
+							font: '12px/1.2 sans-serif',
+							pointerEvents: 'none',
+							opacity: 0
+						  });
+						  chart.canvas.parentNode.appendChild(el);
+						}
+						if (tooltip.opacity === 0) {
+						  el.style.opacity = 0;
+						  return;
+						}
+						const p      = tooltip.dataPoints[0];
+						const tirage = p.parsed.x;
+						const jours  = tirage * 7 / 2;
+						const soldeN = p.parsed.y;
+						const couleur = soldeN >= 0 ? '#4caf50' : '#e53935';
+
+						el.innerHTML = `
+						  <div><strong>Temps&nbsp;:</strong> ${formatTempsCourt(jours)}</div>
+						  <div><strong>Solde&nbsp;:</strong>
+							   <span style="color:${couleur}">${soldeN.toLocaleString('fr-FR')} €</span></div>`;
+						const { offsetLeft, offsetTop } = chart.canvas;
+						el.style.opacity = 1;
+						el.style.left = offsetLeft + tooltip.caretX + "px";
+						el.style.top  = offsetTop  + tooltip.caretY + "px";
+					  }
+					}
+				  },
+				  scales: {
+					x: {
+					  type: "linear",
+					  title: { display: true, text: "Temps" },
+					  ticks: {
+						callback(value) {
+						  const jours = value * 7 / 2;
+						  return formatTempsCourt(jours);
+						}
+					  }
+					},
+					y: { title: { display: false, text: "€" } }
+				  }
+				}
+			  });
 			}
+			
+			function addGainPoint(x, y) {
+			  const data = gainChart.data.datasets[0].data;
+			  const last = data[data.length - 1];
+			  if (last && last.x === x) last.y = y;
+			  else data.push({ x, y });
+			  gainChart.update();
+			}
+
+
+
+			function formatTempsCourt(totalJours) {
+			  if (totalJours < 30) return Math.round(totalJours) + " jours";
+			  if (totalJours < 30.4375 * 6) return Math.round(totalJours / 30.4375) + " mois";
+
+			  const ans = totalJours / 365.25;
+			  if (ans < 100) return (ans < 10 ? ans.toFixed(1).replace(".0", "") : Math.round(ans)) + " ans";
+
+			  const siecles = Math.round(ans / 100);
+			  return siecles + " siècles";
+			}
+
 
 			const GAIN_SEUIL = 20000;
 			let prizeTableModified = false;
@@ -1107,8 +1372,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				}
 
 				if (addPoint) {
-					gainChart.data.datasets[0].data.push({ x: count, y: gainNet });
-					gainChart.update();
+					addGainPoint(count, gainNet);
 					lastY = gainNet;
 				}
 			}
@@ -1646,6 +1910,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				let percentString = `(${percentLossVal >= 0 ? "+" : ""}${percentLossVal.toFixed(2)}%)`;
 				document.getElementById('percentValue').innerHTML =
 					`<span style="color:#888;">${percentString}</span>`;
+				updateDetailsModalIfOpen(); 
 			}
 
 			function updateChanceDisplay() {
@@ -1728,32 +1993,44 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 			}
 
-			function formatTimeInDays(totalDays) {
-				const joursTotal = Math.floor(totalDays);
-				let centuries = Math.floor(joursTotal / 36500);
-				let reste = joursTotal % 36500;
-				let years = Math.floor(reste / 365);
-				reste = reste % 365;
-				let months = Math.floor(reste / 30.4375);
-				reste = Math.floor(reste % 30.4375);
-				let weeks = Math.floor(reste / 7);
-				let days = reste % 7;
+			function formatTimeInDays(totalDays, options = {}) {
+			  const { skipSmallUnitsIfYearOrCentury = false } = options;
 
-				const w = window.innerWidth;
-				const parts = [];
+			  const joursTotal = Math.floor(totalDays);
+			  let centuries = Math.floor(joursTotal / 36500);
+			  let reste     = joursTotal % 36500;
+			  let years     = Math.floor(reste / 365);
+			  reste         = reste % 365;
+			  let months    = Math.floor(reste / 30.4375);
+			  reste         = Math.floor(reste % 30.4375);
+			  let weeks     = Math.floor(reste / 7);
+			  let days      = reste % 7;
 
-				if (centuries > 0) parts.push(centuries + ' ' + (centuries === 1 ? 'siècle' : 'siècles'));
-				if (years > 0) parts.push(years + ' ' + (years === 1 ? 'an' : 'ans'));
-				if (months > 0) parts.push(months + ' mois');
+			  const w = typeof window !== "undefined" ? window.innerWidth : 1200;
+			  const parts = [];
 
-				const showWeeks = !(w > 785 && w < 1000 && centuries > 0);
-				const showDays = !(w > 785 && ((w < 1000 && centuries > 0) || (w < 1200 && years > 0)));
+			  if (centuries) parts.push(`${centuries} ${centuries === 1 ? "siècle" : "siècles"}`);
+			  if (years)     parts.push(`${years} ${years === 1 ? "an" : "ans"}`);
+			  if (months)    parts.push(`${months} mois`);
 
-				if (weeks > 0 && showWeeks) parts.push(weeks + ' ' + (weeks === 1 ? 'semaine' : 'semaines'));
-				if (days > 0 && showDays) parts.push(days + ' ' + (days === 1 ? 'jour' : 'jours'));
+			  const hasBigUnit = centuries || years;
+			  let showWeeks = true, showDays = true;
 
-				return parts.length === 0 ? "0 jour" : parts.join(", ");
+			  if (skipSmallUnitsIfYearOrCentury && hasBigUnit) {
+				showWeeks = false;
+				showDays  = false;
+			  } else {
+				if (w > 785 && w < 1000 && centuries)                    showWeeks = false;
+				if (w > 785 && ((w < 1000 && centuries) || (w < 1200 && years)))
+																	   showDays  = false;
+			  }
+
+			  if (weeks && showWeeks) parts.push(`${weeks} ${weeks === 1 ? "semaine" : "semaines"}`);
+			  if (days  && showDays)  parts.push(`${days} ${days === 1 ? "jour"    : "jours"}`);
+
+			  return parts.length ? parts.join(", ") : "0 jour";
 			}
+
 
 			function updateTimePassed(drawCount) {
 				const days = drawCount * (7 / 2);
@@ -2046,8 +2323,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 								}
 
 								if (gainChart) {
-									gainChart.data.datasets[0].data.push({ x: count, y: balance });
-									gainChart.update();
+									addGainPoint(count, balance);
 									lastY = balance;
 								}
 
@@ -2175,6 +2451,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 								if (countGrilles > 0) {
 									const key = nb + "_" + sb;
 									if (stats.hasOwnProperty(key)) stats[key] += countGrilles;
+									if (firstOccurrence[key] === undefined) firstOccurrence[key] = count;
 									let prize = prizeMapping[key] || 0;
 									if (document.getElementById("multichanceCheckbox").checked) {
 										prize *= multichanceRatio;
@@ -2257,8 +2534,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 						}
 
 						if (gainChart) {
-							gainChart.data.datasets[0].data.push({ x: count, y: balance });
-							gainChart.update();
+							gaddGainPoint(count, balance);
 							lastY = balance;
 						}
 
@@ -2408,8 +2684,11 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			}
 
 			function startDrawing() {
-				simulationHasStarted = true;
-				resetGainChart();
+			historySaved = false; 
+			firstOccurrence = {};
+			lastDetailsModalState = "";
+			simulationHasStarted = true;
+			resetGainChart();
 
 				if (document.getElementById("modeSelect").value === "flash" && document.getElementById("multichanceCheckbox").checked) {
 					const totalParts = parseInt(document.getElementById("totalParts").value) || 0;
@@ -2451,7 +2730,10 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			document.getElementById("stopMyMillonWinCheckbox").checked = false;
 			document.getElementById("stopMyMillonWinGroup").style.display = "block";
 
-			document.getElementById("startBtn").addEventListener("click", startDrawing);
+			document.getElementById("startBtn").addEventListener("click", function () {
+			  addCurrentRunToHistory();
+			  startDrawing();
+			});
 			document.getElementById("stopBtn").addEventListener("click", function () {
 				if (!stopFlag) {
 					stopFlag = true;
@@ -2470,6 +2752,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				updateStatsDisplay();
 			});
 			document.getElementById("resetBtn").addEventListener("click", function () {
+				addCurrentRunToHistory();
 				stopFlag = true;
 				simulationHasStarted = false;
 				clearTimeout(loopTimeout);
@@ -2479,6 +2762,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 					stats[combo] = 0;
 					statsGain[combo] = 0;
 				}
+				firstOccurrence = {};
 				myMillionWinCount = 0;
 				myMillionTotalGain = 0;
 				simulationActive = false;
@@ -2612,6 +2896,54 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 					openExamplesModal(lastOdds);
 				});
 			}
+			
+			document.getElementById('showDetails').addEventListener('click', e => {
+			  e.preventDefault();
+			  modalOverlayDetails.style.display = 'block';
+			  detailsModal.style.display       = 'block';
+			  updateDetailsModalIfOpen();
+			});
+
+
+			document.getElementById('closeDetailsBtn').addEventListener('click', () => {
+			  document.getElementById('detailsModal').style.display         = 'none';
+			  document.getElementById('modalOverlayDetails').style.display  = 'none';
+			});
+			document.getElementById('modalOverlayDetails').addEventListener('click', () => {
+			  document.getElementById('detailsModal').style.display         = 'none';
+			  document.getElementById('modalOverlayDetails').style.display  = 'none';
+			});
+			
+			document.addEventListener('DOMContentLoaded',()=>{
+			  renderHistory();
+
+			  document.getElementById('historyLink')
+					  .addEventListener('click',e=>{
+						e.preventDefault();
+						renderHistory();
+						document.getElementById('historyModal').style.display='block';
+					  });
+
+			  document.getElementById('closeHistoryBtn')
+					  .addEventListener('click',()=>document.getElementById('historyModal').style.display='none');
+
+			  document.getElementById('historyModal')
+					  .addEventListener('click',e=>{
+						if(e.target.id==='historyModal')
+						  document.getElementById('historyModal').style.display='none';
+					  });
+
+			  const btn = document.getElementById('clearHistoryBtn');
+			  if(btn) btn.addEventListener('click', clearHistory);
+			});
+			
+					function persistLastRun() {
+		  try { addCurrentRunToHistory(); } catch {}
+		}
+		window.addEventListener('beforeunload', persistLastRun);
+		window.addEventListener('pagehide',     persistLastRun);
+
+					
 		</script>
 </body>
 
