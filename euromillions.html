@@ -415,10 +415,13 @@
 		.hist-neg  .solde { color:#e53935; }
 			
 		.history-advice{
-			font-size: 0.78em;          /* plus petit */
-			color: #888;                /* gris clair */
-			margin: 8px 0 4px;          /* un tout petit espace avant les boutons */
+			font-size: 0.78em;
+			color: #888;
+			margin: 8px 0 4px;
 		}
+		
+		.hist-jack  { background:#e6fae6; border-color:#fdd835; }
+		.hist-jack  .solde { color:#159f13; font-weight:bold; }
 
 	</style>
 </head>
@@ -781,23 +784,52 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			  const MM = String(d.getMinutes()).padStart(2, '0');
 			  return `${dd}/${mm}/${yy} - ${HH}:${MM}`;
 			}
-
+	
+			let historySaved = false;
+			
 			function addCurrentRunToHistory() {
-			  if (!simulationHasStarted || (count === 0 && totalGrillesJouees === 0)) return;
+			  if (historySaved) return;
+			  if (!simulationHasStarted) return;
+
+			  const ladder = [
+				  "5_2",
+				  "MY_MILLION",
+				  "5_1", "5_0",
+				  "4_2", "4_1", "3_2",
+				  "4_0", "2_2",
+				  "3_1", "3_0",
+				  "1_2", "2_1", "2_0",
+				  "0_2", "1_1", "1_0",
+				  "0_1", "0_0"
+				];
+
+			  let best = "—";
+			  for (const step of ladder) {
+				if (step === "MY_MILLION") {
+				  if (myMillionWinCount > 0) { best = "My Million"; break; }
+				} else if (stats[step] > 0) {
+				  const [n, s] = step.split("_");
+				  best = `${n} n° + ${s} ★`;
+				  break;
+				}
+			  }
 
 			  const entry = {
-				date: formatDateFR(new Date()),
+				date:    formatDateFR(new Date()),
 				tirages: count,
-				temps: formatTimeInDays(count * (7/2)),
+				temps:   formatTimeInDays(count * (7/2)),
 				grilles: totalGrillesJouees,
-				solde: Number.parseFloat(String(balance)).toFixed(2)
+				solde:   Number.parseFloat(String(balance)).toFixed(2),
+				record:  best
 			  };
 
 			  const hist = loadHistory();
 			  hist.unshift(entry);
 			  saveHistory(hist);
 			  renderHistory();
+			  historySaved = true;
 			}
+
 
 			function renderHistory() {
 			  const list  = document.getElementById('historyList');
@@ -807,37 +839,38 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			  const hist = loadHistory();
 			  list.innerHTML = '';
 
-			  if (hist.length === 0) {
-				empty.style.display = 'block';
-				return;
-			  }
+			  if (hist.length === 0) { empty.style.display = 'block'; return; }
 			  empty.style.display = 'none';
 
 			  hist.forEach(item => {
-				const li = document.createElement('li');
-				const soldeNum = parseFloat(item.solde); 
-				li.classList.add(soldeNum >= 0 ? 'hist-pos' : 'hist-neg');
+				const li       = document.createElement('li');
+				const soldeNum = parseFloat(item.solde);
 
-				li.style.margin        = '6px 0';
-				li.style.border        = '1px solid #ddd';
-				li.style.padding       = '8px';
-				li.style.borderRadius  = '6px';
+				if (soldeNum >= 1_000_000)      li.classList.add('hist-jack');
+				else if (soldeNum >= 0)         li.classList.add('hist-pos');
+				else                            li.classList.add('hist-neg');
+
+				const ratioBrut    = Number(item.grilles) / Number(item.tirages);
+				const ratio        = Math.round(ratioBrut);
+				const ratioTxt     = ratio.toLocaleString('fr-FR');
+				const pluriel      = ratio === 1 ? 'grille' : 'grilles';
+
+				li.style.cssText = 'margin:6px 0;border:1px solid #ddd;padding:8px;border-radius:6px;';
 
 				li.innerHTML = `
 				  <div><strong>Date :</strong> ${item.date}</div>
 				  <div><strong>Tirages :</strong> ${Number(item.tirages).toLocaleString('fr-FR')}</div>
 				  <div><strong>Temps écoulé :</strong> ${item.temps}</div>
-				  <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}</div>
-				  <div><strong>Solde :</strong>
-					   <span class="solde">
-						 ${(soldeNum).toLocaleString('fr-FR', {
-							 minimumFractionDigits:2, maximumFractionDigits:2
-						 })} €
-					   </span>
-				  </div>`;
+				  <div><strong>Grilles jouées :</strong> ${Number(item.grilles).toLocaleString('fr-FR')}
+					   <span style="color:gray;">(${ratioTxt} ${pluriel} par tirage)</span></div>
+				  <div><strong>Palier :</strong> ${item.record}</div>
+				  <div><strong>Solde :</strong> <span class="solde">
+					${soldeNum.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €
+				  </span></div>`;
 				list.appendChild(li);
 			  });
 			}
+
 
 			function clearHistory() {
 			  saveHistory([]);
@@ -1111,7 +1144,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
 			  document.getElementById('editOddsOk').onclick = function () {
 				const nv = parseInt(document.getElementById('editOddsInput').value) || 1;
-				// Remet le crayon visible
 				document.getElementById('editOddsIcon').style.display = '';
 				openExamplesModal(nv);
 			  };
@@ -2642,6 +2674,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			}
 
 			function startDrawing() {
+				historySaved = false; 
 				firstOccurrence = {};
 				lastDetailsModalState = "";
 				const list = document.getElementById("detailsList");
@@ -2920,6 +2953,13 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			}
 		  });
 		});
+		
+		function persistLastRun() {
+		  try { addCurrentRunToHistory(); } catch {}
+		}
+		window.addEventListener('beforeunload', persistLastRun);
+		window.addEventListener('pagehide',     persistLastRun);
+				
 		</script>
 		<div id="historyModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999;">
   <div style="background:#fff; max-width:450px; margin:80px auto; padding:20px; border-radius:8px; position:relative;">
@@ -2942,6 +2982,5 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
   </div>
 </div>
 </body>
-
 </html>
 
