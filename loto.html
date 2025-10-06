@@ -562,19 +562,23 @@ Exemple : 10 grilles multiples (6 numéros, 10 Chance), 1 à 10 parts sur 200">i
 
           <div>
             <input type="checkbox" id="smartDrawCheckbox">
-            <label for="smartDrawCheckbox">
-              Grille optimisée
-              <span class="info-icon" title="Active une stratégie de sélection basée sur la rareté.
+		<label for="smartDrawCheckbox">
+		  Type de ticket
+		  <span class="info-icon" title="Active la sélection automatique des numéros selon différents critères :
 
-Les numéros et Chance les moins souvent tirés au cours des 70 derniers tirages 
-sont privilégiés, dans l’espoir qu’ils soient « en retard ». Cela repose sur 
-l’idée de compenser une sous-fréquence apparente.
+• Les moins tombés (depuis le début) : privilégie les boules observées comme les plus rares.
+• Les plus tombés  (depuis le début) : privilégie au contraire les numéros les plus fréquents.
+• Mixte (moitié moins tombés et plus tombés ) : combine rareté et fréquence.
+• Anniversaire : limite les numéros possibles à 1–31, comme des dates de naissance.
+• Pairs / Impairs équilibrés : impose un équilibre (ex. 2–3 ou 3–2).
+• Petits (1–25) / Grands (26–49) : répartit les numéros entre petites et grandes valeurs.
+• Avec suite (2–3 numéros consécutifs) : force au moins une courte suite (p. ex. 12–13 ou 34–35–36).
+• Somme proche de la moyenne : favorise une somme totale autour de ~125 (pour 5 numéros).
 
-⚠️ En réalité, chaque tirage est totalement indépendant des précédents, 
-et tous les numéros ont toujours exactement la même probabilité de sortir.
-Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
+💡 Ces approches modifient seulement la façon de choisir les numéros.
+Chaque tirage reste indépendant et tous les numéros gardent la même probabilité de sortir.">i</span>
+		</label>
 
-            </label>
 
           </div>
         </div>
@@ -618,12 +622,19 @@ combien de fois chaque boule (1–49) et chaque Chance (1–10) a été tirée."
           <label for="stopMyMillonWinCheckbox">Stopper si on gagne un code loto</label>
         </div>
 
-        <div id="smartDrawSettings" style="margin-left: 22px; margin-top: 0px; display: none;">
-          <label for="rareNumbersCount">Nb de numéros rares (0 à 5) :</label>
-          <input type="number" id="rareNumbersCount" value="3" min="0" max="5" style="width: 60px;"><br>
-          <label for="rareStarsCount">Nb de chance rares (0 à 1) :</label>
-          <input type="number" id="rareStarsCount" value="1" min="0" max="1" style="width: 60px;">
-        </div>
+        <div id="smartDrawSettings" style="margin-left: 0px; margin-top: 12px; display: none;">
+		  <label for="smartTypeSelect">Type de sélection :</label>
+		  <select id="smartTypeSelect">
+			<option value="frequence_total">Les moins tombés (début le début)</option>
+			<option value="frequence_total_plus">Les plus tombés (début le début)</option>
+			<option value="mixte">Mixte (moitié moins tombés et plus tombés)</option>
+			<option value="anniversaire">Anniversaire (numéros 1 à 31)</option>
+			<option value="pair_impair">Pairs / Impairs équilibrés</option>
+			<option value="petit_grand">Petits (1–25) / Grands (26–49)</option>
+			<option value="consecutif">Avec suite (2–3 numéros consécutifs)</option>
+			<option value="moyenne">Somme proche de la moyenne</option>
+		  </select>
+		</div>
 
         <div class="form-group" id="multichancePartsContainer" style="display:none; margin-left:20px;">
           <label for="totalParts">Total de parts :</label>
@@ -1403,7 +1414,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
               type: "linear",
               title: { display: true, text: "Temps" },
               ticks: {
-                callback(value/*, idx, ticks*/) {
+                callback(value) {
                   const jours = value * 7 / 3;
                   return formatTempsCourt(jours);
                 }
@@ -1739,55 +1750,198 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       return [...set].sort((a, b) => a - b);
     }
 
-    function buildCommonRareSet(numCount = 5, starCount = 1) {
-      const rareNumWanted = Math.min(
-        parseInt(document.getElementById("rareNumbersCount")?.value) || 0,
-        numCount, 5
-      );
-      const rareStarWanted = Math.min(
-        parseInt(document.getElementById("rareStarsCount")?.value) || 0,
-        starCount, 1
-      );
+function generateOptimizedTicket(numCount = 5, starCount = 1) {
+  const type = (document.getElementById("smartTypeSelect")?.value) || "frequence";
 
-      const numsByRarity = [...Array(49).keys()].map(i => i + 1)
-        .sort((a, b) => freqNum[a] - freqNum[b]);
-      const starsByRarity = [...Array(10).keys()].map(i => i + 1)
-        .sort((a, b) => freqStar[a] - freqStar[b]);
+  numCount = Math.max(5, Math.min(49, numCount));
+  starCount = Math.max(1, Math.min(10, starCount));
 
-      const minFreqNum = freqNum[numsByRarity[0]];
-      const minFreqStar = freqStar[starsByRarity[0]];
+  const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
-      const rareNumsPool = numsByRarity.slice(0, rareNumWanted);
-      const rareStarsPool = starsByRarity.slice(0, rareStarWanted);
-
-      shuffle(rareNumsPool);
-      shuffle(rareStarsPool);
-
-      return {
-        rareNums: rareNumsPool.slice(0, rareNumWanted),
-        rareStars: rareStarsPool.slice(0, rareStarWanted)
-      };
+  const sampleDistinct = (pool, k) => {
+    const bag = pool.slice();
+    const out = [];
+    while (out.length < k && bag.length) {
+      const idx = Math.floor(Math.random() * bag.length);
+      out.push(bag.splice(idx, 1)[0]);
     }
+    return out.sort((x, y) => x - y);
+  };
 
-    function generateSmartTicket(numCount = 5, starCount = 1, lotRares = null) {
+  const pickByFreq = (len, freqArr, order) => {
+    const arr = Array.from({ length: len }, (_, i) => i + 1)
+      .map(v => ({ v, f: (freqArr[v] || 0), r: Math.random() }));
+    arr.sort((a, b) => {
+      if (order === 'asc') return (a.f - b.f) || (a.r - b.r);
+      return (b.f - a.f) || (a.r - b.r);
+    });
+    return arr.map(o => o.v);
+  };
 
-      const chosenNums = lotRares ? [...lotRares.rareNums] : [];
-      const chosenStars = lotRares ? [...lotRares.rareStars] : [];
-
-      while (chosenNums.length < numCount) {
-        const n = 1 + Math.floor(Math.random() * 49);
-        if (!chosenNums.includes(n)) chosenNums.push(n);
-      }
-      while (chosenStars.length < starCount) {
-        const s = 1 + Math.floor(Math.random() * 10);
-        if (!chosenStars.includes(s)) chosenStars.push(s);
-      }
-
-      return {
-        numbers: chosenNums.sort((a, b) => a - b),
-        stars: chosenStars.sort((a, b) => a - b)
-      };
+  const completeStars = (chosen) => {
+    while (chosen.length < starCount) {
+      const s = 1 + Math.floor(Math.random() * 10);
+      if (!chosen.includes(s)) chosen.push(s);
     }
+    return chosen.sort((a,b)=>a-b);
+  };
+
+  const freqAllEqual = (arr, len) => {
+    const vals = Array.from({length:len},(_,i)=>arr[i+1]||0);
+    return Math.min(...vals) === Math.max(...vals);
+  };
+
+  if (type === "frequence" || type === "frequence_plus") {
+    if (freqAllEqual(freqNum, 49)) return generateTicket(numCount, starCount);
+    const order = (type === "frequence") ? "asc" : "desc";
+    const chosenNums  = pickByFreq(49, freqNum, order).slice(0, numCount);
+    const chosenStars = pickByFreq(10,  freqStar, order).slice(0, starCount);
+    return { numbers: chosenNums.sort((a,b)=>a-b), stars: completeStars(chosenStars) };
+  }
+
+  if (type === "frequence_total" || type === "frequence_total_plus") {
+    if (freqAllEqual(totalFreqNum, 49)) return generateTicket(numCount, starCount);
+    const order = (type === "frequence_total") ? "asc" : "desc";
+    const chosenNums  = pickByFreq(49, totalFreqNum, order).slice(0, numCount);
+    const chosenStars = pickByFreq(10,  totalFreqStar, order).slice(0, starCount);
+    return { numbers: chosenNums.sort((a,b)=>a-b), stars: completeStars(chosenStars) };
+  }
+
+  if (type === "anniversaire") {
+    const pool = Array.from({ length: 31 }, (_, i) => i + 1);
+    let chosenNums = sampleDistinct(pool, Math.min(numCount, 31));
+    while (chosenNums.length < numCount) {
+      const n = randInt(32, 49);
+      if (!chosenNums.includes(n)) chosenNums.push(n);
+    }
+    chosenNums.sort((a,b)=>a-b);
+
+    const chosenStars = [];
+    return {
+      numbers: chosenNums,
+      stars: completeStars(chosenStars)
+    };
+  }
+
+
+  if (type === "pair_impair") {
+    let evens = Math.floor(numCount / 2), odds = numCount - evens;
+    if (Math.random() < 0.5) [evens, odds] = [odds, evens];
+
+    const evPool = Array.from({length: 24}, (_,i)=> (i+1)*2); 
+    const odPool = Array.from({length: 25}, (_,i)=> (i*2)+1); 
+    let chosenNums = sampleDistinct(evPool, Math.min(evens, evPool.length))
+      .concat(sampleDistinct(odPool, Math.min(odds, odPool.length)));
+
+    while (chosenNums.length < numCount) {
+      const n = randInt(1,49);
+      if (!chosenNums.includes(n)) chosenNums.push(n);
+    }
+    chosenNums.sort((a,b)=>a-b);
+
+    return { numbers: chosenNums, stars: generateNumbers(starCount, 10) };
+  }
+
+
+  if (type === "petit_grand") {
+    let small = Math.floor(numCount / 2), large = numCount - small;
+    if (Math.random() < 0.5) [small, large] = [large, small];
+
+    const smallPool = Array.from({length:25},(_,i)=>i+1);
+    const largePool = Array.from({length:24},(_,i)=>i+26);
+
+    let chosenNums = sampleDistinct(smallPool, Math.min(small, smallPool.length))
+      .concat(sampleDistinct(largePool, Math.min(large, largePool.length)));
+
+    while (chosenNums.length < numCount) {
+      const n = randInt(1,49);
+      if (!chosenNums.includes(n)) chosenNums.push(n);
+    }
+    chosenNums.sort((a,b)=>a-b);
+
+    return { numbers: chosenNums, stars: generateNumbers(starCount, 10) };
+  }
+
+  if (type === "consecutif") {
+    const runLen = Math.min(numCount >= 3 ? (Math.random() < 0.6 ? 3 : 2) : 2, numCount);
+    const startMax = 49 - runLen + 1;
+    const start = randInt(1, startMax);
+    const run = Array.from({length: runLen}, (_,i) => start + i);
+
+    const chosenSet = new Set(run);
+    while (chosenSet.size < numCount) {
+      const n = randInt(1,49);
+      if (!chosenSet.has(n)) chosenSet.add(n);
+    }
+    const chosenNums = Array.from(chosenSet).sort((a,b)=>a-b);
+
+    return { numbers: chosenNums, stars: generateNumbers(starCount, 10) };
+  }
+
+  if (type === "moyenne") {
+    const target = 25 * numCount;
+    let best = null, bestDelta = Infinity;
+
+    const trials = Math.min(800, 100 * numCount);
+    for (let i = 0; i < trials; i++) {
+      const cand = generateNumbers(numCount, 49);
+      const sum = cand.reduce((a,b)=>a+b, 0);
+      const delta = Math.abs(sum - target);
+      if (delta < bestDelta) {
+        bestDelta = delta;
+        best = cand;
+        if (delta === 0) break;
+      }
+    }
+    return { numbers: best || generateNumbers(numCount, 49), stars: generateNumbers(starCount, 10) };
+  }
+
+  if (type === "mixte") {
+    if (freqAllEqual(freqNum, 49)) return generateTicket(numCount, starCount);
+
+    const lessCount = Math.floor(numCount / 2);
+    const moreCount = numCount - lessCount;
+
+    const lessNums = pickByFreq(49, freqNum, 'asc');
+    const moreNums = pickByFreq(49, freqNum, 'desc');
+
+    const chosenNums = [];
+    for (let n of lessNums) {
+      if (chosenNums.length >= lessCount) break;
+      if (!chosenNums.includes(n)) chosenNums.push(n);
+    }
+    for (let n of moreNums) {
+      if (chosenNums.length >= numCount) break;
+      if (!chosenNums.includes(n)) chosenNums.push(n);
+    }
+    while (chosenNums.length < numCount) {
+      const n = randInt(1,49);
+      if (!chosenNums.includes(n)) chosenNums.push(n);
+    }
+    chosenNums.sort((a,b)=>a-b);
+
+    const lessStars = pickByFreq(10, freqStar, 'asc');
+    const moreStars = pickByFreq(10, freqStar, 'desc');
+
+    const chosenStars = [];
+    const lessS = Math.floor(starCount / 2);
+    const moreS = starCount - lessS;
+
+    for (let s of lessStars) {
+      if (chosenStars.length >= lessS) break;
+      if (!chosenStars.includes(s)) chosenStars.push(s);
+    }
+    for (let s of moreStars) {
+      if (chosenStars.length >= starCount) break;
+      if (!chosenStars.includes(s)) chosenStars.push(s);
+    }
+    return { numbers: chosenNums, stars: completeStars(chosenStars) };
+  }
+
+  return generateTicket(numCount, starCount);
+}
+
+
 
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -1816,10 +1970,14 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
         }
       }
 
-      if (showFreq) {
-        draw.numbers.forEach(n => totalFreqNum[n]++);
-        draw.stars.forEach(s => totalFreqStar[s]++);
-      }
+		const smartType = document.getElementById("smartTypeSelect")?.value;
+		const needTotals = showFreq || (smart && smartType === "frequence_total");
+
+		if (needTotals) {
+		  draw.numbers.forEach(n => totalFreqNum[n]++);
+		  draw.stars.forEach(s => totalFreqStar[s]++);
+		}
+
 
       return draw;
     }
@@ -2332,11 +2490,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       const numTickets = mode === "flash"
         ? (parseInt(document.getElementById("numTickets").value) || 1)
         : (customTickets.length > 0 ? customTickets.length : 1);
-      let lotRares = null;
-      if (document.getElementById("smartDrawCheckbox").checked) {
-        lotRares = buildCommonRareSet(numCount, starCount);
-      }
-
+		
       let simpleGridsPerTicket = 1;
       if (numCount > 5) simpleGridsPerTicket *= combination(numCount, 5);
       if (starCount > 1) simpleGridsPerTicket *= combination(starCount, 1);
@@ -2356,10 +2510,10 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
         for (let j = 0; j < numTickets; j++) {
           if (mode === "flash") {
             if (document.getElementById("smartDrawCheckbox").checked) {
-              tickets.push(generateSmartTicket(numCount, starCount, lotRares));
-            } else {
-              tickets.push(generateTicket(numCount, starCount));
-            }
+			  tickets.push(generateOptimizedTicket(numCount, starCount));
+			} else {
+			  tickets.push(generateTicket(numCount, starCount));
+			}
           } else {
             if (customTickets.length > 0) {
               tickets.push(customTickets[j % customTickets.length]);
