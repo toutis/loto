@@ -534,7 +534,8 @@
 			<div id="quizFeedback" style="margin-top:8px; min-height:20px;"></div>
 			<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
 			  <button id="quizNextBtn">Nouvelle question</button>
-			  <button id="quizResetBtn">Remettre le score à zéro</button>
+			  <a id="quizSuggestLink" href="#suggest" style="display:none;"></a>
+			  <button id="quizRestartBtn" style="display:none;">Recommencer</button>
 			</div>
 		  </div>
 		</div>
@@ -847,98 +848,161 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       if (s) s.textContent = `Score : ${quizScore} / ${quizTotal}`;
     }
 
-function renderQuizQuestion(qItem) {
-  const qEl = document.getElementById("quizQuestion");
-  const cEl = document.getElementById("quizChoices");
-  const fEl = document.getElementById("quizFeedback");
-  if (!qEl || !cEl || !fEl) return;
+	function renderQuizQuestion(qItem) {
+	  const qEl = document.getElementById("quizQuestion");
+	  const cEl = document.getElementById("quizChoices");
+	  const fEl = document.getElementById("quizFeedback");
+	  if (!qEl || !cEl || !fEl) return;
 
-  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+	  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
 
-  quizAnswered = false;
+	  quizAnswered = false;
 
-  qEl.textContent = qItem.q;
-  fEl.textContent = "";
-  cEl.innerHTML = "";
+	  qEl.textContent = qItem.q;
+	  fEl.textContent = "";
+	  cEl.innerHTML = "";
 
-  qItem.choices.forEach((label, idx) => {
-    const btn = document.createElement("button");
-    btn.className = "quiz-choice";
-    btn.textContent = `${String.fromCharCode(65 + idx)}. ${label}`;
-    btn.addEventListener("click", () => {
-      quizAnswered = true;
+	  qItem.choices.forEach((label, idx) => {
+		const btn = document.createElement("button");
+		btn.className = "quiz-choice";
+		btn.textContent = `${String.fromCharCode(65 + idx)}. ${label}`;
+		btn.addEventListener("click", () => {
+		  quizAnswered = true;
 
-      quizTotal++;
-      const correct = (idx === qItem.answer);
-      const allBtns = [...cEl.querySelectorAll("button")];
+		  quizTotal++;
+		  const correct = (idx === qItem.answer);
+		  const allBtns = [...cEl.querySelectorAll("button")];
 
-      if (correct) {
-        quizScore++;
-        fEl.textContent = "Bonne réponse !";
-        fEl.className = "quiz-correct";
-        btn.classList.add("quiz-choice--correct-picked");
-      } else {
-        fEl.textContent = `Mauvaise réponse.`;
-        fEl.className = "quiz-wrong";
-        btn.classList.add("quiz-choice--wrong-picked");
-        const goodBtn = allBtns[qItem.answer];
-        if (goodBtn) goodBtn.classList.add("quiz-choice--correct-true");
-      }
+		  if (correct) {
+			quizScore++;
+			fEl.textContent = "Bonne réponse !";
+			fEl.className = "quiz-correct";
+			btn.classList.add("quiz-choice--correct-picked");
+		  } else {
+			fEl.textContent = `Mauvaise réponse.`;
+			fEl.className = "quiz-wrong";
+			btn.classList.add("quiz-choice--wrong-picked");
+			const goodBtn = allBtns[qItem.answer];
+			if (goodBtn) goodBtn.classList.add("quiz-choice--correct-true");
+		  }
 
-      updateQuizScore();
-      allBtns.forEach(b => b.disabled = true);
+		  updateQuizScore();
+		  allBtns.forEach(b => b.disabled = true);
 
-      const delay = correct ? 2000 : 5000;
-      if (quizAdvanceTimer) clearTimeout(quizAdvanceTimer);
-      quizAdvanceTimer = setTimeout(nextQuizQuestion, delay);
-    });
+		  const delay = correct ? 2000 : 5000;
+		  if (quizAdvanceTimer) clearTimeout(quizAdvanceTimer);
+		  quizAdvanceTimer = setTimeout(nextQuizQuestion, delay);
+		});
 
-    cEl.appendChild(btn);
-  });
-  updateQuizScore();
-}
+		cEl.appendChild(btn);
+	  });
+	  updateQuizScore();
+	}
 
+	let quizOrder = [];
+	let quizUsedCount = 0;
 
-function nextQuizQuestion() {
-  if (quizIndex !== -1 && quizAnswered === false) {
-    quizTotal++;
-    const fEl = document.getElementById("quizFeedback");
-    if (fEl) { fEl.textContent = "Question passée — comptée faux."; fEl.className = "quiz-wrong"; }
-    updateQuizScore();
-  }
+	function shuffleInPlace(arr) {
+	  for (let i = arr.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[arr[i], arr[j]] = [arr[j], arr[i]];
+	  }
+	  return arr;
+	}
 
-  if (QUIZ_QUESTIONS.length === 0) return;
-  let newIndex;
-  do {
-    newIndex = Math.floor(Math.random() * QUIZ_QUESTIONS.length);
-  } while (QUIZ_QUESTIONS.length > 1 && newIndex === quizIndex);
-  quizIndex = newIndex;
-  renderQuizQuestion(QUIZ_QUESTIONS[quizIndex]);
-}
+	function initQuizOrder() {
+	  quizOrder = Array.from({ length: QUIZ_QUESTIONS.length }, (_, i) => i);
+	  shuffleInPlace(quizOrder);
+	  quizUsedCount = 0;
+	}
 
+	function nextQuizQuestion() {
+	  const fEl = document.getElementById("quizFeedback");
+	  const suggest = document.getElementById("quizSuggestLink");
 
-function resetQuizScore() {
-  quizScore = 0;
-  quizTotal = 0;
-  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
-  updateQuizScore();
-  const fEl = document.getElementById("quizFeedback");
-  if (fEl) { fEl.textContent = ""; fEl.className = ""; }
-}
+	  if (quizIndex !== -1 && quizAnswered === false) {
+		quizTotal++;
+		if (fEl) { fEl.textContent = "Question passée — comptée faux."; fEl.className = "quiz-wrong"; }
+		updateQuizScore();
+	  }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const nextBtn  = document.getElementById("quizNextBtn");
-  const resetBtn = document.getElementById("quizResetBtn");
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
-    nextQuizQuestion();
-  });
-  if (resetBtn) resetBtn.addEventListener("click", () => {
-    if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
-    resetQuizScore();
-  });
-});
+		if (quizOrder.length === 0) {
+		  const qEl = document.getElementById("quizQuestion");
+		  const cEl = document.getElementById("quizChoices");
+		  if (qEl) qEl.textContent = "";
+		  if (cEl) cEl.innerHTML = "";
 
+		  if (fEl) {
+			fEl.innerHTML = "✅ Toutes les questions ont été faites. "
+			  + "Si vous voulez proposer de nouvelles questions, cliquez sur "
+			  + "<strong>« Faire une suggestion »</strong>.";
+			fEl.className = "quiz-correct";
+		  }
+
+		  if (suggest) suggest.style.display = "inline";
+		  const nextBtn = document.getElementById("quizNextBtn");
+		  if (nextBtn) nextBtn.disabled = true;
+
+		  const restartBtn = document.getElementById("quizRestartBtn");
+		  if (restartBtn) restartBtn.style.display = "inline";
+
+		  return;
+		}
+
+	  const newIndex = quizOrder.pop();
+	  quizIndex = newIndex;
+	  quizAnswered = false;
+	  renderQuizQuestion(QUIZ_QUESTIONS[quizIndex]);
+
+	  const nextBtn = document.getElementById("quizNextBtn");
+	  if (nextBtn) nextBtn.disabled = false;
+	  if (suggest) suggest.style.display = "none";
+	  
+	  const restartBtn = document.getElementById("quizRestartBtn");
+	  if (restartBtn) restartBtn.style.display = "none";
+	}
+
+	function resetQuizScore() {
+	  quizScore = 0;
+	  quizTotal = 0;
+	  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+	  updateQuizScore();
+	  const fEl = document.getElementById("quizFeedback");
+	  if (fEl) { fEl.textContent = ""; fEl.className = ""; }
+	}
+
+	document.addEventListener("DOMContentLoaded", () => {
+	  if (window.__quizInited) return;
+	  window.__quizInited = true;
+
+	  initQuizOrder();
+
+	  const nextBtn = document.getElementById("quizNextBtn");
+	  const restartBtn = document.getElementById("quizRestartBtn");
+	  if (restartBtn) restartBtn.style.display = "none";
+	  
+	  if (nextBtn)
+		nextBtn.addEventListener("click", () => {
+		  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+		  nextQuizQuestion();
+		});
+
+	  if (restartBtn)
+		restartBtn.addEventListener("click", () => {
+		  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+		  resetQuizScore();
+		  initQuizOrder();
+		  const fEl = document.getElementById("quizFeedback");
+		  if (fEl) fEl.textContent = "";
+		  const qEl = document.getElementById("quizQuestion");
+		  const cEl = document.getElementById("quizChoices");
+		  if (qEl) qEl.textContent = "Cliquez sur « Nouvelle question » pour recommencer.";
+		  if (cEl) cEl.innerHTML = "";
+		  document.getElementById("quizNextBtn").disabled = false;
+		  document.getElementById("quizSuggestLink").style.display = "none";
+		  restartBtn.style.display = "none";
+		});
+	});
 
 
     function prizeTableIsModified() {
