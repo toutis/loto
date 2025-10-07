@@ -479,8 +479,8 @@ const EXTRA_QUESTIONS = [{
 	},
 	{
 		q: "Vous jouez 1 000 grilles d’un coup dans le même tirage. La probabilité d’au moins un jackpot est :",
-		choices: ["1 sur 19 068", "1 sur 1 906", "1 sur 191", "≈ 1 %"],
-		answer: 1
+		choices: ["1 sur 19 069", "1 sur 1 906", "1 sur 191", "≈ 1 %"],
+		answer: 0
 	},
 	{
 		q: "Vous jouez 10 000 grilles dans le même tirage. Quel est l’ordre de grandeur de la probabilité de gagner le jackpot ?",
@@ -1428,3 +1428,4 @@ try {
 } catch (e) {
 	window.QUIZ_QUESTIONS = (window.QUIZ_QUESTIONS || []).concat(EXTRA_QUESTIONS);
 }
+
