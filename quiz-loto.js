@@ -304,7 +304,7 @@ const EXTRA_QUESTIONS = [{
 			"Parce qu’on retient les schémas simples",
 			"Les trois raisons sont vraies"
 		],
-		answer: 4
+		answer: 3
 	},
 	{
 		q: "Si le Loto affichait juste un nombre gagnant entre 1 et 19 068 840, la plupart des gens :",
@@ -1009,7 +1009,7 @@ const EXTRA_QUESTIONS = [{
 	{
 		q: "Une hausse du jackpot rend-elle le jeu mathématiquement rentable (espérance positive) ?",
 		choices: ["Oui dès 10 M€", "Oui dès 30 M€", "Non, l’espérance reste négative"],
-		answer: 3
+		answer: 2
 	},
 	{
 		q: "À chaque tirage de Loto, combien de codes gagnants de 20 000 € sont tirés au sort ?",
