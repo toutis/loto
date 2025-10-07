@@ -2,14 +2,15 @@
 <html lang="fr">
 
 <head>
-  <!-- Projet sous licence MIT – Voir fichier LICENSE.
+  Projet sous licence MIT – Voir fichier LICENSE.
 	Simulation pédagogique et indépendante, sans affiliation ni approbation de la Française des Jeux (FDJ).
-	Aucune mise réelle, aucun gain, aucune collecte de données personnelles. -->
+	Aucune mise réelle, aucun gain, aucune collecte de données personnelles.
   <meta charset="UTF-8">
   <title>Simulateur Loto</title>
   <meta name="description"
     content="Simulateur pédagogique de Loto : jouez des grilles, suivez vos statistiques et visualisez les gains sans aucun enjeu réel.">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="quiz-loto.js"></script>
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   <style>
     body {
@@ -458,6 +459,19 @@
 	  outline-offset: 0;
 	}
 	
+	.quiz-correct { color:#159f13; font-weight:bold; }
+    .quiz-wrong { color:#e53935; font-weight:bold; }
+    .quiz-choice { text-align:left; }
+    #quizChoices button { text-align:left; padding:6px 10px; }
+	
+	.quiz-choice { text-align:left; padding:6px 10px; border:1px solid #ccc; border-radius:6px; }
+	.quiz-choice:disabled { opacity:1; cursor:default; }
+
+	.quiz-choice--correct-picked { background:#dff6e1; border-color:#159f13; color:#0a6310; font-weight:600; }
+	.quiz-choice--correct-true  { background:#eefceb; border-color:#5cb85c; color:#146c1b; font-weight:600; }
+	.quiz-choice--wrong-picked  { background:#ffe1e1; border-color:#e53935; color:#a31414; font-weight:600; }
+
+	
   </style>
 </head>
 
@@ -481,6 +495,7 @@
           <select id="modeSelect">
             <option value="flash" selected>Flash (tickets aléatoires)</option>
             <option value="custom">Personnalisé (définir mes propres grilles)</option>
+			<option value="quiz">Quiz (QCM Loto)</option>
           </select>
         </div>
         <div class="form-group" id="flashSettings">
@@ -506,6 +521,24 @@
             <button id="clearCustomGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Clear</button>
           </div>
         </div>
+		<div class="form-group" id="quizSettings" style="display:none;">
+		  <div id="quizContainer" style="border:1px solid #ccc; padding:10px; border-radius:8px; max-width:680px;">
+			<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+			  <strong>Quiz Loto</strong>
+			  <span id="quizScore" style="color:#555;">Score : 0 / 0</span>
+			</div>
+			<div id="quizQuestion" style="font-size:1.05em; margin-bottom:8px;">
+			  Cliquez sur « Nouvelle question » pour commencer.
+			</div>
+			<div id="quizChoices" style="display:flex; flex-direction:column; gap:6px;"></div>
+			<div id="quizFeedback" style="margin-top:8px; min-height:20px;"></div>
+			<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+			  <button id="quizNextBtn">Nouvelle question</button>
+			  <button id="quizResetBtn">Remettre le score à zéro</button>
+			</div>
+		  </div>
+		</div>
+
         <div class="form-group" id="ticketsCountGroup" style="display: flex; align-items: center; gap: 12px;">
           <label for="numTickets">Nombre de tickets par tirage :</label>
           <input type="number" id="numTickets" value="1" min="1" style="width: 60px;">
@@ -802,6 +835,111 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       "1_1": 2.2, "1_0": 0,
       "0_1": 2.2, "0_0": 0
     };
+
+    let quizIndex = -1;
+    let quizScore = 0;
+    let quizTotal = 0;
+	let quizAdvanceTimer = null;
+	let quizAnswered = false; 
+
+    function updateQuizScore() {
+      const s = document.getElementById("quizScore");
+      if (s) s.textContent = `Score : ${quizScore} / ${quizTotal}`;
+    }
+
+function renderQuizQuestion(qItem) {
+  const qEl = document.getElementById("quizQuestion");
+  const cEl = document.getElementById("quizChoices");
+  const fEl = document.getElementById("quizFeedback");
+  if (!qEl || !cEl || !fEl) return;
+
+  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+
+  quizAnswered = false;
+
+  qEl.textContent = qItem.q;
+  fEl.textContent = "";
+  cEl.innerHTML = "";
+
+  qItem.choices.forEach((label, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "quiz-choice";
+    btn.textContent = `${String.fromCharCode(65 + idx)}. ${label}`;
+    btn.addEventListener("click", () => {
+      quizAnswered = true;
+
+      quizTotal++;
+      const correct = (idx === qItem.answer);
+      const allBtns = [...cEl.querySelectorAll("button")];
+
+      if (correct) {
+        quizScore++;
+        fEl.textContent = "Bonne réponse !";
+        fEl.className = "quiz-correct";
+        btn.classList.add("quiz-choice--correct-picked");
+      } else {
+        fEl.textContent = `Mauvaise réponse.`;
+        fEl.className = "quiz-wrong";
+        btn.classList.add("quiz-choice--wrong-picked");
+        const goodBtn = allBtns[qItem.answer];
+        if (goodBtn) goodBtn.classList.add("quiz-choice--correct-true");
+      }
+
+      updateQuizScore();
+      allBtns.forEach(b => b.disabled = true);
+
+      const delay = correct ? 2000 : 5000;
+      if (quizAdvanceTimer) clearTimeout(quizAdvanceTimer);
+      quizAdvanceTimer = setTimeout(nextQuizQuestion, delay);
+    });
+
+    cEl.appendChild(btn);
+  });
+  updateQuizScore();
+}
+
+
+function nextQuizQuestion() {
+  if (quizIndex !== -1 && quizAnswered === false) {
+    quizTotal++;
+    const fEl = document.getElementById("quizFeedback");
+    if (fEl) { fEl.textContent = "Question passée — comptée faux."; fEl.className = "quiz-wrong"; }
+    updateQuizScore();
+  }
+
+  if (QUIZ_QUESTIONS.length === 0) return;
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * QUIZ_QUESTIONS.length);
+  } while (QUIZ_QUESTIONS.length > 1 && newIndex === quizIndex);
+  quizIndex = newIndex;
+  renderQuizQuestion(QUIZ_QUESTIONS[quizIndex]);
+}
+
+
+function resetQuizScore() {
+  quizScore = 0;
+  quizTotal = 0;
+  if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+  updateQuizScore();
+  const fEl = document.getElementById("quizFeedback");
+  if (fEl) { fEl.textContent = ""; fEl.className = ""; }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const nextBtn  = document.getElementById("quizNextBtn");
+  const resetBtn = document.getElementById("quizResetBtn");
+  if (nextBtn) nextBtn.addEventListener("click", () => {
+    if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+    nextQuizQuestion();
+  });
+  if (resetBtn) resetBtn.addEventListener("click", () => {
+    if (quizAdvanceTimer) { clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+    resetQuizScore();
+  });
+});
+
+
 
     function prizeTableIsModified() {
       for (const key in DEFAULT_PRIZES) {
@@ -2397,38 +2535,111 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
       block.style.display = this.checked ? "block" : "none";
     });
 
+document.getElementById("modeSelect").addEventListener("change", function () {
+  const mode = this.value;
 
-    document.getElementById("modeSelect").addEventListener("change", function () {
-      const mode = this.value;
-      const flash = document.getElementById("flashSettings");
-      const custom = document.getElementById("customSettings");
-      const ticketsGrp = document.getElementById("ticketsCountGroup");
-      const multiGrp = document.getElementById("multichanceCheckbox").parentNode;
-      const multiParts = document.getElementById("multichancePartsContainer");
-      const smartChk = document.getElementById("smartDrawCheckbox").parentNode;
-      const smartSet = document.getElementById("smartDrawSettings");
+  const flash  = document.getElementById("flashSettings");
+  const custom = document.getElementById("customSettings");
+  const quiz   = document.getElementById("quizSettings");
 
-      if (mode === "flash") {
-        flash.style.display = "block";
-        custom.style.display = "none";
-        ticketsGrp.style.display = "block";
-        multiGrp.style.display = "block";
-        multiParts.style.display = document.getElementById("multichanceCheckbox").checked
-          ? "block" : "none";
-        smartChk.style.display = "block";
-        smartSet.style.display = document.getElementById("smartDrawCheckbox").checked
-          ? "block" : "none";
-      } else {
-        flash.style.display = "none";
-        custom.style.display = "block";
-        ticketsGrp.style.display = "none";
-        multiGrp.style.display = "none";
-        multiParts.style.display = "none";
-        smartChk.style.display = "none";
-        smartSet.style.display = "none";
-      }
-      updateChanceDisplay();
-    });
+  const ticketsGrp   = document.getElementById("ticketsCountGroup");
+  const multiGrp     = document.getElementById("multichanceCheckbox").parentNode;
+  const multiParts   = document.getElementById("multichancePartsContainer");
+  const smartChk     = document.getElementById("smartDrawCheckbox").parentNode;
+  const smartSet     = document.getElementById("smartDrawSettings");
+  const speedGrp     = document.getElementById("speedControlGroup");
+  const freqBox      = document.getElementById("frequencyContainer");
+  const myMillonGrp  = document.getElementById("stopMyMillonWinGroup");
+  const btnRow       = document.getElementById("startBtn")?.parentElement;
+
+  const stopYearsGrp = document.getElementById("stopAfterYearsCheckbox").closest(".form-group");
+  const stopBalGrp   = document.getElementById("stopNegativeGainCheckbox").closest(".form-group");
+  const stopAtLeastGrp = document.getElementById("stopNumbers").closest(".form-group");
+
+  const smallOptions = [
+    document.getElementById("showCombinationNumber")?.closest("div"),
+    document.getElementById("physicalRandomCheckbox")?.closest("div"),
+    document.getElementById("showFrequenciesCheckbox")?.closest("div")
+  ];
+  const codeMultiSmart = [
+    document.getElementById("myMillonCheckbox")?.parentElement,
+    document.getElementById("multichanceCheckbox")?.parentElement,
+    document.getElementById("smartDrawCheckbox")?.parentElement
+  ];
+
+  if (mode === "flash") {
+    flash.style.display  = "block";
+    custom.style.display = "none";
+    quiz.style.display   = "none";
+
+    ticketsGrp.style.display = "block";
+    multiGrp.style.display   = "block";
+    multiParts.style.display = document.getElementById("multichanceCheckbox").checked ? "block" : "none";
+    smartChk.style.display   = "block";
+    smartSet.style.display   = document.getElementById("smartDrawCheckbox").checked ? "block" : "none";
+    speedGrp.style.display   = "flex";
+    freqBox.style.display    = document.getElementById("showFrequenciesCheckbox").checked ? "block" : "none";
+    myMillonGrp.style.display= document.getElementById("myMillonCheckbox").checked ? "block" : "none";
+    if (btnRow) btnRow.style.display = "inline-flex";
+
+    stopYearsGrp.style.display = "block";
+    stopBalGrp.style.display   = "block";
+    stopAtLeastGrp.style.display = "flex";
+    [...smallOptions, ...codeMultiSmart].forEach(el => el && (el.style.display = "block"));
+  }
+  else if (mode === "custom") {
+    flash.style.display  = "none";
+    custom.style.display = "block";
+    quiz.style.display   = "none";
+
+    ticketsGrp.style.display = "none";
+    multiGrp.style.display   = "none";
+    multiParts.style.display = "none";
+    smartChk.style.display   = "none";
+    smartSet.style.display   = "none";
+    speedGrp.style.display   = "flex";
+    freqBox.style.display    = "none";
+    myMillonGrp.style.display= "none";
+    if (btnRow) btnRow.style.display = "inline-flex";
+
+    stopYearsGrp.style.display = "block";
+    stopBalGrp.style.display   = "block";
+    stopAtLeastGrp.style.display = "flex";
+    [...smallOptions, ...codeMultiSmart].forEach(el => el && (el.style.display = "block"));
+  }
+else if (mode === "quiz") {
+  try {
+    if (!stopFlag) {
+      stopFlag = true;
+      simulationActive = false;
+      clearTimeout(loopTimeout);
+      const stopBtn = document.getElementById("stopBtn");
+      if (stopBtn) stopBtn.textContent = "Continuer";
+    }
+  } catch {}
+
+  flash.style.display  = "none";
+  custom.style.display = "none";
+  quiz.style.display   = "block";
+
+  ticketsGrp.style.display   = "none";
+  multiGrp.style.display     = "none";
+  multiParts.style.display   = "none";
+  smartChk.style.display     = "none";
+  smartSet.style.display     = "none";
+  speedGrp.style.display     = "none";
+  freqBox.style.display      = "none";
+  myMillonGrp.style.display  = "none";
+  if (btnRow) btnRow.style.display = "none";
+
+  stopYearsGrp.style.display   = "none";
+  stopBalGrp.style.display     = "none";
+  stopAtLeastGrp.style.display = "none";
+  [ ...smallOptions, ...codeMultiSmart ].forEach(el => el && (el.style.display = "none"));
+}
+
+  updateChanceDisplay();
+});
 
     const speedSlider = document.getElementById("speedSlider");
     const speedValueLabel = document.getElementById("speedValueLabel");
