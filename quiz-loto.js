@@ -1,18 +1,8 @@
-// ———————————————————————————————————————————————
-// Questions supplémentaires – version relue, harmonisée et sans doublons
-// Style :
-//  - « probabilité » au lieu de « proba »
-//  - tournures homogènes (« Quelle est la probabilité de … ? », « est d’environ … »)
-//  - signes « ≈ » pour l’approximation (cohérents avec les commentaires)
-//  - corrections d’index de réponses erronés et de listes incohérentes
-// ———————————————————————————————————————————————
-
 const EXTRA_QUESTIONS = [
-  // ——— Ordres de grandeur & combinaisons ———
   {
     q: "Combien de combinaisons différentes existe‑t‑il au Loto (5 numéros parmi 49 + 1 numéro Chance parmi 10) ?",
     choices: ["1 906 884", "19 068 840", "190 688 400", "490 000 000", "4 900 000 000"],
-    answer: 1 // C(49,5) × 10 = 19 068 840
+    answer: 1
   },
   {
     q: "L’ordre de grandeur pour obtenir 5 bons numéros SANS le numéro Chance est :",
@@ -23,50 +13,49 @@ const EXTRA_QUESTIONS = [
       "1 sur 2 118 760",
       "1 sur 19 068 840"
     ],
-    answer: 3 // ≈ 1 sur 2 118 760
+    answer: 3
   },
   {
     q: "La probabilité d’avoir 4 bons numéros AVEC le numéro Chance est :",
     choices: ["1 sur 86 700", "1 sur 9 631", "1 sur 2 016", "1 sur 144", "1 sur 29"],
-    answer: 0 // ≈ 1 sur 86 677 (arrondi)
+    answer: 0
   },
   {
     q: "La probabilité d’avoir 4 bons numéros SANS le numéro Chance est :",
     choices: ["1 sur 9 631", "1 sur 2 016", "1 sur 224", "1 sur 144", "1 sur 29"],
-    answer: 0 // ≈ 1 sur 9 631
+    answer: 0
   },
   {
     q: "La probabilité d’avoir 3 bons numéros AVEC le numéro Chance est :",
     choices: ["1 sur 2 016", "1 sur 224", "1 sur 144", "1 sur 28", "1 sur 16"],
-    answer: 0 // ≈ 1 sur 2 016
+    answer: 0
   },
   {
     q: "La probabilité d’avoir 3 bons numéros SANS le numéro Chance est :",
     choices: ["1 sur 224", "1 sur 144", "1 sur 96", "1 sur 32", "1 sur 8"],
-    answer: 1 // ≈ 1 sur 224
+    answer: 1
   },
   {
     q: "La probabilité d’avoir 2 bons numéros AVEC le numéro Chance est :",
     choices: ["1 sur 144", "1 sur 96", "1 sur 72", "1 sur 16", "1 sur 8"],
-    answer: 0 // ≈ 1 sur 144
+    answer: 0
   },
   {
     q: "La probabilité d’avoir 2 bons numéros SANS le numéro Chance est :",
     choices: ["1 sur 64", "1 sur 24", "1 sur 16", "1 sur 12", "1 sur 8"],
-    answer: 2 // ≈ 1 sur 16
+    answer: 2
   },
   {
     q: "La probabilité d’avoir 1 bon numéro AVEC le numéro Chance est :",
     choices: ["1 sur 56", "1 sur 32", "1 sur 28", "1 sur 12", "1 sur 4"],
-    answer: 2 // ≈ 1 sur 28
+    answer: 2
   },
   {
     q: "La probabilité d’avoir 0 bon numéro AVEC le numéro Chance est :",
     choices: ["1 sur 56", "1 sur 18", "1 sur 17,6", "1 sur 12", "1 sur 4"],
-    answer: 2 // ≈ 1 sur 17,56
+    answer: 2
   },
 
-  // ——— Compréhension générale ———
   {
     q: "Augmenter le nombre de grilles jouées sur UN même tirage plutôt que de les répartir :",
     choices: [
@@ -76,7 +65,7 @@ const EXTRA_QUESTIONS = [
       "Double la probabilité de tous les rangs",
       "Garantit un rang au moins moyen"
     ],
-    answer: 2 // linéarité des chances à budget égal (p très petite)
+    answer: 2
   },
   {
     q: "Si vous passez de 1 à 100 grilles sur le même tirage, la probabilité de jackpot :",
@@ -112,7 +101,6 @@ const EXTRA_QUESTIONS = [
     answer: 1
   },
 
-  // ——— Budget & attentes ———
   {
     q: "Prix d’une grille simple de Loto (référence utilisée ici) :",
     choices: ["1,10 €", "2,20 €", "3,00 €", "5,00 €", "10,00 €"],
@@ -127,7 +115,7 @@ const EXTRA_QUESTIONS = [
       "Quelques centaines de millions d’€",
       "Plus d’un milliard d’€"
     ],
-    answer: 2 // ordre de grandeur ≈ 40 M€
+    answer: 2
   },
   {
     q: "À budget fixe, jouer en multiple (ex. 6 numéros) plutôt que le même nombre de grilles simples :",
@@ -140,27 +128,26 @@ const EXTRA_QUESTIONS = [
     ],
     answer: 2
   },
-
-  // ——— Multigrilles & combinatoire ———
+  
   {
     q: "Combien de grilles simples sont équivalentes à une multiple 7 numéros (Chance simple) ?",
     choices: ["7", "14", "21", "28", "35"],
-    answer: 2 // C(7,5) = 21
+    answer: 2 
   },
   {
     q: "Une multiple 8 numéros (Chance simple) équivaut à combien de grilles simples ?",
     choices: ["28", "36", "56", "70", "84"],
-    answer: 2 // C(8,5) = 56
+    answer: 2 
   },
   {
     q: "Une multiple 6 numéros avec 3 numéros Chance équivaut à :",
     choices: ["6 grilles", "12 grilles", "18 grilles", "24 grilles", "36 grilles"],
-    answer: 2 // C(6,5)=6 ; × 3 Chances → 18
+    answer: 2 
   },
   {
     q: "Avec 9 numéros (Chance simple), l’équivalent en grilles simples est :",
     choices: ["56", "72", "84", "126", "168"],
-    answer: 3 // C(9,5) = 126
+    answer: 3 
   },
   {
     q: "Vous jouez 1 000 grilles d’un coup (même tirage). La probabilité d’au moins un jackpot est :",
@@ -467,3 +454,4 @@ try {
 } catch (e) {
   window.QUIZ_QUESTIONS = (window.QUIZ_QUESTIONS || []).concat(EXTRA_QUESTIONS);
 }
+
