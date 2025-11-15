@@ -1,0 +1,3195 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+	<!-- Projet sous licence MIT – Voir fichier LICENSE.
+	Simulation pédagogique et indépendante, sans affiliation ni approbation de la Française des Jeux (FDJ).
+	Aucune mise réelle, aucun gain, aucune collecte de données personnelles. -->
+	<meta charset="UTF-8">
+	<title>Simulateur Keno</title>
+	<meta name="description"
+		content="Simulateur pédagogique Keno : jouez des grilles, suivez vos statistiques et visualisez les gains sans aucun enjeu réel.">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0px;
+			padding-left: 30px;
+			padding-right: 30px;
+		}
+
+		.main-container {
+			max-width: 1200px;
+			margin: 0 auto;
+			display: flex;
+			justify-content: space-between;
+			align-items: flex-start;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+
+		.left-column {
+			flex: 1;
+			max-width: 45%;
+			text-align: left;
+		}
+
+		.right-column {
+			flex: 1;
+			max-width: 45%;
+			text-align: left;
+		}
+
+		.form-group,
+		.display,
+		.compteur {
+			font-size: 1.1em;
+			margin: 10px 0;
+		}
+
+		input,
+		button,
+		select,
+		textarea {
+			padding: 6px 12px;
+			font-size: 1em;
+			margin: 5px;
+		}
+
+		.ticket {
+			border: 1px solid #aaa;
+			padding: 8px;
+			margin: 5px 0;
+			width: fit-content;
+		}
+
+		.winning {
+			background-color: #cfc;
+		}
+
+		#chanceDisplay {
+			font-weight: bold;
+			margin: 10px 0;
+		}
+
+		#resultat {
+			border: 2px solid #AB1B5D;
+			padding: 10px;
+			margin: 10px 0;
+		}
+
+		#statsContainer {
+			margin-top: 20px;
+		}
+
+		#statsContainer ul {
+			list-style: none;
+			padding: 0;
+		}
+
+		#statsContainer li {
+			margin: 5px 0;
+		}
+
+		#multichanceAndMyMillonContainer {
+			display: flex;
+			align-items: center;
+		}
+
+		.info-icon {
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			background-color: #ccc;
+			text-align: center;
+			line-height: 16px;
+			font-size: 12px;
+			margin-left: 5px;
+			cursor: help;
+		}
+
+		#speedControlGroup {
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			gap: 10px;
+			margin: 10px 0;
+		}
+
+		#speedValueLabel {
+			color: gray;
+		}
+
+		#fireworksContainer {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 9999;
+		}
+
+		.firework {
+			position: absolute;
+			width: 4px;
+			height: 4px;
+			background: radial-gradient(circle, var(--color) 0%, var(--color-dark) 70%);
+			border-radius: 50%;
+			opacity: 1;
+			animation: firework 2.0s ease-out forwards;
+			box-shadow: 0 0 15px var(--color);
+		}
+
+		@keyframes firework {
+			0% {
+				transform: scale(1);
+				opacity: 1;
+			}
+
+			50% {
+				opacity: 1;
+			}
+
+			100% {
+				transform: translate(var(--tx), var(--ty)) scale(3);
+				opacity: 0;
+			}
+		}
+
+		.sound-toggle {
+			cursor: pointer;
+			margin-left: 0px;
+			font-size: 24px;
+			vertical-align: middle;
+		}
+
+		.sound-toggle span {
+			display: inline-block;
+		}
+
+		.icons-bar {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+		}
+
+		#stopMyMillonWinGroup {
+			margin-left: 22px;
+			margin-top: 0;
+			font-size: 0.95em;
+			display: none;
+		}
+
+		.number-ball,
+		.star-ball {
+			display: inline-flex;
+			justify-content: center;
+			align-items: center;
+			width: 30px;
+			height: 30px;
+			margin: 2px 0px;
+			font-size: .85em;
+			font-weight: bold;
+			color: #fff;
+			position: relative;
+			vertical-align: middle;
+			user-select: none;
+		}
+
+		.number-ball {
+			background: #AB1B5D;
+			border-radius: 50%;
+		}
+
+		.ball {
+			background-color: #8e44ad;
+			color: white;
+			border-radius: 50%;
+			width: 26px;
+			height: 26px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: bold;
+			margin: 0 2px;
+			font-size: 14px;
+		}
+
+		.match {
+			opacity: 1 !important;
+		}
+
+		.semi {
+			opacity: 0.45;
+		}
+
+		#ticketsContainer {}
+
+		#ticketsContainer .ticket {
+			display: inline-block;
+			margin: 6px 0;
+			box-sizing: border-box;
+		}
+
+		#ticketsContainer.cols-2 {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(320px, 1fr));
+			gap: 12px;
+		}
+
+		#ticketsContainer.cols-2 .ticket {
+			display: block;
+			width: 100%;
+			margin: 0;
+		}
+
+		#resultat,
+		.ticket {
+			word-break: break-word;
+			white-space: normal;
+		}
+
+		.display-toggle {
+			cursor: pointer;
+			margin-left: 0px;
+			font-size: 24px;
+			user-select: none;
+			vertical-align: middle;
+		}
+
+		body.plain-display .number-ball,
+		body.plain-display .star-ball {
+			background: none !important;
+			color: #111 !important;
+			font-family: inherit !important;
+			font-size: inherit !important;
+			font-weight: normal !important;
+			letter-spacing: 0 !important;
+			border-radius: 0 !important;
+			box-shadow: none !important;
+			width: auto !important;
+			height: auto !important;
+			padding: 0 2px !important;
+			margin: 0 2px !important;
+			opacity: 1 !important;
+			vertical-align: baseline !important;
+		}
+
+		body.plain-display .number-ball.semi,
+		body.plain-display .star-ball.semi {
+			color: #111 !important;
+			opacity: 1 !important;
+		}
+
+		body.plain-display .number-ball.match,
+		body.plain-display .star-ball.match {
+			color: #159f13 !important;
+			font-weight: bold !important;
+			opacity: 1 !important;
+		}
+
+		body.plain-display .star-ball::before {
+			display: none !important;
+		}
+
+		body.plain-display .number-ball,
+		body.plain-display .star-ball {
+			font-family: inherit !important;
+			font-size: inherit !important;
+			margin-right: 0 !important;
+			word-spacing: 0 !important;
+		}
+
+		body.plain-display .number-ball,
+		body.plain-display .star-ball {
+			display: inline-block !important;
+		}
+
+		body.plain-display .number-ball,
+		body.plain-display .star-ball {
+			letter-spacing: 0 !important;
+		}
+
+		body.plain-display .ticket span {
+			font-family: inherit !important;
+			font-size: inherit !important;
+		}
+
+		body.plain-display .ticket {
+			font-family: inherit;
+			font-size: inherit;
+			word-spacing: 0 !important;
+		}
+
+		body.plain-display .number-ball.match,
+		body.plain-display .star-ball.match,
+		body.plain-display .match {
+			color: #159f13 !important;
+			font-weight: bold !important;
+			opacity: 1 !important;
+		}
+
+		#myMillonCheckbox,
+		label[for="myMillonCheckbox"],
+		#multichanceCheckbox,
+		label[for="multichanceCheckbox"],
+		#stopMyMillonWinGroup,
+		#multichancePartsContainer {
+			display: none !important;
+		}
+
+		#smartDrawCheckbox,
+		label[for="smartDrawCheckbox"] {
+			vertical-align: middle;
+		}
+
+		#smartDrawCheckbox {
+			margin-right: 4px;
+		}
+
+		#myMillonCheckbox,
+		#multichanceCheckbox,
+		#smartDrawCheckbox {
+			transform: translateY(1px);
+		}
+
+		.compteur {
+			white-space: nowrap;
+		}
+
+		@media (max-width: 785px) {
+			.main-container {
+				flex-direction: column;
+			}
+
+			.left-column,
+			.right-column {
+				max-width: 100%;
+			}
+		}
+
+		#prizesForm {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 10px 20px;
+			max-height: 80vh;
+			overflow-y: auto;
+		}
+
+		#prizesForm div {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 10px;
+		}
+
+		#prizesForm label {
+			flex: 1;
+			text-align: right;
+			white-space: nowrap;
+		}
+
+		#prizesForm input {
+			flex: 0 0 100px;
+		}
+
+		#examplesModal {
+			display: none;
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background: #fff;
+			padding: 20px;
+			border: 2px solid #444;
+			box-shadow: 0 0 20px rgba(0, 0, 0, .3);
+			z-index: 10000;
+			width: 500px;
+			max-height: none;
+			overflow-y: auto;
+		}
+
+		#examplesModal ul li {
+			margin-bottom: 0.7em;
+		}
+
+		#examplesModal ul {
+			list-style: none;
+			padding-left: 0;
+		}
+
+		.hist-pos {
+			background: #e6fae6;
+			border-color: #159f13;
+		}
+
+		.hist-neg {
+			background: #ffecec;
+			border-color: #e53935;
+		}
+
+		.hist-jack {
+			background: #e6fae6;
+			border-color: #fdd835;
+		}
+
+		.hist-pos .solde {
+			color: #159f13;
+		}
+
+		.hist-neg .solde {
+			color: #e53935;
+		}
+
+		.hist-jack .solde {
+			color: #159f13;
+			font-weight: bold;
+		}
+
+		.history-advice {
+			font-size: .78em;
+			color: #888;
+			margin: 8px 0 4px;
+		}
+
+		.wrench-icon {
+			cursor: help;
+			user-select: none;
+			display: inline-block;
+			line-height: 1;
+			font-size: 1.25em;
+		}
+
+		.multiplier-value {
+			color: #9b0a59;
+			font-weight: bold;
+		}
+
+		#smartDrawCheckbox,
+		label[for="smartDrawCheckbox"],
+		#smartDrawSettings {
+			display: none !important;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="main-container">
+		<div class="left-column">
+			<h1>
+				Simulation Keno
+				<span class="icons-bar">
+					<span id="soundToggle" class="sound-toggle">
+					</span>
+
+					<span id="displayToggle" class="display-toggle"
+						title="Basculer l’affichage des boules / affichage texte">
+					</span>
+				</span>
+			</h1>
+
+			<div class="section">
+				<div class="form-group">
+					<label for="modeSelect">Mode :</label>
+					<select id="modeSelect">
+						<option value="flash" selected>Flash (tickets aléatoires)</option>
+						<option value="custom">Personnalisé (définir mes propres grilles)</option>
+					</select>
+				</div>
+				<div class="form-group" id="flashSettings">
+					<label for="ticketNumbersCount">Nombre de numéros (min 4, max 10) :</label>
+					<input type="number" id="ticketNumbersCount" value="10" min="4" max="56"><br>
+				</div>
+				<div class="form-group" id="customSettings" style="display:none;">
+					<label for="customGrids">
+						Mes grilles personnalisées :<br>
+						• Grille complète : <em>1,2,3,4,5,6,7,8,9,10</em>
+					</label>
+					<br>
+					<textarea id="customGrids" rows="4" cols="42" placeholder="Une grille par ligne"></textarea>
+					<div
+						style="margin-top: 2px; display: flex; align-items: center; gap: 4px; font-size: 1em; padding-bottom: 6px;">
+						<label for="nbGrillesAuto">Générer x grilles :</label>
+						<input type="number" id="nbGrillesAuto" value="3" min="1" max="100"
+							style="width: 50px; padding: 3px 6px; font-size: 1em;">
+						<button id="generateGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Générer</button>
+						<button id="clearCustomGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Clear</button>
+						<span id="customPriceDisplay" style="color: gray; font-weight: normal;">Prix : 0,00 €</span>
+					</div>
+				</div>
+				<div class="form-group" id="ticketsCountGroup" style="display: flex; align-items: center; gap: 12px;">
+					<label for="numTickets">Nombre de tickets par tirage :</label>
+					<input type="number" id="numTickets" value="1" min="1" style="width: 60px;">
+					<span id="priceDisplay" style="color: gray; font-weight: normal;">Prix : -- €</span>
+				</div>
+				<!-- À placer juste après le champ “Nombre de grilles” -->
+				<div class="form-group" id="stakeGroup">
+					<label for="stakeSelect">Mise par grille (€) :</label>
+					<select id="stakeSelect">
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="5">5</option>
+						<option value="10">10</option>
+					</select>
+					<label style="margin-left: 12px;">
+						<input type="checkbox" id="multiplierCheckbox">
+						Multiplicateur
+					</label>
+				</div>
+
+				<div class="form-group" style="align-items: center; gap: 8px;">
+					<label for="stopNumbers" style="margin-right: 6px;">
+						Stopper si au moins&nbsp;X numéros corrects&nbsp;:
+					</label>
+					<input type="number" id="stopNumbers" value="10" min="0" max="10" style="width: 43px;">
+				</div>
+				<div class="form-group">
+					<input type="checkbox" id="stopAfterYearsCheckbox">
+					<label for="stopAfterYearsCheckbox">Stopper si on dépasse X années :</label>
+					<input type="number" id="stopAfterYearsInput" value="50" min="1" style="width:80px;">
+				</div>
+				<div class="form-group">
+					<input type="checkbox" id="stopNegativeGainCheckbox">
+					<label for="stopNegativeGainCheckbox">Stopper si le solde est à :</label>
+					<input type="number" id="stopNegativeGainThreshold" value="-10000" step="0.01" style="width:100px;"
+						title="Pour un seuil positif, saisir +1000 ou 1000 ; pour un seuil négatif, saisir -10000">
+				</div>
+				<div class="form-group" id="speedControlGroup">
+					<label for="speedSlider">Vitesse :</label>
+					<input type="range" id="speedSlider" min="1" max="100" value="50" list="tickmarks">
+					<datalist id="tickmarks">
+						<option value="50" label="50%"></option>
+					</datalist>
+					<span id="speedValueLabel">(Tirage = 1, Délai = 1000 ms)</span>
+				</div>
+
+				<div style="display: flex; align-items: center; margin-bottom: 10px;">
+
+					<div>
+						<input type="checkbox" id="myMillonCheckbox" checked>
+						<label for="myMillonCheckbox">
+							Codes Loto <span class="info-icon" title="L'option Code Loto : Chaque lundi, environ 3 millions de grilles sont jouées, 4,2 millions le mercredi, et 6 millions le samedi.
+À chaque tirage, 10 codes gagnants sont tirés au sort parmi toutes les grilles jouées.
+
+Chaque code gagnant remporte 20.000 € !">i</span>
+						</label>
+					</div>
+
+					<div>
+						<input type="checkbox" id="multichanceCheckbox">
+						<label for="multichanceCheckbox">
+							Multichance <span class="info-icon" title="L'option Multichance : Il permet de réduire votre mise en répartissant votre investissement sur plusieurs parts.
+Cela diminue le coût par ticket, mais réduit également les gains proportionnellement au nombre de parts détenues.
+
+Cette option est utilisée seulement avec une dizaine de grilles multiples.
+Exemple : 10 grilles multiples (6 numéros, 10 Chance), 1 à 10 parts sur 200">i</span>
+						</label>
+					</div>
+					<div style="display: flex; align-items: center; gap: 24px; margin-bottom: 6px;">
+						<span>
+							<input type="checkbox" id="smartDrawCheckbox">
+							<label for="smartDrawCheckbox" style="margin-left: 4px;">
+								Grille optimisée
+								<span class="info-icon" title="Active une stratégie de sélection basée sur la rareté.
+
+Les numéros et dream les moins souvent tirés au cours des 70 derniers tirages 
+sont privilégiés, dans l’espoir qu’ils soient « en retard ». Cela repose sur 
+l’idée de compenser une sous-fréquence apparente.
+
+⚠️ En réalité, chaque tirage est totalement indépendant des précédents, 
+et tous les numéros ont toujours exactement la même probabilité de sortir.
+Cette méthode n'augmente donc pas objectivement vos chances.">i</span>
+							</label>
+						</span>
+					</div>
+				</div>
+
+				<div class="form-group" id="stopMyMillonWinGroup" style="margin-left: 10px; margin-bottom: 10px;">
+					<input type="checkbox" id="stopMyMillonWinCheckbox">
+					<label for="stopMyMillonWinCheckbox">Stopper si on gagne un code loto</label>
+				</div>
+
+				<div id="smartDrawSettings" style="margin-left: 22px; margin-top: 0px; display: none;">
+					<label for="rareNumbersCount">Nb de numéros rares (0 à 6) :</label>
+					<input type="number" id="rareNumbersCount" value="3" min="0" max="6" style="width: 60px;"><br>
+				</div>
+
+				<div class="form-group" id="multichancePartsContainer" style="display:none; margin-left:20px;">
+					<label for="totalParts">Total de parts :</label>
+					<input type="number" id="totalParts" value="200" min="1"><br>
+					<label for="yourParts">Votre nombre de parts :</label>
+					<input type="number" id="yourParts" value="1" min="1">
+				</div>
+				<div style="display: inline-flex; gap: 10px;">
+					<button id="startBtn">Démarrer la simulation</button>
+					<button id="stopBtn">Stop</button>
+					<button id="resetBtn">Reset</button>
+				</div>
+			</div>
+		</div>
+		<div class="right-column">
+			<div id="chanceDisplay"></div>
+			<div class="section display" id="resultat">
+				<strong>Tirage :</strong><br>
+				Numéros : --<br>
+				Multiplicateur : --
+			</div>
+			<div class="compteur" id="counter">Tirages : 0</div>
+			<div class="compteur" id="timePassed">Temps écoulé : 0 jour</div>
+			<div class="compteur" id="grillesPlayed">Grilles jouées : 0</div>
+			<div class="compteur" id="gainDisplay">Solde : 0 €</div>
+			<div class="section display" id="ticketsContainer"></div>
+			<canvas id="gainChart" height="150"></canvas>
+			<div class="section display" id="statsContainer">
+				<h3 style="margin-bottom: 0;">
+					Statistiques de résultats
+					<span class="info-icon" title="Les gains par rang sont fixes et déterminés à l’avance dans cette simulation. 
+Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc.">i</span>
+				</h3>
+				<a href="#" id="editPrizesLink" style="color:#187ad2;font-size:.95em;">Modifier les gains par rang</a> |
+				<a href="#" id="showDetails" style="color:#187ad2;font-size:.95em;">voir plus de détails</a> |
+				<a href="#" id="historyLink" style="color:#187ad2;font-size:.95em;">voir l'historique</a>
+
+
+				<ul>
+					<div id="gainLossSummary" style="margin:12px 0 8px 0;">
+						<div>
+							<span style="color:#222; font-weight:normal; margin-right:4px;">Bilan&nbsp;:</span>
+							<span id="spentValue"></span>
+							<span style="margin:0 4px; color:#888;">/</span>
+							<span id="gainValue"></span>
+							<span id="percentValue" style="margin-left:4px;"></span>
+						</div>
+						<div style="height:7px;"></div>
+					</div>
+					<ul id="statsList">
+						<li id="stats_myMillion" style="display:list-item;">
+							Code loto : <span id="stats_myMillion_value">0</span>
+							<span id="stats_myMillion_pct"></span>
+							<span id="stats_myMillion_gain"></span>
+						</li>
+					</ul>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div id="fireworksContainer"></div>
+	<div id="prizesModal" style="display:none; position: fixed; top: 50%; left: 50%;
+	transform: translate(-50%, -50%); background: white; padding: 20px;
+	border: 2px solid #444; z-index: 10000; width: 640px; max-height: none;
+	overflow-y: visible; box-shadow: 0 0 20px rgba(0,0,0,0.3);">
+		<h3>Modifier les gains par rang</h3>
+		<div style="margin-bottom:10px;">
+			<label for="prizeCategorySelect">Choisir un nombre :</label>
+			<select id="prizeCategorySelect">
+				<option value="10">10 numéros</option>
+				<option value="9">9 numéros</option>
+				<option value="8">8 numéros</option>
+				<option value="7">7 numéros</option>
+				<option value="6">6 numéros</option>
+				<option value="5">5 numéros</option>
+				<option value="4">4 numéros</option>
+			</select>
+		</div>
+		<form id="prizesForm"></form>
+		<div style="margin-top: 10px;">
+			<button id="closePrizesBtn" type="button">❌ Fermer</button>
+			<button id="resetPrizesBtn" type="button">🔄 Reset</button>
+		</div>
+	</div>
+	<div id="modalOverlay"
+		style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+	</div>
+
+
+	<div id="detailsModal" style="display:none;position:fixed;top:50%;left:50%;
+			 transform:translate(-50%,-50%);background:#fff;padding:20px;
+			 border:2px solid #444;box-shadow:0 0 20px rgba(0,0,0,.3);
+			 z-index:10001;width:400px;max-height:80vh;overflow-y:auto;">
+		<h3>Détails des paliers obtenus</h3>
+		<ul id="detailsList" style="padding-left:1em;"></ul>
+		<button id="closeDetailsBtn" style="margin-top:10px;">❌ Fermer</button>
+	</div>
+
+	<div id="modalOverlayDetails" style="display:none;position:fixed;top:0;left:0;
+			 width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;"></div>
+
+
+	<div id="historyModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+     background:rgba(0,0,0,.6);z-index:9999;">
+		<div style="background:#fff;max-width:450px;margin:80px auto;padding:20px;border-radius:8px;position:relative;">
+			<h3>Historique de vos simulations</h3>
+			<div id="historyTotals" style="font-weight:bold;margin:6px 0 10px;color:#333;"></div>
+
+			<ul id="historyList" style="list-style:none;padding-left:0;margin:0;max-height:50vh;overflow:auto;"></ul>
+			<p id="historyEmptyMsg" style="color:#777;margin-top:6px;display:none;">
+				(Aucun élément pour le moment)
+			</p>
+
+			<p class="history-advice">
+				Nous vous recommandons de rejouer <strong>strictement les mêmes paramètres</strong>
+				à chaque simulation.<br>
+				Vous pourrez ainsi comparer les résultats et estimer combien de personnes
+				auraient gagné dans des conditions identiques.
+			</p>
+
+			<div style="margin-top:12px;text-align:right;">
+				<button id="clearHistoryBtn">🗑️ Effacer l'historique</button>
+				<button id="closeHistoryBtn">❌ Fermer</button>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="examplesModal">
+		<div id="examplesContent"></div>
+
+		<div style="margin-top:10px">
+			<button id="closeExamplesBtn" type="button">❌ Fermer</button>
+		</div>
+
+		<script>
+
+			let firstOccurrence = {};
+			let baselineByTotal = {};
+			let lastDetailsModalState = "";
+			let gainChart = null;
+			let lastY;
+			let lastOdds = Infinity;
+
+			const HISTORY_KEY = 'keno_history';
+			const HISTORY_MAX = 100;
+
+			const DEFAULT_PRIZES = {
+				"10_10": 200000,
+				"10_9": 2000,
+				"10_8": 150,
+				"10_7": 15,
+				"10_6": 5,
+				"10_5": 2,
+				"10_4": 0,
+				"10_3": 0,
+				"10_2": 0,
+				"10_1": 0,
+				"10_0": 2,
+
+				"9_9": 30000,
+				"9_8": 100,
+				"9_7": 25,
+				"9_6": 8,
+				"9_5": 2,
+				"9_4": 1,
+				"9_3": 0,
+				"9_2": 0,
+				"9_1": 0,
+				"9_0": 2,
+
+				"8_8": 8000,
+				"8_7": 100,
+				"8_6": 30,
+				"8_5": 5,
+				"8_4": 0,
+				"8_3": 0,
+				"8_2": 0,
+				"8_1": 0,
+				"8_0": 2,
+
+				"7_7": 3000,
+				"7_6": 90,
+				"7_5": 5,
+				"7_4": 0,
+				"7_3": 0,
+				"7_2": 0,
+				"7_1": 0,
+				"7_0": 2,
+
+				"6_6": 900,
+				"6_5": 30,
+				"6_4": 3,
+				"6_3": 0,
+				"6_2": 0,
+				"6_1": 0,
+				"6_0": 0,
+
+				"5_5": 80,
+				"5_4": 10,
+				"5_3": 2,
+				"5_2": 0,
+				"5_1": 0,
+				"5_0": 0,
+
+				"4_4": 70,
+				"4_3": 3,
+				"4_2": 0,
+				"4_1": 0,
+				"4_0": 0
+			};
+
+			function rebuildPrizeForm(category = "10") {
+				const form = document.getElementById("prizesForm");
+				form.innerHTML = "";
+
+				const entries = Object.entries(prizeMapping)
+					.filter(([key]) => key.startsWith(category + "_"))
+					.sort((a, b) => {
+						const ha = parseInt(a[0].split("_")[1]);
+						const hb = parseInt(b[0].split("_")[1]);
+						return hb - ha;
+					});
+
+				entries.forEach(([key, value]) => {
+					const [total, hits] = key.split("_");
+					const div = document.createElement("div");
+
+					div.innerHTML = `
+          <label>${hits}/${total} :</label>
+          <input type="number" name="${key}" value="${value}">
+        `;
+					form.appendChild(div);
+				});
+			}
+			document.getElementById("prizeCategorySelect")
+				.addEventListener("change", e => rebuildPrizeForm(e.target.value));
+
+			document.addEventListener("DOMContentLoaded", () => rebuildPrizeForm("10"));
+
+			function prizeTableIsModified() {
+				for (const key in DEFAULT_PRIZES) {
+					if (prizeMapping[key] !== DEFAULT_PRIZES[key]) return true;
+				}
+				return false;
+			}
+
+			function loadHistory() {
+				try {
+					const raw = localStorage.getItem(HISTORY_KEY);
+					return raw ? JSON.parse(raw) : [];
+				}
+				catch { return []; }
+			}
+			function saveHistory(arr) {
+				try { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0, HISTORY_MAX))); }
+				catch { }
+			}
+			function formatDateFR(d = new Date()) {
+				const dd = String(d.getDate()).padStart(2, '0');
+				const mm = String(d.getMonth() + 1).padStart(2, '0');
+				const yy = String(d.getFullYear()).slice(-2);
+				const HH = String(d.getHours()).padStart(2, '0');
+				const MM = String(d.getMinutes()).padStart(2, '0');
+				return `${dd}/${mm}/${yy} - ${HH}:${MM}`;
+			}
+
+			let historySaved = false;
+			function addCurrentRunToHistory() {
+				if (historySaved) return;
+				if (!simulationHasStarted || count === 0) return;
+
+				const total = +document.getElementById("ticketNumbersCount").value || 10;
+
+				let best = "—";
+				for (let hits = total; hits >= 0; hits--) {
+					if (stats[`${total}_${hits}`] > 0) {
+						best = `${hits}/${total}`;
+						break;
+					}
+				}
+
+				const entry = {
+					date: formatDateFR(new Date()),
+					tirages: count,
+					temps: formatTimeInDays(count),
+					grilles: totalGrillesJouees,
+					solde: Number(balance).toFixed(2),
+					record: best,
+					prizeModified: prizeTableIsModified()
+				};
+
+				const hist = loadHistory();
+				hist.unshift(entry);
+				saveHistory(hist);
+				renderHistory();
+				historySaved = true;
+			}
+
+			function renderHistory() {
+				const list = document.getElementById('historyList');
+				const empty = document.getElementById('historyEmptyMsg');
+				if (!list) return;
+
+				const hist = loadHistory();
+				list.innerHTML = '';
+
+				if (hist.length === 0) { empty.style.display = 'block'; return; }
+				empty.style.display = 'none';
+
+				hist.forEach(item => {
+					const li = document.createElement('li');
+
+					const soldeNum = parseFloat(item.solde);
+					if (soldeNum >= 1_000_000) li.classList.add('hist-jack');
+					else if (soldeNum >= 0) li.classList.add('hist-pos');
+					else li.classList.add('hist-neg');
+
+					li.style.cssText = 'margin:6px 0;border:1px solid #ddd;padding:8px;border-radius:6px;';
+
+					const wrench = item.prizeModified
+						? ' <span class="wrench-icon" title="Les gains par rang ont été modifiés pour cette simulation">🔧</span>'
+						: '';
+
+					const ratio = item.tirages ? Math.round(item.grilles / item.tirages) : 0;
+					li.innerHTML = `
+			  <div><strong>Date :</strong> ${item.date}${wrench}</div>
+			  <div><strong>Tirages :</strong> ${item.tirages.toLocaleString('fr-FR')}</div>
+			  <div><strong>Temps écoulé :</strong> ${item.temps}</div>
+			  <div><strong>Grilles jouées :</strong> ${item.grilles.toLocaleString('fr-FR')}
+				   <span style="color:gray;">(${ratio.toLocaleString('fr-FR')} grille${ratio > 1 ? 's' : ''} par tirage)</span>
+			  </div>
+			  <div><strong>Pallier :</strong> ${item.record}</div>
+			  <div><strong>Solde :</strong> <span class="solde">
+				${(soldeNum).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+			  </span></div>`;
+					list.appendChild(li);
+				});
+			}
+			function clearHistory() { saveHistory([]); renderHistory(); }
+
+			function updatePrix() {
+				const prixUnitaire = getTicketCost();
+				const nbTickets = parseInt(document.getElementById("numTickets").value, 10) || 1;
+				const coutTotal = prixUnitaire * nbTickets;
+				const affichage = coutTotal.toLocaleString("fr-FR", {
+					minimumFractionDigits: 2,
+					maximumFractionDigits: 2
+				});
+
+				document.getElementById("priceDisplay").textContent =
+					`Prix : ${affichage} €`;
+			}
+
+			function updateCustomPriceDisplay() {
+				const txt = document.getElementById("customGrids").value;
+				const nbGrilles = txt
+					.split('\n')
+					.map(l => l.trim())
+					.filter(l => l)
+					.map(l => l.split(/[ ,;]+/).filter(x => /^\d+$/.test(x)))
+					.filter(arr => arr.length >= 4 && arr.length <= 10
+						&& arr.every(n => +n >= 1 && +n <= 56))
+					.length;
+
+				const prixUnitaire = getTicketCost();
+				const total = nbGrilles * prixUnitaire;
+
+				document.getElementById("customPriceDisplay").textContent =
+					`Prix : ${total.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+			}
+
+			window.addEventListener("DOMContentLoaded", updatePrix);
+			document.getElementById("stakeSelect").addEventListener("change", updatePrix);
+			document.getElementById("multiplierCheckbox").addEventListener("change", updatePrix);
+
+
+			window.addEventListener("DOMContentLoaded", function () {
+				updatePrix();
+			});
+
+			document.getElementById("ticketNumbersCount")
+				.addEventListener("input", updatePrix);
+			document.getElementById("numTickets")
+				.addEventListener("input", updatePrix);
+
+			function isValidCombinationIndex(idx) {
+				return Number.isInteger(idx) && idx >= 1 && idx <= combination(40, 5) * combination(5, 1);
+			}
+
+			function combinationIndex(numbers, stars, numMax = 40, starMax = 5, nNum = numbers.length, nStar = stars.length) {
+				if (!Array.isArray(numbers) || numbers.length !== nNum) return null;
+				if (!Array.isArray(stars) || stars.length !== nStar) return null;
+
+				let idxNum = 0, prev = 0;
+				for (let i = 0; i < nNum; i++) {
+					for (let n = prev + 1; n < numbers[i]; n++) {
+						idxNum += combination(numMax - n, nNum - (i + 1));
+					}
+					prev = numbers[i];
+				}
+
+				let idxStar = 0;
+				if (nStar === 1) {
+					idxStar = stars[0] - 1;
+				} else {
+					let temp = [...stars].sort((a, b) => a - b);
+					let prevS = 0;
+					for (let i = 0; i < nStar; i++) {
+						for (let s = prevS + 1; s < temp[i]; s++) {
+							idxStar += combination(starMax - s, nStar - (i + 1));
+						}
+						prevS = temp[i];
+					}
+				}
+
+				return idxNum * combination(starMax, nStar) + idxStar + 1;
+			}
+
+			function combinationIndexToTicket(idx, numMax = 40, starMax = 5, nNum = 5, nStar = 1) {
+				idx--;
+				const STAR_COMBOS = combination(starMax, nStar);
+				const starIdx = idx % STAR_COMBOS;
+				let rank = Math.floor(idx / STAR_COMBOS);
+
+				let nums = [];
+				let prev = 0;
+				for (let k = nNum; k >= 1; k--) {
+					let n = prev + 1;
+					while (combination(numMax - n, k - 1) <= rank) {
+						rank -= combination(numMax - n, k - 1);
+						n++;
+					}
+					nums.push(n);
+					prev = n;
+				}
+
+				let stars = [];
+				let pool = [];
+				for (let i = 1; i <= starMax; i++) pool.push(i);
+				let left = nStar;
+				let sIdx = starIdx;
+				for (let i = 0; i < nStar; i++) {
+					let s = pool[0];
+					let j = 0;
+					while (combination(starMax - s, left - 1) <= sIdx) {
+						sIdx -= combination(starMax - s, left - 1);
+						s++;
+						j++;
+					}
+					stars.push(s);
+					pool.splice(j, 1);
+					left--;
+				}
+				return { numbers: nums, stars: stars };
+			}
+
+			function combinationFromIndex(idx, numMax = 40, starMax = 1) {
+				if (idx < 1 || idx > combination(numMax, 5) * starMax)
+					throw new RangeError("Index hors bornes");
+
+				idx--;
+				const star = (idx % starMax) + 1;
+				let rank = Math.floor(idx / starMax);
+
+				const nums = [];
+				let prev = 0;
+				for (let k = 5; k >= 1; k--) {
+					let n = prev + 1;
+					while (combination(numMax - n, k - 1) <= rank) {
+						rank -= combination(numMax - n, k - 1);
+						n++;
+					}
+					nums.push(n);
+					prev = n;
+				}
+				return { numbers: nums, stars: [star] };
+			}
+
+			function formatTimeInDays(totalDays) {
+				const joursTotal = Math.floor(totalDays);
+				let centuries = Math.floor(joursTotal / 36500);
+				let reste = joursTotal % 36500;
+				let years = Math.floor(reste / 365);
+				reste = reste % 365;
+				let months = Math.floor(reste / 30.4375);
+				reste = Math.floor(reste % 30.4375);
+				let weeks = Math.floor(reste / 7);
+				let days = reste % 7;
+
+				const parts = [];
+				if (centuries > 0) parts.push(centuries + ' ' + (centuries === 1 ? 'siècle' : 'siècles'));
+				if (years > 0) parts.push(years + ' ' + (years === 1 ? 'an' : 'ans'));
+				if (months > 0) parts.push(months + ' mois');
+				if (weeks > 0) parts.push(weeks + ' ' + (weeks === 1 ? 'semaine' : 'semaines'));
+				if (days > 0) parts.push(days + ' ' + (days === 1 ? 'jour' : 'jours'));
+
+				return parts.length === 0 ? "0 jour" : parts.join(", ");
+			}
+
+			function generateProbabilityExamples(N) {
+				if (!Number.isFinite(N) || N <= 0) return [];
+
+				const F = new Intl.NumberFormat("fr-FR");
+				const examples = [];
+
+				const seconds = N;
+				if (seconds >= 60) {
+					const minutes = seconds / 60;
+					if (minutes < 60) {
+						examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(Math.round(minutes))} ${minutes < 2 ? "minute" : "minutes"}`);
+					} else {
+						const hours = minutes / 60;
+						if (hours < 24) {
+							examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(Math.round(hours))} ${hours < 2 ? "heure" : "heures"}`);
+						} else {
+							const days = hours / 24;
+							if (days < 365) {
+								examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(Math.round(days))} ${days < 2 ? "jour" : "jours"}`);
+							} else {
+								const years = days / 365;
+								examples.push(`⏱️ C’est comme choisir 1 seconde dans ${F.format(years.toFixed(1))} ans`);
+							}
+						}
+					}
+				}
+
+				const flips = Math.round(Math.log2(N));
+				if (flips > 1) {
+					examples.push(`🪙 Réussir ${flips} lancers de pile ou face d’affilée`);
+				}
+
+				const km = N / 100_000;
+				if (km >= 1) {
+					examples.push(`📏 Retrouver un centimètre précis sur une route de ${F.format(Math.round(km))} km`);
+				} else {
+					const m = N / 100;
+					if (m >= 1) {
+						examples.push(`📏 Retrouver un centimètre précis sur une règle de ${F.format(Math.round(m))} m`);
+					}
+				}
+
+				const BOOKS_PER_LIBRARY = 100_000;
+				if (N >= 10_000 && N < BOOKS_PER_LIBRARY * 2) {
+					examples.push(`📚 Piocher au hasard le bon livre parmi ${F.format(Math.round(N))} ouvrages`);
+				} else if (N >= BOOKS_PER_LIBRARY * 2) {
+					const libraries = Math.round(N / BOOKS_PER_LIBRARY);
+					examples.push(`📚 Trouver le bon livre parmi ${libraries} bibliothèques de ${F.format(BOOKS_PER_LIBRARY)} ouvrages`);
+				} else if (N >= 100) {
+					examples.push(`🎱 Tirer la seule bille rouge parmi ${F.format(Math.round(N))} billes blanches`);
+				}
+
+				const stadiumCap = 80_000;
+				if (N >= stadiumCap / 2 && N < stadiumCap * 2) {
+					examples.push(`🏟️ Être tiré au sort parmi ${F.format(Math.round(N))} personnes`);
+				} else if (N >= stadiumCap * 2 && N < 10_000_000) {
+					const stades = Math.round(N / stadiumCap);
+					examples.push(`🏟️ Être tiré au sort parmi ${stades} stades de ${stadiumCap.toLocaleString("fr-FR")} personnes`);
+				}
+
+				const screenPix = 2_000 * 1_000;
+				if (N >= screenPix / 2 && N < BOOKS_PER_LIBRARY) {
+					const ecrans = Math.round(N / screenPix);
+					examples.push(`🖥️ Allumer au hasard le bon pixel parmi ${ecrans} écrans Full HD`);
+				}
+
+				const dropPerLitre = 20_000;
+				if (N >= dropPerLitre * 500 && N < 1e9) {
+					const litres = Math.round(N / dropPerLitre);
+					examples.push(`💧 Identifier une goutte d’eau précise dans ${litres.toLocaleString("fr-FR")} litres`);
+				}
+
+				const tiragesParAn = 365;
+				const daysPerDraw = 365.25 / tiragesParAn;
+				const totalDays = N * daysPerDraw;
+				const temps = formatTimeInDays(totalDays);
+				examples.push(`⏳&nbsp;En jouant à chaque tirage, il faudrait en moyenne :<br><strong style="margin-left: 1.5em;">${temps}</strong>`);
+
+				return examples;
+			}
+
+			function updateDetailsModalIfOpen() {
+				const modal = document.getElementById('detailsModal');
+				if (modal.style.display !== 'block') return;
+
+				const total = parseInt(document.getElementById('ticketNumbersCount').value, 10) || 10;
+
+				const UL = document.getElementById('detailsList');
+				if (!UL.firstElementChild || +UL.firstElementChild.dataset.total !== total) {
+					buildDetailsLines(total);
+				}
+
+				[...UL.children].forEach(li => {
+					const [, tot, hits] = li.id.split('_');
+					const key = `${tot}_${hits}`;
+
+					if (firstOccurrence.hasOwnProperty(key)) {
+						const jours = firstOccurrence[key];
+						li.textContent = `${hits}/${tot} : ` +
+							(jours === 0
+								? 'obtenu immédiatement'
+								: `obtenu en ${formatTimeInDays(jours, { skipSmallUnitsIfYearOrCentury: true })}`);
+					} else {
+						li.innerHTML = `<span style="color:gray">${hits}/${tot} : jamais obtenu</span>`;
+					}
+				});
+			}
+
+			function openExamplesModal(N) {
+				const modal = document.getElementById("examplesModal");
+				const overlay = document.getElementById("modalOverlay");
+				const content = document.getElementById("examplesContent");
+
+				const listHTML = generateProbabilityExamples(N)
+					.map(t => `<li>${t}</li>`)
+					.join("");
+
+				const entier = Math.round(N);
+				content.innerHTML =
+					`<p style="font-size:1.3em; font-weight:bold; margin-top:5px; margin-bottom:16px;">
+				<span id="chanceDisplayText">1 chance sur ${entier.toLocaleString("fr-FR")}</span>
+				<span id="editOddsIcon" title="Modifier" style="cursor:pointer; margin-left:8px; vertical-align:middle;">
+				  <svg width="18" height="18" fill="gray" viewBox="0 0 24 24">
+					<path d="M3 17.25V21h3.75l11.02-11.02-3.75-3.75L3 17.25zM20.71 
+					  7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 
+					  1.83 3.75 3.75 1.84-1.82z"/>
+				  </svg>
+				</span>
+			  </p>
+			  <ul>${listHTML}</ul>`;
+				modal.style.display = "block";
+				overlay.style.display = "block";
+
+				const editIcon = document.getElementById('editOddsIcon');
+				editIcon.onclick = function () {
+					const span = document.getElementById('chanceDisplayText');
+					const prevVal = span.textContent.match(/\d[\d\s]*$/);
+					const val = prevVal ? prevVal[0].replace(/\s/g, '') : '117';
+					const currentOdds = N;
+
+					span.innerHTML = `
+				1 chance sur 
+				<input id="editOddsInput" type="number" min="1" value="${val}" 
+				  style="font-size:0.8em;width:150px;text-align:center;">
+				<button id="editOddsOk" style="margin-left:2px;font-size:0.6em;">✔</button>
+				<button id="editOddsCancel" style="margin-left:2px;font-size:0.6em;">✖</button>
+			  `;
+
+					document.getElementById('editOddsIcon').style.display = 'none';
+
+					const inputField = document.getElementById('editOddsInput');
+					inputField.focus();
+					inputField.addEventListener('keydown', function (e) {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							document.getElementById('editOddsOk').click();
+						} else if (e.key === 'Escape') {
+							e.preventDefault();
+							document.getElementById('editOddsCancel').click();
+						}
+					});
+
+					document.getElementById('editOddsOk').onclick = function () {
+						const nv = parseInt(document.getElementById('editOddsInput').value) || 1;
+						document.getElementById('editOddsIcon').style.display = '';
+						openExamplesModal(nv);
+					};
+					document.getElementById('editOddsCancel').onclick = function () {
+						document.getElementById('editOddsIcon').style.display = '';
+						openExamplesModal(currentOdds);
+					};
+				};
+			}
+
+			document.getElementById("closeExamplesBtn").addEventListener("click", () => {
+				document.getElementById("examplesModal").style.display = "none";
+				document.getElementById("modalOverlay").style.display = "none";
+			});
+
+			document.getElementById("modalOverlay").addEventListener("click", function () {
+				document.getElementById("examplesModal").style.display = "none";
+			});
+
+			function savePrizeFormData() {
+				const form = document.getElementById("prizesForm");
+				const inputs = form.querySelectorAll("input");
+				inputs.forEach(input => {
+					const val = parseFloat(input.value);
+					if (!isNaN(val) && val >= 0) {
+						prizeMappingEditable[input.name] = val;
+					}
+				});
+
+				for (const key in prizeMappingEditable) {
+					prizeMapping[key] = prizeMappingEditable[key];
+				}
+				prizeTableModified = true;
+			}
+
+			function generateRandomGridString() {
+				const numbers = generateNumbers(10, 56);
+				return `${numbers.join(",")}`;
+			}
+
+			document.getElementById("generateGridsBtn").addEventListener("click", () => {
+				const nb = parseInt(document.getElementById("nbGrillesAuto").value, 10);
+				if (isNaN(nb) || nb < 1) return;
+				let result = "";
+				for (let i = 0; i < nb; i++) {
+					result += generateRandomGridString() + "\n";
+				}
+				document.getElementById("customGrids").value = result.trim();
+				updateChanceDisplay();
+				updateCustomPriceDisplay();
+			});
+			document.getElementById("clearCustomGridsBtn").addEventListener("click", () => {
+				document.getElementById("customGrids").value = "";
+				updateChanceDisplay();
+				updateCustomPriceDisplay();
+			});
+
+			function initGainChart() {
+				const ctx = document.getElementById("gainChart").getContext("2d");
+
+				gainChart = new Chart(ctx, {
+					type: "line",
+					data: {
+						datasets: [{
+							label: "Solde (€)",
+							data: [],
+							fill: false,
+							borderWidth: 2,
+							pointRadius: 0,
+							pointHitRadius: 12,
+							pointHoverRadius: 5,
+							hoverBorderWidth: 2,
+							tension: 0,
+							segment: {
+								borderColor: c => c.p1.parsed.y >= 0 ? "#43a047" : "#e53935"
+							}
+						}]
+					},
+					options: {
+						animation: false,
+						parsing: false,
+						spanGaps: true,
+						elements: {
+							line: { borderCapStyle: "round", borderJoinStyle: "round" },
+							point: { radius: 0 }
+						},
+						plugins: {
+							legend: { display: false },
+							decimation: {
+								enabled: true,
+								algorithm: "min-max",
+								samples: 40000
+							},
+							tooltip: {
+								enabled: false,
+								external({ chart, tooltip }) {
+									let el = chart.canvas.parentNode.querySelector('.my-tooltip');
+									if (!el) {
+										el = document.createElement('div');
+										el.className = 'my-tooltip';
+										Object.assign(el.style, {
+											position: 'absolute',
+											background: 'rgba(0,0,0,.8)',
+											color: '#fff',
+											borderRadius: '4px',
+											padding: '6px 8px',
+											font: '12px/1.2 sans-serif',
+											pointerEvents: 'none',
+											opacity: 0
+										});
+										chart.canvas.parentNode.appendChild(el);
+									}
+									if (tooltip.opacity === 0) {
+										el.style.opacity = 0;
+										return;
+									}
+									const p = tooltip.dataPoints[0];
+									const tirage = p.parsed.x;
+									const jours = tirage;
+									const soldeN = p.parsed.y;
+									const couleur = soldeN >= 0 ? '#4caf50' : '#e53935';
+
+									el.innerHTML = `
+						  <div><strong>Temps&nbsp;:</strong> ${formatTempsCourt(jours)}</div>
+						  <div><strong>Solde&nbsp;:</strong>
+							   <span style="color:${couleur}">${soldeN.toLocaleString('fr-FR')} €</span></div>`;
+									const { offsetLeft, offsetTop } = chart.canvas;
+									el.style.opacity = 1;
+									el.style.left = offsetLeft + tooltip.caretX + "px";
+									el.style.top = offsetTop + tooltip.caretY + "px";
+								}
+							}
+						},
+						scales: {
+							x: {
+								type: "linear",
+								title: { display: true, text: "Temps" },
+								ticks: {
+									callback(value) {
+										const jours = value;
+										return formatTempsCourt(jours);
+									}
+								}
+							},
+							y: { title: { display: false, text: "€" } }
+						}
+					}
+				});
+			}
+
+			function addGainPoint(x, y) {
+				const data = gainChart.data.datasets[0].data;
+				const last = data[data.length - 1];
+				if (last && last.x === x) last.y = y;
+				else data.push({ x, y });
+				gainChart.update();
+			}
+
+			function formatTempsCourt(totalJours) {
+				if (totalJours < 30) return Math.round(totalJours) + " jours";
+				if (totalJours < 30.4375 * 6) return Math.round(totalJours / 30.4375) + " mois";
+
+				const ans = totalJours / 365.25;
+				if (ans < 100) return (ans < 10 ? ans.toFixed(1).replace(".0", "") : Math.round(ans)) + " ans";
+
+				const siecles = Math.round(ans / 100);
+				return siecles + " siècles";
+			}
+
+			const GAIN_SEUIL = 20000;
+			let prizeTableModified = false;
+
+			function updateGainChart() {
+				if (!gainChart) return;
+
+				const gainNet = balance;
+				let addPoint = false;
+
+				switch (true) {
+					case (count <= 50):
+						addPoint = true;
+						break;
+					case (count <= 200):
+						addPoint = (count % 10 === 0);
+						break;
+					case (count <= 5000):
+						addPoint = (count % 30 === 0);
+						break;
+					case (count <= 10000):
+						addPoint = (count % 100 === 0);
+						break;
+					case (count <= 100000):
+						addPoint = (count % 2000 === 0);
+						break;
+					case (count <= 1000000):
+						addPoint = (count % 5000 === 0);
+						break;
+					case (count <= 5000000):
+						addPoint = (count % 10000 === 0);
+						break;
+					case (count <= 20000000):
+						addPoint = (count % 150000 === 0);
+						break;
+					case (count <= 80000000):
+						addPoint = (count % 500000 === 0);
+						break;
+					default:
+						addPoint = (count % 1000000 === 0);
+						break;
+				}
+
+				if (!prizeTableModified && gainNet > 0 && lastY !== undefined && Math.abs(gainNet - lastY) >= GAIN_SEUIL) {
+					addPoint = true;
+				}
+
+				if (addPoint) {
+					addGainPoint(count, gainNet);
+					lastY = gainNet;
+				}
+			}
+
+			function resetGainChart() {
+				if (!gainChart) return;
+				gainChart.data.datasets[0].data = [];
+				gainChart.update();
+				lastY = undefined;
+			}
+
+			initGainChart();
+
+			function indexToMyMillionCode(n) {
+				const zeroBased = n - 1;
+				const BLOCK_SIZE = 200000;
+				const blockNumber = Math.floor(zeroBased / BLOCK_SIZE);
+
+				const scramble = (blockNumber * 7919 + 104729) % 26;
+				const firstLetter = String.fromCharCode(65 + scramble);
+
+				const digits = String(n).padStart(8, "0");
+
+				return `${firstLetter} ${digits.slice(0, 4)} ${digits.slice(4)}`;
+			}
+
+			function formatMyMillion(val) {
+				if (typeof val === "number") return indexToMyMillionCode(val);
+				if (typeof val === "string" && val.includes(" à ")) {
+					const [start, end] = val.split(" à ").map(Number);
+					return `${indexToMyMillionCode(start)} à ${indexToMyMillionCode(end)}`;
+				}
+				return val;
+			}
+
+			function formatCodesList(arr) {
+				return arr
+					.slice()
+					.sort((a, b) => {
+						const aStr = formatMyMillion(a).replace(/&nbsp;/g, '').replace(/\s+/g, '');
+						const bStr = formatMyMillion(b).replace(/&nbsp;/g, '').replace(/\s+/g, '');
+						return aStr.localeCompare(bStr);
+					})
+					.map(formatMyMillion)
+					.join(', ');
+			}
+
+			let fancyDisplay = true;
+			function toggleDisplayStyle() {
+				fancyDisplay = !fancyDisplay;
+
+				document.getElementById('displayFancyIcon').style.display = fancyDisplay ? 'inline-block' : 'none';
+				document.getElementById('displayPlainIcon').style.display = fancyDisplay ? 'none' : 'inline-block';
+				document.body.classList.toggle('plain-display', !fancyDisplay);
+
+				refreshTicketsDisplay();
+			}
+
+			document.getElementById('displayToggle').addEventListener('click', toggleDisplayStyle);
+
+			function simpleTextList(arr) {
+				return arr.join(', ');
+			}
+
+			function adjustTicketColumns(tickets) {
+				const container = document.getElementById('ticketsContainer');
+				const bigTicket = tickets.some(t =>
+					t.numbers.length > 15 || t.stars.length > 10
+				);
+				const twoCols = tickets.length > 1 && !bigTicket;
+				container.classList.toggle('cols-2', twoCols);
+			}
+
+			let soundEnabled = false;
+			let currentAudio = null;
+
+			function toggleSound() {
+				soundEnabled = !soundEnabled;
+				document.getElementById('soundOnIcon').style.display = soundEnabled ? 'inline-block' : 'none';
+				document.getElementById('soundOffIcon').style.display = soundEnabled ? 'none' : 'inline-block';
+			}
+
+			document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+			function playSound(soundFile) {
+				if (!soundEnabled) return;
+				if (currentAudio) {
+					currentAudio.pause();
+					currentAudio = null;
+				}
+				currentAudio = new Audio(soundFile);
+				currentAudio.play().catch((err) => {
+					console.warn('Erreur de lecture audio :', err);
+				});
+			}
+
+			const stats = {};
+			const statsGain = {};
+
+			function ensureStatsFor(total) {
+				for (let hits = 0; hits <= total; hits++) {
+					const k = `${total}_${hits}`;
+					if (!(k in stats)) stats[k] = 0;
+					if (!(k in statsGain)) statsGain[k] = 0;
+				}
+			}
+
+			let myMillionWinCount = 0;
+			let myMillionTotalGain = 0;
+
+			let count = 0;
+			let stopFlag = false;
+			let loopTimeout;
+			let balance = 0;
+			const ticketCost = 1;
+			let totalGrillesJouees = 0;
+
+			let simulationActive = false;
+			let simulationHasStarted = false;
+
+			const prizeMapping = {
+				"10_10": 200000,
+				"10_9": 2000,
+				"10_8": 150,
+				"10_7": 15,
+				"10_6": 5,
+				"10_5": 2,
+				"10_4": 0,
+				"10_3": 0,
+				"10_2": 0,
+				"10_1": 0,
+				"10_0": 2,
+
+				"9_9": 30000,
+				"9_8": 100,
+				"9_7": 25,
+				"9_6": 8,
+				"9_5": 2,
+				"9_4": 1,
+				"9_3": 0,
+				"9_2": 0,
+				"9_1": 0,
+				"9_0": 2,
+
+				"8_8": 8000,
+				"8_7": 100,
+				"8_6": 30,
+				"8_5": 5,
+				"8_4": 0,
+				"8_3": 0,
+				"8_2": 0,
+				"8_1": 0,
+				"8_0": 2,
+
+				"7_7": 3000,
+				"7_6": 90,
+				"7_5": 5,
+				"7_4": 0,
+				"7_3": 0,
+				"7_2": 0,
+				"7_1": 0,
+				"7_0": 2,
+
+				"6_6": 900,
+				"6_5": 30,
+				"6_4": 3,
+				"6_3": 0,
+				"6_2": 0,
+				"6_1": 0,
+				"6_0": 0,
+
+				"5_5": 80,
+				"5_4": 10,
+				"5_3": 2,
+				"5_2": 0,
+				"5_1": 0,
+				"5_0": 0,
+
+				"4_4": 70,
+				"4_3": 3,
+				"4_2": 0,
+				"4_1": 0,
+				"4_0": 0
+			};
+
+			const speedPresets = [
+				{ batchSize: 1, speed: 1000 },
+				{ batchSize: 10, speed: 500 },
+				{ batchSize: 100, speed: 100 },
+				{ batchSize: 500, speed: 50 },
+				{ batchSize: 1000, speed: 10 },
+				{ batchSize: 2000, speed: 5 },
+				{ batchSize: 5000, speed: 2 },
+				{ batchSize: 10000, speed: 1 },
+				{ batchSize: 50000, speed: 0 },
+				{ batchSize: 100000, speed: 0 },
+			];
+
+			let currentBatchSize = speedPresets[4].batchSize;
+			let currentSpeed = speedPresets[4].speed;
+
+			function combination(n, r) {
+				if (r > n) return 0;
+				let num = 1, den = 1;
+				for (let i = 0; i < r; i++) {
+					num *= (n - i);
+					den *= (i + 1);
+				}
+				return num / den;
+			}
+
+			function getTicketCost() {
+				const stake = parseInt(document.getElementById("stakeSelect").value) || 1;
+				const multi = document.getElementById("multiplierCheckbox").checked;
+				return multi ? stake * 2 : stake;
+			}
+
+			function getStakeAmount() {
+				return parseInt(document.getElementById("stakeSelect").value) || 1;
+			}
+
+			function costOfTicket() { 
+				return getTicketCost();
+			}
+
+			function generateNumbers(count, max) {
+				let numbers = [];
+				while (numbers.length < count) {
+					const num = Math.floor(Math.random() * max) + 1;
+					if (!numbers.includes(num)) {
+						numbers.push(num);
+					}
+				}
+				return numbers.sort((a, b) => a - b);
+			}
+
+			function getCombinations(arr, k) {
+				const results = [];
+				function combine(start, combo) {
+					if (combo.length === k) {
+						results.push(combo.slice());
+						return;
+					}
+					for (let i = start; i < arr.length; i++) {
+						combo.push(arr[i]);
+						combine(i + 1, combo);
+						combo.pop();
+					}
+				}
+				combine(0, []);
+				return results;
+			}
+
+			function generateTicket(numCount = 10) {
+				numCount = Math.max(4, Math.min(56, numCount));
+				const ticketNumbers = generateNumbers(numCount, 56);
+
+				return { numbers: ticketNumbers, stars: [] };
+			}
+			
+			const freqNum = Array(39).fill(0);
+			const freqStar = [];
+			const MAX_RECENT_DRAWS = 70;
+			const recentDraws = [];
+
+			function pickUnique(pool, k) {
+				const sac = [...pool];
+				const set = new Set();
+				while (set.size < k && sac.length) {
+					const idx = Math.floor(Math.random() * sac.length);
+					const val = sac.splice(idx, 1)[0];
+					set.add(val);
+				}
+				return [...set].sort((a, b) => a - b);
+			}
+
+			function buildCommonRareSet(numCount = 6, starCount = 1) {
+				const rareNumWanted = Math.min(
+					parseInt(document.getElementById("rareNumbersCount")?.value) || 0,
+					numCount, 6
+				);
+				const rareStarWanted = Math.min(
+					parseInt(document.getElementById("rareStarsCount")?.value) || 0,
+					starCount, 1
+				);
+
+				const numsByRarity = [...Array(40).keys()].map(i => i + 1)
+					.sort((a, b) => freqNum[a] - freqNum[b]);
+				const starsByRarity = [...Array(5).keys()].map(i => i + 1)
+					.sort((a, b) => freqStar[a] - freqStar[b]);
+				const minFreqNum = freqNum[numsByRarity[0]];
+				const minFreqStar = freqStar[starsByRarity[0]];
+				const rareNumsPool = numsByRarity.slice(0, rareNumWanted);
+				const rareStarsPool = starsByRarity.slice(0, rareStarWanted);
+
+				shuffle(rareNumsPool);
+				shuffle(rareStarsPool);
+
+				return {
+					rareNums: rareNumsPool.slice(0, rareNumWanted),
+					rareStars: rareStarsPool.slice(0, rareStarWanted)
+				};
+			}
+
+			function generateSmartTicket(numCount = 6, starCount = 1, lotRares = null) {
+
+				const chosenNums = lotRares ? [...lotRares.rareNums] : [];
+				const chosenStars = lotRares ? [...lotRares.rareStars] : [];
+
+				while (chosenNums.length < numCount) {
+					const n = 1 + Math.floor(Math.random() * 40);
+					if (!chosenNums.includes(n)) chosenNums.push(n);
+				}
+				while (chosenStars.length < starCount) {
+					const s = 1 + Math.floor(Math.random() * 5);
+					if (!chosenStars.includes(s)) chosenStars.push(s);
+				}
+
+				return {
+					numbers: chosenNums.sort((a, b) => a - b),
+					stars: chosenStars.sort((a, b) => a - b)
+				};
+			}
+
+			function shuffle(arr) {
+				for (let i = arr.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[arr[i], arr[j]] = [arr[j], arr[i]];
+				}
+			}
+
+			function generateDraw() {
+				const draw = {
+					numbers: generateNumbers(16, 56),
+					stars: []
+				};
+
+				draw.numbers.forEach(n => freqNum[n]++);
+				recentDraws.push(draw);
+
+				if (recentDraws.length > MAX_RECENT_DRAWS) {
+					const old = recentDraws.shift();
+					old.numbers.forEach(n => freqNum[n]--);
+					old.stars.forEach(s => freqStar[s]--);
+				}
+
+				return draw;
+			}
+
+			function countMatches(arr1, arr2) {
+				return arr1.filter(x => arr2.includes(x)).length;
+			}
+
+			function parseCustomInput(str) {
+				return str.split(',')
+					.map(s => parseInt(s.trim()))
+					.filter(n => !isNaN(n));
+			}
+
+			function parseCustomGrids(str) {
+				return str
+					.split('\n')
+					.map(l => l.trim())
+					.filter(l => l !== '')
+					.map(l => l.split(/[ ,;]+/)
+						.map(n => parseInt(n, 10))
+						.filter(Number.isFinite))
+					.filter(nums => nums.length >= 4 && nums.length <= 10
+						&& nums.every(n => n >= 1 && n <= 56))
+					.map(nums => ({ numbers: nums.sort((a, b) => a - b), stars: [] }));
+			}
+
+			function ballHTML(value, type) {
+				const cls = type === "star" ? "star-ball" : "number-ball";
+				return `<span class="${cls}">${value}</span>`;
+			}
+
+			function combinationBallHTML(val) {
+				return `<span class="number-ball" style="margin-left:6px; background:#047dff; color:white; font-size:0.88em; min-width:36px;" title="Numéro unique">${val.toLocaleString('fr-FR')}</span>`;
+			}
+
+			function refreshTicketsDisplay() {
+				if (!window._lastTicketsData) return;
+
+				const { tickets, draw, myMillion } = window._lastTicketsData;
+
+				document.getElementById("ticketsContainer").innerHTML = "";
+
+				tickets.forEach((ticket, index) => {
+					const div = document.createElement("div");
+					div.className = "ticket";
+					const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
+					const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
+					div.innerHTML = `<strong>Ticket ${index + 1} :</strong><br>
+						 Numéros : ${highlightedNums}`;
+					document.getElementById("ticketsContainer").appendChild(div);
+				});
+			}
+
+			function highlightMatches(values, drawValues, type) {
+				const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+
+				if (isPlain) {
+					return values.map((v, i) => {
+						const isMatch = drawValues.includes(v);
+						let str = isMatch
+							? `<span class="match">${v}</span>`
+							: v;
+						if (i < values.length - 1) str += ', ';
+						return str;
+					}).join('');
+				} else {
+					return values.map(v => {
+						const cls = drawValues.includes(v) ? 'match' : 'semi';
+						const base = ballHTML(v, type);
+						return base.replace('class="', `class="${cls} `);
+					}).join(' ');
+				}
+			}
+
+			function balls(values, type) {
+				return values.map(v => ballHTML(v, type)).join(" ");
+			}
+
+			function launchFireworks() {
+				const container = document.getElementById('fireworksContainer');
+				let count = 0;
+				const total = 80;
+				const interval = setInterval(() => {
+					if (count >= total) {
+						clearInterval(interval);
+						return;
+					}
+					const firework = document.createElement('div');
+					firework.classList.add('firework');
+					const x = Math.random() * window.innerWidth;
+					firework.style.left = x + 'px';
+					firework.style.top = '0px';
+					const tx = (Math.random() - 0.5) * 300;
+					const ty = Math.random() * 500;
+					firework.style.setProperty('--tx', tx + 'px');
+					firework.style.setProperty('--ty', ty + 'px');
+					const colors = [
+						{ light: '#ffcc00', dark: '#ff9900' },
+						{ light: '#ff3366', dark: '#cc0033' },
+						{ light: '#66ccff', dark: '#3399ff' },
+						{ light: '#99ff99', dark: '#33cc33' }
+					];
+					const chosen = colors[Math.floor(Math.random() * colors.length)];
+					firework.style.setProperty('--color', chosen.light);
+					firework.style.setProperty('--color-dark', chosen.dark);
+					container.appendChild(firework);
+					firework.addEventListener('animationend', () => {
+						firework.remove();
+					});
+					count++;
+				}, 25);
+			}
+
+			function removeLooseImages() {
+				const container = document.querySelector('#looseImageContainer');
+				if (container) {
+					container.innerHTML = "";
+				}
+			}
+
+			function addLooseImage(filename) {
+				const container = document.querySelector('#looseImageContainer');
+				if (!container) return;
+				const img = document.createElement('img');
+				img.src = filename;
+				img.style.width = "1.5em";
+				img.style.height = "1.5em";
+				img.style.verticalAlign = "middle";
+				img.style.marginLeft = "8px";
+				container.appendChild(img);
+			}
+
+			function buildStatsLines(totalOrList) {
+				const totals = Array.isArray(totalOrList) ? totalOrList : [totalOrList];
+				const UL = document.getElementById('statsList');
+
+				UL.querySelectorAll('li[data-total], li.stats-sep').forEach(li => li.remove());
+
+				totals.forEach((total, idx) => {
+					if (idx > 0) {
+						const sep = document.createElement('li');
+						sep.className = 'stats-sep';
+						sep.style.listStyle = 'none';
+						sep.innerHTML = '&nbsp;';
+						UL.appendChild(sep);
+					}
+
+					ensureStatsFor(total);
+
+					for (let hits = total; hits >= 0; hits--) {
+						const key = `${total}_${hits}`;
+						const li = document.createElement('li');
+						li.dataset.total = total;
+						li.innerHTML = `${hits}/${total} : <span id="stats_${key}">0</span>`;
+						UL.appendChild(li);
+					}
+				});
+			}
+
+			function buildDetailsLines(total) {
+				const UL = document.getElementById('detailsList');
+				if (!UL) return;
+				UL.innerHTML = '';
+
+				for (let hits = total; hits >= 0; hits--) {
+					const key = `${total}_${hits}`;
+					const li = document.createElement('li');
+					li.dataset.total = total
+					li.id = `details_${key}`;
+
+					li.innerHTML = `<span style="color:gray">${hits}/${total} : jamais obtenu</span>`;
+					UL.appendChild(li);
+				}
+			}
+
+			document.addEventListener('DOMContentLoaded', () => {
+				const defaultTotal = 10;
+				ensureStatsFor(defaultTotal);
+				buildStatsLines(defaultTotal);
+				updateStatsDisplay();
+			});
+
+			function updateStatsDisplay() {
+				let total = 0;
+				for (let combo in stats) total += stats[combo];
+
+				const elemMyMillion = document.getElementById("stats_myMillion");
+				const valMyMillion = document.getElementById("stats_myMillion_value");
+				const pctMyMillion = document.getElementById("stats_myMillion_pct");
+				const gainMyMillion = document.getElementById("stats_myMillion_gain");
+
+				if (!document.getElementById("myMillonCheckbox").checked) {
+					elemMyMillion.style.display = "none";
+				} else {
+					elemMyMillion.style.display = "list-item";
+					let percent = count > 0 ? (myMillionWinCount / count * 100) : 0;
+					if (myMillionWinCount === 0 && simulationHasStarted && count > 0) {
+						valMyMillion.innerHTML = `<span style='color: red;'>0</span>`;
+					} else {
+						valMyMillion.innerHTML = myMillionWinCount.toLocaleString('de-DE');
+					}
+					pctMyMillion.innerHTML = `<span style='color: gray;'>(${percent.toFixed(2)}%)</span>`;
+					if (myMillionTotalGain > 0) {
+						gainMyMillion.innerHTML = `<span style='color: green;'>+${myMillionTotalGain.toLocaleString('de-DE', {
+							minimumFractionDigits: 1,
+							maximumFractionDigits: 1
+						})}€</span>`;
+					} else {
+						gainMyMillion.innerHTML = '';
+					}
+				}
+
+				for (let combo in stats) {
+					const elem = document.getElementById("stats_" + combo);
+					if (elem) {
+						const countValue = stats[combo];
+						let pct = total > 0 ? (countValue / total * 100) : 0;
+						const totalPrize = statsGain[combo] ?? 0;
+						const totalPrizeFormatted = totalPrize.toLocaleString('de-DE', {
+							minimumFractionDigits: 1,
+							maximumFractionDigits: 1
+						});
+						const prizeDisplay = totalPrize === 0 ? "" : `<span style='color: green;'>+${totalPrizeFormatted}€</span>`;
+						if (countValue === 0) {
+							elem.innerHTML =
+								`<span style='color: ${simulationHasStarted ? 'red' : 'black'};'>${countValue.toLocaleString('de-DE')}</span>
+               <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
+               ${prizeDisplay}`;
+						} else {
+							elem.innerHTML =
+								`${countValue.toLocaleString('de-DE')}
+               <span style='color: gray;'>(${pct.toFixed(2)}%)</span>
+               ${prizeDisplay}`;
+						}
+					}
+				}
+				let totalGain = 0;
+				for (let combo in statsGain) totalGain += statsGain[combo];
+				totalGain += myMillionTotalGain;
+
+				let solde = balance;
+				let totalSpent = totalGain - solde;
+
+				let losses = -Math.abs(totalSpent);
+				let gains = Math.abs(totalGain);
+
+				document.getElementById('spentValue').innerHTML =
+					`<span style="color:red;">${losses.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}&nbsp;€</span>`;
+				document.getElementById('gainValue').innerHTML =
+					`<span style="color:green;">+${gains.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}&nbsp;€</span>`;
+
+				let percentLossVal = (totalSpent > 0)
+					? ((totalGain / totalSpent - 1) * 100)
+					: 0;
+				let percentString = `(${percentLossVal >= 0 ? "+" : ""}${percentLossVal.toFixed(2)}%)`;
+				document.getElementById('percentValue').innerHTML =
+					`<span style="color:#888;">${percentString}</span>`;
+				updateDetailsModalIfOpen();
+			}
+
+			function updateChanceDisplay() {
+				const mode = document.getElementById("modeSelect").value;
+				let numCount;
+				let customGridsText = "";
+				let grids = [];
+
+				if (mode === "flash") {
+					numCount = parseInt(document.getElementById("ticketNumbersCount").value) || 4;
+					buildStatsLines(numCount);
+					buildDetailsLines(numCount);
+					updateStatsDisplay();
+				} else {
+					customGridsText = document.getElementById("customGrids").value;
+					grids = parseCustomGrids(customGridsText);
+
+					const tailles = [...new Set(grids.map(g => g.numbers.length))];
+					if (tailles.length === 0) tailles.push(4);
+
+					buildStatsLines(tailles);
+					buildDetailsLines(tailles[0]);
+					updateStatsDisplay();
+					numCount = tailles[0];
+				}
+
+				numCount = Math.max(4, Math.min(56, numCount));
+
+				const numTickets = (mode === "flash")
+					? (parseInt(document.getElementById("numTickets").value) || 1)
+					: (grids.length || 1);
+
+				const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 0;
+
+				function probAtLeast(numCount, stopNumbers) {
+					const TOTAL = 56;
+					const DRAWN = 16;
+
+					if (stopNumbers < 0) stopNumbers = 0;
+
+					let p = 0;
+					const maxHits = Math.min(numCount, DRAWN);
+
+					for (let k = stopNumbers; k <= maxHits; k++) {
+						p += combination(numCount, k) *
+							combination(TOTAL - numCount, DRAWN - k) /
+							combination(TOTAL, DRAWN);
+					}
+
+					return p;
+				}
+
+				let pGlobal = 0;
+
+				if (mode === "flash") {
+					const pTicket = probAtLeast(numCount, stopNumbers);
+					pGlobal = 1 - Math.pow(1 - pTicket, numTickets);
+				} else {
+					let probNone = 1;
+					grids.forEach(g => {
+						const pTicket = probAtLeast(g.numbers.length, stopNumbers);
+						probNone *= (1 - pTicket);
+					});
+					pGlobal = 1 - probNone;
+				}
+
+				if (stopNumbers === 0) {
+					const probZeroOneTicket = n =>
+						combination(56 - n, 16) / combination(56, 16);
+
+					let pZeroGlobal = 0;
+
+					if (mode === "flash") {
+						const pZeroTicket = probZeroOneTicket(numCount);
+						pZeroGlobal = 1 - Math.pow(1 - pZeroTicket, numTickets);
+					} else {
+						let probNone = 1;
+						grids.forEach(g => {
+							const pZeroTicket = probZeroOneTicket(g.numbers.length);
+							probNone *= (1 - pZeroTicket);
+						});
+						pZeroGlobal = 1 - probNone;
+					}
+
+					const percent = (pZeroGlobal * 100).toFixed(8);
+					const reciprocal = pZeroGlobal > 0
+						? Math.round(1 / pZeroGlobal).toLocaleString('fr-FR')
+						: "∞";
+
+					lastOdds = pZeroGlobal > 0 ? (1 / pZeroGlobal) : Infinity;
+
+					let html = `Taux de chance (pour au moins 0 n°) : ${percent}%<br>`;
+					html += `1 chance sur ${reciprocal}`;
+
+					if (isFinite(lastOdds)) {
+						html += ` - <a id="examplesLink" href="#" style="color:#187ad2;">Exemples concrets</a>`;
+					}
+
+					document.getElementById("chanceDisplay").innerHTML = html;
+
+					const link = document.getElementById("examplesLink");
+					if (link) {
+						link.addEventListener("click", e => {
+							e.preventDefault();
+							openExamplesModal(lastOdds);
+						});
+					}
+
+					return;
+				}
+
+				const percent = (pGlobal * 100).toFixed(8);
+				const reciprocalFormatted = pGlobal > 0
+					? Math.round(1 / pGlobal).toLocaleString('fr-FR')
+					: "∞";
+
+				lastOdds = pGlobal > 0 ? 1 / pGlobal : Infinity;
+
+				let html = `Taux de chance (pour au moins ${stopNumbers} n°) : ${percent}%<br>`;
+				html += `1 chance sur ${reciprocalFormatted}`;
+
+				if (isFinite(lastOdds)) {
+					html += ` - <a id="examplesLink" href="#" style="color:#187ad2;">Exemples concrets</a>`;
+				}
+
+				document.getElementById("chanceDisplay").innerHTML = html;
+
+				const link = document.getElementById("examplesLink");
+				if (link) {
+					link.addEventListener("click", function (e) {
+						e.preventDefault();
+						openExamplesModal(lastOdds);
+					});
+				}
+
+			}
+
+
+			function formatTimeInDays(totalDays, options = {}) {
+				const { skipSmallUnitsIfYearOrCentury = false } = options;
+
+				const joursTotal = Math.floor(totalDays);
+				let centuries = Math.floor(joursTotal / 36500);
+				let reste = joursTotal % 36500;
+				let years = Math.floor(reste / 365);
+				reste = reste % 365;
+				let months = Math.floor(reste / 30.4375);
+				reste = Math.floor(reste % 30.4375);
+				let weeks = Math.floor(reste / 7);
+				let days = reste % 7;
+
+				const w = typeof window !== "undefined" ? window.innerWidth : 1200;
+				const parts = [];
+
+				if (centuries) parts.push(`${centuries} ${centuries === 1 ? "siècle" : "siècles"}`);
+				if (years) parts.push(`${years} ${years === 1 ? "an" : "ans"}`);
+				if (months) parts.push(`${months} mois`);
+
+				const hasBigUnit = centuries || years;
+				let showWeeks = true, showDays = true;
+
+				if (skipSmallUnitsIfYearOrCentury && hasBigUnit) {
+					showWeeks = false;
+					showDays = false;
+				} else {
+					if (w > 785 && w < 1000 && centuries) showWeeks = false;
+					if (w > 785 && ((w < 1000 && centuries) || (w < 1200 && years)))
+						showDays = false;
+				}
+
+				if (weeks && showWeeks) parts.push(`${weeks} ${weeks === 1 ? "semaine" : "semaines"}`);
+				if (days && showDays) parts.push(`${days} ${days === 1 ? "jour" : "jours"}`);
+
+				return parts.length ? parts.join(", ") : "0 jour";
+			}
+
+
+			function updateTimePassed(drawCount) {
+				const days = drawCount;
+				const formatted = formatTimeInDays(days);
+				document.getElementById("timePassed").textContent = "Temps écoulé : " + formatted;
+			}
+
+			window.addEventListener("resize", () => updateTimePassed(count));
+
+			function updateGainDisplay() {
+				const formatted = balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+				const gainElem = document.getElementById("gainDisplay");
+				let imageContainer = document.getElementById("looseImageContainer");
+				if (!imageContainer) {
+					imageContainer = document.createElement("span");
+					imageContainer.id = "looseImageContainer";
+				}
+				if (balance >= 0) {
+					gainElem.innerHTML = `Solde : <span style='color: green;'>${formatted} €</span>`;
+				} else {
+					gainElem.innerHTML = `Solde : <span style='color: red;'>${formatted} €</span>`;
+				}
+				gainElem.appendChild(imageContainer);
+				updateGainChart();
+			}
+
+			document.querySelectorAll("#ticketNumbersCount, #numTickets, #stopNumbers, #customGrids, #stopAfterYearsInput, #stopAfterYearsCheckbox")
+				.forEach(input => {
+					input.addEventListener("input", updateChanceDisplay);
+				});
+			updateChanceDisplay();
+			document.getElementById("stopBtn").style.display = "none";
+
+			document.getElementById("multichanceCheckbox").addEventListener("change", function () {
+				const partsContainer = document.getElementById("multichancePartsContainer");
+				partsContainer.style.display = this.checked ? "block" : "none";
+			});
+
+			document.getElementById("myMillonCheckbox").addEventListener("change", function () {
+				document.getElementById("stopMyMillonWinGroup").style.display = this.checked ? "block" : "none";
+				updateStatsDisplay();
+			});
+
+			document.getElementById("smartDrawCheckbox").addEventListener("change", function () {
+				const block = document.getElementById("smartDrawSettings");
+				block.style.display = this.checked ? "block" : "none";
+			});
+
+
+			document.getElementById("modeSelect").addEventListener("change", function () {
+				const mode = this.value;
+				const flash = document.getElementById("flashSettings");
+				const custom = document.getElementById("customSettings");
+				const ticketsGrp = document.getElementById("ticketsCountGroup");
+				const multiGrp = document.getElementById("multichanceCheckbox").parentNode;
+				const multiParts = document.getElementById("multichancePartsContainer");
+				const smartChk = document.getElementById("smartDrawCheckbox").parentNode;
+				const smartSet = document.getElementById("smartDrawSettings");
+
+				if (mode === "flash") {
+					flash.style.display = "block";
+					custom.style.display = "none";
+					ticketsGrp.style.display = "block";
+
+					multiGrp.style.display = "block";
+					multiParts.style.display = document.getElementById("multichanceCheckbox").checked
+						? "block" : "none";
+
+					smartChk.style.display = "block";
+					smartSet.style.display = document.getElementById("smartDrawCheckbox").checked
+						? "block" : "none";
+				} else {
+					flash.style.display = "none";
+					custom.style.display = "block";
+					ticketsGrp.style.display = "none";
+					multiGrp.style.display = "none";
+					multiParts.style.display = "none";
+					smartChk.style.display = "none";
+					smartSet.style.display = "none";
+				}
+
+				updateChanceDisplay();
+			});
+
+			const speedSlider = document.getElementById("speedSlider");
+			const speedValueLabel = document.getElementById("speedValueLabel");
+
+			function updateSpeedFromSlider(value) {
+				const sliderVal = parseInt(value, 10);
+				if (sliderVal <= 50) {
+					currentBatchSize = 1;
+					currentSpeed = Math.round(1000 - (sliderVal - 1) * (999 / 49));
+				} else if (sliderVal <= 70) {
+					let ratio = (sliderVal - 50) / 20;
+					currentBatchSize = Math.round(1 + ratio * (200 - 1));
+					currentSpeed = 1;
+				} else {
+					let ratio = (sliderVal - 70) / 30;
+					currentBatchSize = Math.round(200 + ratio * (2000 - 200));
+					currentSpeed = Math.round(1 - ratio * 1);
+				}
+				speedValueLabel.textContent = `(Tirage = ${currentBatchSize}, Délai = ${currentSpeed} ms)`;
+			}
+
+			updateSpeedFromSlider(speedSlider.value);
+			speedSlider.addEventListener("input", function () {
+				updateSpeedFromSlider(this.value);
+			});
+
+			function drawMultiplier() {
+				const r = Math.random();
+				if (r < 0.6711) return 2;
+				if (r < 0.6711 + 0.2703) return 3;
+				return 5;
+			}
+
+			function runLoop() {
+				removeLooseImages();
+				if (stopFlag) return;
+				simulationActive = true;
+
+				const mode = document.getElementById("modeSelect").value;
+				let multichanceRatio = 1;
+				if (mode === "flash" && document.getElementById("multichanceCheckbox").checked) {
+					const totalParts = parseInt(document.getElementById("totalParts").value) || 0;
+					const yourParts = parseInt(document.getElementById("yourParts").value) || 0;
+					if (yourParts > totalParts) {
+						alert("Erreur : Votre nombre de parts ne peut pas dépasser le total de parts (" + totalParts + ").");
+						stopFlag = true;
+						document.getElementById("startBtn").style.display = "block";
+						simulationActive = false;
+						return;
+					}
+					multichanceRatio = yourParts / totalParts;
+				}
+				let tickets = [];
+				let draw = null;
+				let customTickets = [];
+				if (mode === "custom") {
+					const customGridsText = document.getElementById("customGrids").value;
+					customTickets = parseCustomGrids(customGridsText);
+				}
+				const numCount = mode === "flash"
+					? (parseInt(document.getElementById("ticketNumbersCount").value) || 5)
+					: (customTickets.length > 0 ? customTickets[0].numbers.length : 5);
+				const numTickets = mode === "flash"
+					? (parseInt(document.getElementById("numTickets").value) || 1)
+					: (customTickets.length > 0 ? customTickets.length : 1);
+				let lotRares = null;
+				if (document.getElementById("smartDrawCheckbox").checked) {
+					lotRares = buildCommonRareSet(numCount, starCount);
+				}
+
+				let simpleGridsPerTicket = 1;
+				const stopNumbers = parseInt(document.getElementById("stopNumbers").value) || 0;
+				const stopAfterYearsChecked = document.getElementById("stopAfterYearsCheckbox").checked;
+				const stopAfterYearsValue = parseInt(document.getElementById("stopAfterYearsInput").value) || 100;
+				const batchSize = currentBatchSize;
+				const speed = currentSpeed;
+
+				const stopMyMillonWin = document.getElementById("stopMyMillonWinCheckbox").checked;
+
+				let ligneMulti = '';
+				for (let i = 0; i < batchSize; i++) {
+					count++;
+					totalGrillesJouees += numTickets * simpleGridsPerTicket;
+					tickets = [];
+					for (let j = 0; j < numTickets; j++) {
+						if (mode === "flash") {
+							if (document.getElementById("smartDrawCheckbox").checked) {
+								tickets.push(generateSmartTicket(numCount, lotRares));
+							} else {
+								tickets.push(generateTicket(numCount));
+							}
+						} else {
+							if (customTickets.length > 0) {
+								tickets.push(customTickets[j % customTickets.length]);
+							}
+						}
+					}
+					if (mode === "flash") {
+						let costPerTicket = simpleGridsPerTicket * getTicketCost();
+						if (document.getElementById("multichanceCheckbox").checked) {
+							costPerTicket *= multichanceRatio;
+						}
+						balance -= numTickets * getTicketCost() * multichanceRatio;
+					} else {
+						tickets.forEach(ticket => {
+							balance -= costOfTicket(ticket);
+						});
+					}
+					draw = generateDraw();
+
+					const drawnMultiplier = drawMultiplier();
+					draw.multiplier = drawnMultiplier;
+					ligneMulti = `<br>Multiplicateur : <span class="multiplier-value">x${drawnMultiplier}</span>`;
+					const multiplierCoeff = document.getElementById("multiplierCheckbox").checked
+						? drawnMultiplier
+						: 1;
+
+					let myMillionJustWon = false;
+					if (document.getElementById("myMillonCheckbox").checked) {
+						let tirageJour = (count - 1) % 3;
+						let possibilities;
+						switch (tirageJour) {
+							case 0:
+								possibilities = 3000000;
+								break;
+							case 1:
+								possibilities = 4200000;
+								break;
+							case 2:
+								possibilities = 6000000;
+								break;
+						}
+
+						let assignedRanges = [];
+						tickets.forEach(ticket => {
+							let n = ticket.numbers.length;
+							ensureStatsFor(n);
+							let s = ticket.stars.length;
+							let numGrilles = combination(n, 6) * combination(s, 1);
+							if (numGrilles > 1) {
+								let baseNumber;
+								let attempt = 0;
+								const maxAttempts = 100;
+								do {
+									baseNumber = Math.floor(Math.random() * (possibilities - numGrilles + 1)) + 1;
+									attempt++;
+									var conflict = assignedRanges.some(range =>
+										baseNumber <= range.end && (baseNumber + numGrilles - 1) >= range.start
+									);
+								} while (conflict && attempt < maxAttempts);
+								let rangeEnd = baseNumber + numGrilles - 1;
+								assignedRanges.push({ start: baseNumber, end: rangeEnd });
+								ticket.myMillon = baseNumber + " à " + rangeEnd;
+							} else {
+								let candidate;
+								let attempt = 0;
+								const maxAttempts = 100;
+								do {
+									candidate = Math.floor(Math.random() * possibilities) + 1;
+									attempt++;
+									var conflict = assignedRanges.some(range =>
+										candidate >= range.start && candidate <= range.end
+									);
+								} while (conflict && attempt < maxAttempts);
+								assignedRanges.push({ start: candidate, end: candidate });
+								ticket.myMillon = candidate;
+							}
+						});
+						draw.myMillon = [];
+						while (draw.myMillon.length < 10) {
+							const candidate = Math.floor(Math.random() * possibilities) + 1;
+							if (!draw.myMillon.includes(candidate)) {
+								draw.myMillon.push(candidate);
+							}
+						}
+
+						let myMillonWin = tickets.some(ticket => {
+							return draw.myMillon.some(code => {
+								if (typeof ticket.myMillon === "string" && ticket.myMillon.includes(" à ")) {
+									let [start, end] = ticket.myMillon.split(" à ").map(Number);
+									return code >= start && code <= end;
+								} else {
+									return ticket.myMillon === code;
+								}
+							});
+						});
+
+						if (myMillonWin) {
+							myMillionWinCount++;
+							let myMillonPrize = 20000;
+							if (document.getElementById("multichanceCheckbox").checked) {
+								const totalParts = parseInt(document.getElementById("totalParts").value) || 1;
+								const yourParts = parseInt(document.getElementById("yourParts").value) || 1;
+								myMillonPrize = 20000 * (yourParts / totalParts);
+							}
+							balance += myMillonPrize;
+							myMillionTotalGain += myMillonPrize;
+							updateStatsDisplay();
+
+							myMillionJustWon = true;
+							if (stopMyMillonWin) {
+								alert(
+									"Code Loto gagnée !\n" +
+									"Tirage n° " + count.toLocaleString('de-DE') + "\n" +
+									"Gain : " + myMillonPrize.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €"
+								);
+
+								if (balance >= 1) {
+									playSound("win.mp3");
+								} else if (balance <= -1000000) {
+									playSound("bigloose.mp3");
+									addLooseImage("bigloose.jpeg");
+								}
+
+								if (gainChart) {
+									addGainPoint(count, balance);
+									lastY = balance;
+								}
+
+								stopFlag = true;
+								simulationActive = false;
+								document.getElementById("startBtn").style.display = "inline-block";
+								document.getElementById("startBtn").textContent = "Nouvelle simulation";
+								document.getElementById("stopBtn").style.display = "inline-block";
+								document.getElementById("stopBtn").textContent = "Continuer";
+
+								document.getElementById("ticketsContainer").innerHTML = "";
+
+								tickets.forEach((ticket, index) => {
+									const div = document.createElement("div");
+									let isWinning;
+									if (typeof ticket.myMillon === "string" && ticket.myMillon.includes(" à ")) {
+										const [start, end] = ticket.myMillon.split(" à ").map(Number);
+										isWinning = draw.myMillon.some(code => code >= start && code <= end);
+									} else {
+										isWinning = draw.myMillon.includes(ticket.myMillon);
+									}
+									div.className = "ticket" + (isWinning ? " winning" : "");
+									const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
+									const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
+									let myMillionDisplay = formatMyMillion(ticket.myMillon);
+									if (isWinning) {
+										myMillionDisplay = `<span style="color: green; font-weight: bold;">${formatMyMillion(ticket.myMillon)}</span>`;
+									}
+									let ticketIndexHTML = "";
+									if (
+										ticket.numbers?.length === 6 &&
+										ticket.stars?.length === 1 &&
+										document.getElementById("showCombinationNumber")?.checked
+									) {
+										const idxUnikTicket = combinationIndex(ticket.numbers, ticket.stars);
+										ticketIndexHTML = ` <span style="color:gray; font-size:0.95em; font-weight:normal;">
+								 (${idxUnikTicket.toLocaleString('fr-FR')})
+							   </span>`;
+									}
+
+									div.innerHTML = `
+			<strong>Ticket ${index + 1}${ticketIndexHTML} :</strong><br>
+			Numéros : ${highlightedNums}<br>
+			My Million : ${myMillionDisplay}`;
+
+									document.getElementById("ticketsContainer").appendChild(div);
+								});
+
+								const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+								document.getElementById("resultat").innerHTML =
+									`<strong>
+				  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+										? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+										: ""} :
+			   </strong><br>
+	   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}<br>
+	   Dream : ${isPlain ? simpleTextList(draw.stars) : balls(draw.stars, "star")}<br>
+	   Code Loto : ${formatCodesList(draw.myMillon)}`;
+								document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+								document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+								updateTimePassed(count);
+								updateStatsDisplay();
+								updateGainDisplay();
+								return;
+							}
+						}
+					}
+					updateGainChart();
+
+					if (stopAfterYearsChecked) {
+						const currentYears = count / 365;
+						if (currentYears >= stopAfterYearsValue) {
+							document.getElementById("ticketsContainer").innerHTML = "";
+							const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+							document.getElementById("resultat").innerHTML =
+								`<strong>
+				  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+									? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+									: ""} :
+			   </strong><br>
+			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}`;
+
+							document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+							document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+							updateTimePassed(count);
+							updateStatsDisplay();
+							updateGainDisplay();
+							alert("On a dépassé les " + stopAfterYearsValue + " ans de simulation !\n(Nombre de tirages : " + count.toLocaleString('de-DE') + ")");
+
+							if (balance >= 1) {
+								playSound("win.mp3");
+							} else if (balance <= -1000000) {
+								playSound("bigloose.mp3");
+								addLooseImage("bigloose.jpeg");
+							}
+
+							stopFlag = true;
+							simulationActive = false;
+							document.getElementById("startBtn").style.display = "inline-block";
+							document.getElementById("startBtn").textContent = "Nouvelle simulation";
+							document.getElementById("stopBtn").style.display = "inline-block";
+							document.getElementById("stopBtn").textContent = "Continuer";
+							return;
+						}
+					}
+
+					let foundWinningTicket = false;
+					let winningTicket = null;
+					tickets.forEach(ticket => {
+						const n = ticket.numbers.length;
+						const s = ticket.stars.length;
+
+						const numGood = countMatches(ticket.numbers, draw.numbers);
+						const stopAtLeast = (stopNumbers === 0)
+							? (numGood === 0)
+							: (numGood >= stopNumbers);
+
+						if (!foundWinningTicket && stopAtLeast) {
+							foundWinningTicket = true;
+							winningTicket = ticket;
+						}
+						if (stopNumbers > 0 && numGood >= stopNumbers) {
+							foundWinningTicket = true;
+							winningTicket = ticket;
+						}
+						const numBad = n - numGood;
+						const starGood = countMatches(ticket.stars, draw.stars);
+						const starBad = s - starGood;
+
+						const key = n + "_" + numGood
+
+						if (stats.hasOwnProperty(key)) stats[key] += 1;
+						if (baselineByTotal[n] === undefined) {
+							baselineByTotal[n] = count;
+						}
+
+						if (stats[key] === 1 && firstOccurrence[key] === undefined) {
+							firstOccurrence[key] = count - baselineByTotal[n];
+						}
+						const miseBase = getStakeAmount();
+						const gainBrut = (prizeMapping[key] || 0)
+							* miseBase
+							* multiplierCoeff
+							* multichanceRatio;
+
+						if (statsGain.hasOwnProperty(key))
+							statsGain[key] += gainBrut;
+
+						balance += gainBrut;
+
+						if (!foundWinningTicket &&
+							((stopNumbers === 0 && numGood === 0) ||
+								(stopNumbers > 0 && numGood >= stopNumbers))) {
+							foundWinningTicket = true;
+							winningTicket = ticket;
+						}
+					});
+
+
+					if (foundWinningTicket) {
+						document.getElementById("ticketsContainer").innerHTML = "";
+						adjustTicketColumns(tickets);
+						tickets.forEach((ticket, index) => {
+							const div = document.createElement("div");
+							div.className = "ticket";
+							const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
+							const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
+							let ticketLabel = `<strong>Ticket ${index + 1}</strong>`;
+							const showIdx = document.getElementById("showCombinationNumber")?.checked;
+							if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 6) {
+								const combIdx = combinationIndex(ticket.numbers, ticket.stars);
+								ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
+							}
+							div.innerHTML = `${ticketLabel} :<br>
+							 Numéros : ${highlightedNums}`;
+							document.getElementById("ticketsContainer").appendChild(div);
+							if (ticket === winningTicket) {
+								div.classList.add("winning");
+							}
+							document.getElementById("ticketsContainer").appendChild(div);
+						});
+						const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+						document.getElementById("resultat").innerHTML =
+							`<strong>
+				  Tirage${(draw.numbers?.length === 10 && document.getElementById("showCombinationNumber")?.checked)
+								? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+								: ""} :
+			   </strong><br>
+			   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}
+   ${ligneMulti}`;
+
+						document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+						document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+						updateTimePassed(count);
+						updateStatsDisplay();
+						updateGainDisplay();
+
+						document.getElementById("startBtn").style.display = "inline-block";
+						document.getElementById("startBtn").textContent = "Nouvelle simulation";
+						document.getElementById("stopBtn").style.display = "inline-block";
+						document.getElementById("stopBtn").textContent = "Continuer";
+
+						const winningMatchNumbers = countMatches(winningTicket.numbers, draw.numbers);
+						const winningMatchStars = countMatches(winningTicket.stars, draw.stars);
+						const nbCoches = winningTicket.numbers.length;
+
+						const winningKey = `${nbCoches}_${winningMatchNumbers}`;
+						let winningGain = prizeMapping[winningKey] || 0;
+						if (document.getElementById("multichanceCheckbox").checked) {
+							winningGain *= multichanceRatio;
+						}
+						if (winningMatchNumbers === 10) {
+							launchFireworks();
+						}
+						const tempsEcoule = formatTimeInDays(count);
+						alert("Seuil atteint !\n" +
+							"Ticket gagnant : " + winningTicket.numbers.join(", ") + "\n" +
+							"Tirage : " + draw.numbers.join(", ") + "\n" +
+							"Nombre de tirages : " + count.toLocaleString('de-DE') + "\n" +
+							"Temps écoulé : " + tempsEcoule + "\n" +
+							"Gain : " + winningGain.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + " €");
+
+						if (balance <= -1000000) {
+							addLooseImage("bigloose.jpeg");
+						}
+
+						if (gainChart) {
+							addGainPoint(count, balance);
+							lastY = balance;
+						}
+
+						stopFlag = true;
+						simulationActive = false;
+						document.getElementById("startBtn").style.display = "inline-block";
+						document.getElementById("startBtn").textContent = "Nouvelle simulation";
+						document.getElementById("stopBtn").style.display = "inline-block";
+						document.getElementById("stopBtn").textContent = "Continuer";
+						return;
+					}
+
+					if (document.getElementById("stopNegativeGainCheckbox").checked) {
+						const seuil = parseFloat(document.getElementById("stopNegativeGainThreshold").value) || 0;
+
+						if (seuil < 0) {
+							if (balance < seuil) {
+								document.getElementById("ticketsContainer").innerHTML = "";
+								adjustTicketColumns(tickets);
+								const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+								document.getElementById("resultat").innerHTML =
+									`<strong>
+					 Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+										? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+										: ""} :
+					 </strong><br>
+					 Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}
+   ${ligneMulti}`;
+
+								document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+								document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+								updateTimePassed(count);
+								updateStatsDisplay();
+								updateGainDisplay();
+								alert("Le solde est passé en dessous du seuil défini (" + seuil + " €). La simulation est arrêtée.");
+
+								if (balance <= -1000000) {
+									addLooseImage("bigloose.jpeg");
+								}
+
+								if (gainChart) {
+									gainChart.data.datasets[0].data.push({ x: count, y: balance });
+									gainChart.update();
+									lastY = balance;
+								}
+
+								stopFlag = true;
+								simulationActive = false;
+								document.getElementById("startBtn").style.display = "inline-block";
+								document.getElementById("startBtn").textContent = "Nouvelle simulation";
+								document.getElementById("stopBtn").style.display = "inline-block";
+								document.getElementById("stopBtn").textContent = "Continuer";
+								return;
+							}
+						} else {
+							if (balance > seuil) {
+								document.getElementById("ticketsContainer").innerHTML = "";
+								adjustTicketColumns(tickets);
+								const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+								document.getElementById("resultat").innerHTML =
+									`<strong>
+					 Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+										? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+										: ""} :
+					 </strong><br>
+					 Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}
+   ${ligneMulti}`;
+
+								document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+								document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+								updateTimePassed(count);
+								updateStatsDisplay();
+								updateGainDisplay();
+								alert("Le solde a dépassé le seuil défini (" + seuil + " €). La simulation est arrêtée.");
+
+								if (balance >= 1) {
+									playSound("win.mp3");
+								} else if (balance <= -1000000) {
+									playSound("bigloose.mp3");
+									addLooseImage("bigloose.jpeg");
+								}
+
+								if (gainChart) {
+									gainChart.data.datasets[0].data.push({ x: count, y: balance });
+									gainChart.update();
+									lastY = balance;
+								}
+
+								stopFlag = true;
+								simulationActive = false;
+								document.getElementById("startBtn").style.display = "inline-block";
+								document.getElementById("startBtn").textContent = "Nouvelle simulation";
+								document.getElementById("stopBtn").style.display = "inline-block";
+								document.getElementById("stopBtn").textContent = "Continuer";
+								return;
+							}
+						}
+					}
+
+				}
+
+				document.getElementById("ticketsContainer").innerHTML = "";
+				adjustTicketColumns(tickets);
+				tickets.forEach((ticket, index) => {
+					const div = document.createElement("div");
+					div.className = "ticket";
+					const highlightedNums = highlightMatches(ticket.numbers, draw.numbers, "number");
+					const highlightedStars = highlightMatches(ticket.stars, draw.stars, "star");
+					let ticketLabel = `<strong>Ticket ${index + 1}</strong>`;
+					const showIdx = document.getElementById("showCombinationNumber")?.checked;
+					if (showIdx && ticket.stars.length === 1 && ticket.numbers.length === 6) {
+						const combIdx = combinationIndex(ticket.numbers, ticket.stars);
+						ticketLabel += ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combIdx.toLocaleString('fr-FR')})</span>`;
+					}
+					div.innerHTML = `${ticketLabel} :<br>
+						 Numéros : ${highlightedNums}`;
+					document.getElementById("ticketsContainer").appendChild(div);
+				});
+
+				window._lastTicketsData = {
+					tickets: tickets,
+					draw: draw,
+					myMillion: document.getElementById("myMillonCheckbox").checked
+				};
+
+				const isPlain = typeof fancyDisplay !== "undefined" && !fancyDisplay;
+				document.getElementById("resultat").innerHTML =
+					`<strong>
+			  Tirage${(draw.numbers?.length === 6 && draw.stars?.length === 1 && document.getElementById("showCombinationNumber")?.checked)
+						? ` <span style="color:gray; font-size:0.95em; font-weight:normal;">(${combinationIndex(draw.numbers, draw.stars).toLocaleString('fr-FR')})</span>`
+						: ""} :
+		   </strong><br>
+	   Numéros : ${isPlain ? simpleTextList(draw.numbers) : balls(draw.numbers, "number")}
+   ${ligneMulti}`;
+
+				document.getElementById("counter").textContent = "Tirages : " + count.toLocaleString('de-DE');
+				document.getElementById("grillesPlayed").textContent = "Grilles jouées : " + totalGrillesJouees.toLocaleString('de-DE');
+				updateTimePassed(count);
+				updateStatsDisplay();
+				updateGainDisplay();
+
+				loopTimeout = setTimeout(runLoop, speed);
+			}
+
+			function startDrawing() {
+				historySaved = false;
+				firstOccurrence = {};
+				lastDetailsModalState = "";
+				simulationHasStarted = true;
+				resetGainChart();
+
+				if (document.getElementById("modeSelect").value === "flash" && document.getElementById("multichanceCheckbox").checked) {
+					const totalParts = parseInt(document.getElementById("totalParts").value) || 0;
+					const yourParts = parseInt(document.getElementById("yourParts").value) || 0;
+					if (yourParts > totalParts) {
+						alert("Erreur : Votre nombre de parts (" + yourParts + ") ne peut pas dépasser le total de parts (" + totalParts + ").");
+						return;
+					}
+				}
+				baselineByTotal = {};
+				clearTimeout(loopTimeout);
+				count = 0;
+				stopFlag = false;
+				balance = 0;
+				totalGrillesJouees = 0;
+				for (let combo in stats) {
+					stats[combo] = 0;
+					statsGain[combo] = 0;
+				}
+				myMillionWinCount = 0;
+				myMillionTotalGain = 0;
+				simulationActive = true;
+				document.getElementById("counter").textContent = "Tirages : 0";
+				document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
+				document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
+				document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Solde : 0,00 €</span>";
+				document.getElementById("ticketsContainer").innerHTML = "";
+				document.getElementById("resultat").innerHTML = `<strong>Tirage :</strong><br>Numéros : --<br>Multiplicateur : --`;
+				document.getElementById("stopBtn").textContent = "Stop";
+				updateStatsDisplay();
+				updateTimePassed(0);
+				updateGainDisplay();
+				removeLooseImages();
+				document.getElementById("startBtn").style.display = "none";
+				document.getElementById("stopBtn").style.display = "inline-block";
+				runLoop();
+			}
+
+			document.getElementById("myMillonCheckbox").checked = false;
+			document.getElementById("stopMyMillonWinCheckbox").checked = false;
+			document.getElementById("stopMyMillonWinGroup").style.display = "block";
+
+			document.getElementById("startBtn").addEventListener("click", function () {
+				addCurrentRunToHistory();
+				startDrawing();
+			});
+			document.getElementById("stopBtn").addEventListener("click", function () {
+				if (!stopFlag) {
+					stopFlag = true;
+					simulationActive = false;
+					clearTimeout(loopTimeout);
+					this.textContent = "Continuer";
+				} else {
+					stopFlag = false;
+					simulationActive = true;
+					this.textContent = "Stop";
+					runLoop();
+					if (simulationActive) {
+						document.getElementById("startBtn").style.display = "none";
+					}
+				}
+				updateStatsDisplay();
+			});
+			document.getElementById("resetBtn").addEventListener("click", function () {
+				addCurrentRunToHistory();
+				stopFlag = true;
+				simulationHasStarted = false;
+				clearTimeout(loopTimeout);
+				count = 0;
+				totalGrillesJouees = 0;
+				for (let combo in stats) {
+					stats[combo] = 0;
+					statsGain[combo] = 0;
+				}
+				firstOccurrence = {};
+				myMillionWinCount = 0;
+				myMillionTotalGain = 0;
+				simulationActive = false;
+				updateStatsDisplay();
+				document.getElementById("counter").textContent = "Tirages : 0";
+				document.getElementById("grillesPlayed").textContent = "Grilles jouées : 0";
+				document.getElementById("timePassed").textContent = "Temps écoulé : 0 jour";
+				document.getElementById("gainDisplay").innerHTML = "<span style='color: green;'>Solde : 0,00 €</span>";
+				document.getElementById("ticketsContainer").innerHTML = "";
+				document.getElementById("resultat").innerHTML = `<strong>Tirage :</strong><br>Numéros : --<br>Multiplicateur : --`;
+				document.getElementById("stopBtn").textContent = "Stop";
+				document.getElementById("startBtn").style.display = "block";
+				document.getElementById("stopBtn").style.display = "none";
+				removeLooseImages();
+				resetGainChart();
+			});
+
+			updateStatsDisplay();
+
+			document.getElementById("ticketNumbersCount").addEventListener("blur", function () {
+				let v = parseInt(this.value) || 4;
+				if (v < 4) v = 4;
+				if (v > 56) v = 56;
+				this.value = v;
+			});
+			const prizeMappingEditable = { ...prizeMapping };
+
+			document.getElementById("editPrizesLink").addEventListener("click", function (e) {
+				e.preventDefault();
+				const form = document.getElementById("prizesForm");
+				form.innerHTML = "";
+
+				const orderedKeys = Object.keys(prizeMappingEditable).sort((a, b) => {
+					const [totA, hitA] = a.split("_").map(Number);
+					const [totB, hitB] = b.split("_").map(Number);
+					return totB !== totA ? totB - totA : hitB - hitA;
+				});
+
+				orderedKeys.forEach(key => {
+					const [total, hits] = key.split("_");
+					const row = document.createElement("div");
+
+					const label = document.createElement("label");
+					label.textContent = `${hits}/${total} :`;
+
+					const input = document.createElement("input");
+					input.type = "number";
+					input.step = "0.01";
+					input.min = "0";
+					input.name = key;
+					input.value = prizeMappingEditable[key];
+
+					row.appendChild(label);
+					row.appendChild(input);
+					form.appendChild(row);
+				});
+
+				document.getElementById("prizesModal").style.display = "block";
+				document.getElementById("modalOverlay").style.display = "block";
+				
+				const select = document.getElementById("prizeCategorySelect");
+				rebuildPrizeForm(select.value);
+			});
+
+
+			document.getElementById("closePrizesBtn").addEventListener("click", function () {
+				savePrizeFormData();
+				document.getElementById("prizesModal").style.display = "none";
+				document.getElementById("modalOverlay").style.display = "none";
+			});
+			document.getElementById("resetPrizesBtn").addEventListener("click", function () {
+				for (const key in DEFAULT_PRIZES) {
+					prizeMappingEditable[key] = DEFAULT_PRIZES[key];
+					prizeMapping[key] = DEFAULT_PRIZES[key];
+				}
+				for (const key in prizeMappingEditable) {
+					if (!(key in DEFAULT_PRIZES)) delete prizeMappingEditable[key];
+				}
+				for (const key in prizeMapping) {
+					if (!(key in DEFAULT_PRIZES)) delete prizeMapping[key];
+				}
+
+				const select = document.getElementById("prizeCategorySelect");
+				rebuildPrizeForm(select.value);
+
+				prizeTableModified = false;
+			});
+
+			document.getElementById("modalOverlay").addEventListener("click", function () {
+				savePrizeFormData();
+				document.getElementById("prizesModal").style.display = "none";
+				this.style.display = "none";
+				document.body.style.overflow = "";
+			});
+
+			const link = document.getElementById("examplesLink");
+			if (link) {
+				link.addEventListener("click", function (e) {
+					e.preventDefault();
+					openExamplesModal(lastOdds);
+				});
+			}
+
+			document.getElementById('showDetails').addEventListener('click', e => {
+				e.preventDefault();
+				modalOverlayDetails.style.display = 'block';
+				detailsModal.style.display = 'block';
+				updateDetailsModalIfOpen();
+			});
+
+
+			document.getElementById('closeDetailsBtn').addEventListener('click', () => {
+				document.getElementById('detailsModal').style.display = 'none';
+				document.getElementById('modalOverlayDetails').style.display = 'none';
+			});
+			document.getElementById('modalOverlayDetails').addEventListener('click', () => {
+				document.getElementById('detailsModal').style.display = 'none';
+				document.getElementById('modalOverlayDetails').style.display = 'none';
+			});
+
+			document.addEventListener('DOMContentLoaded', () => {
+				renderHistory();
+
+				document.getElementById('historyLink')
+					.addEventListener('click', e => {
+						e.preventDefault();
+						renderHistory();
+						document.getElementById('historyModal').style.display = 'block';
+					});
+
+				document.getElementById('closeHistoryBtn')
+					.addEventListener('click', () => document.getElementById('historyModal').style.display = 'none');
+
+				document.getElementById('historyModal')
+					.addEventListener('click', e => {
+						if (e.target.id === 'historyModal')
+							document.getElementById('historyModal').style.display = 'none';
+					});
+
+				const btn = document.getElementById('clearHistoryBtn');
+				if (btn) btn.addEventListener('click', clearHistory);
+			});
+
+			function persistLastRun() {
+				try { addCurrentRunToHistory(); } catch { }
+			}
+			window.addEventListener('beforeunload', persistLastRun);
+			window.addEventListener('pagehide', persistLastRun);
+
+			document.getElementById("stakeSelect")
+				.addEventListener("change", () => { updatePrix(); });
+			document.getElementById("multiplierCheckbox")
+				.addEventListener("change", () => { updatePrix(); });
+			document.getElementById("customGrids")
+				.addEventListener("input", updateCustomPriceDisplay);
+			document.getElementById("stakeSelect")
+				.addEventListener("change", updateCustomPriceDisplay);
+			document.getElementById("multiplierCheckbox")
+				.addEventListener("change", updateCustomPriceDisplay);
+		</script>
+</body>
+
+</html>
