@@ -778,13 +778,31 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			const HISTORY_MAX = 100;
 			
 			const DEFAULT_PRIZES = {
-			  "5_2": 45000000,  "5_1": 400000,  "5_0": 50000,
+			  "5_2": 0,  "5_1": 400000,  "5_0": 50000,
 			  "4_2": 1500,      "4_1": 150,     "4_0": 55,
 			  "3_2": 75,        "3_1": 14,      "3_0": 11,
 			  "2_2": 15,        "2_1": 8,       "2_0": 4,
 			  "1_2": 7,         "1_1": 0,       "1_0": 0,
 			  "0_2": 0,         "0_1": 0,       "0_0": 0
 			};
+			
+			function getRandomJackpotEuromillions () {
+			  const p      = 0.10;
+			  const q      = 0.92;
+			  const base   = 17_000_000;
+			  const inc    = 5_000_000;
+			  const maxInc = 47;
+
+			  let r  = Math.random();
+			  let acc = 0;
+			  for (let i = 0; i <= maxInc; i++) {
+				const prob = p * Math.pow(q, i);
+				acc += prob;
+				if (r < acc) return Math.min(base + i * inc, 250_000_000);
+			  }
+			  return 250_000_000;
+			}
+
 			
 			function prizeTableIsModified(){
 			  for (const key in DEFAULT_PRIZES){
@@ -874,7 +892,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				  grilles: totalGrillesJouees,
 				  solde  : Number.parseFloat(String(balance)).toFixed(2),
 				  record : best,
-				  prizeModified: prizeTableIsModified()      //  ← nouvelle ligne
+				  prizeModified: prizeTableIsModified()
 			  };
 
 			  const hist = loadHistory();
@@ -1550,7 +1568,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			let simulationHasStarted = false;
 
 			const prizeMapping = {
-				"5_2": 45000000,
+				"5_2": 0,
 				"5_1": 400000,
 				"5_0": 50000,
 				"4_2": 1500,
@@ -2279,6 +2297,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 						});
 					}
 					draw = generateDraw();
+					const jackpotForDraw = getRandomJackpotEuromillions();
 
 					let myMillionJustWon = false;
 					if (document.getElementById("myMillonCheckbox").checked) {
@@ -2498,7 +2517,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 										updateDetailsModalIfOpen();
 									  }
 									}
-									let prize = prizeMapping[key] || 0;
+									let prize = (key === "5_2") ? jackpotForDraw : (prizeMapping[key] || 0);
 									if (document.getElementById("multichanceCheckbox").checked) {
 										prize *= multichanceRatio;
 									}
@@ -2568,7 +2587,8 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 						const winningMatchNumbers = countMatches(winningTicket.numbers, draw.numbers);
 						const winningMatchStars = countMatches(winningTicket.stars, draw.stars);
 						const winningKey = winningMatchNumbers + "_" + winningMatchStars;
-						let winningGain = prizeMapping[winningKey] || 0;
+						let winningGain = (winningKey === "5_2") ? jackpotForDraw
+                                         : (prizeMapping[winningKey] || 0);
 						if (document.getElementById("multichanceCheckbox").checked) {
 							winningGain *= multichanceRatio;
 						}
@@ -2907,7 +2927,7 @@ Varie selon le nombre réel de grilles jouées à chaque tirage.">i</span>`
 			});
 			document.getElementById("resetPrizesBtn").addEventListener("click", function () {
 				const defaultPrizes = {
-					"5_2": 45000000,
+					"5_2": 0,
 					"5_1": 400000,
 					"5_0": 50000,
 					"4_2": 1500,

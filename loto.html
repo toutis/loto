@@ -832,7 +832,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
     const HISTORY_MAX = 100;
 
     const DEFAULT_PRIZES = {
-      "5_1": 3000000, "5_0": 100000,
+      "5_1": 0, "5_0": 100000,
       "4_1": 1000, "4_0": 500,
       "3_1": 50, "3_0": 20,
       "2_1": 10, "2_0": 4.4,
@@ -1846,7 +1846,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
     let simulationHasStarted = false;
 
     const prizeMapping = {
-      "5_1": 3000000,
+      "5_1": 0,
       "5_0": 100000,
       "4_1": 1000,
       "4_0": 500,
@@ -1859,7 +1859,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
       "0_1": 2.2,
       "0_0": 0
     };
-
 
     const speedPresets = [
       { batchSize: 1, speed: 1000 },
@@ -1876,6 +1875,24 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 
     let currentBatchSize = speedPresets[4].batchSize;
     let currentSpeed = speedPresets[4].speed;
+	
+	function getRandomJackpot () {
+	  const p = 0.151;
+	  const q = 0.85;
+	  const base = 2_000_000;
+	  const maxInc = 33;
+
+	  let r = Math.random();
+	  let acc = 0;
+
+	  for (let i = 0; i <= maxInc; i++) {
+		const prob = p * Math.pow(q, i);
+		acc += prob;
+		if (r < acc) return base + i * 1_000_000
+	  }
+	  return 35_000_000;
+	}
+
 
     function combination(n, r) {
       if (r > n) return 0;
@@ -2490,7 +2507,7 @@ function generateOptimizedTicket(numCount = 5, starCount = 1) {
 									  combination(10, 1);
 
 					return probNum * probStars;
-				}
+	  }
 
       let pGlobal = 0;
 
@@ -2837,6 +2854,7 @@ else if (mode === "quiz") {
           });
         }
         draw = generateDraw();
+		const jackpotForDraw = getRandomJackpot(); 
         if (document.getElementById("showFrequenciesCheckbox").checked) {
           renderFrequencies();
         }
@@ -3078,7 +3096,7 @@ else if (mode === "quiz") {
                     updateDetailsModalIfOpen();
                   }
                 }
-                let prize = prizeMapping[key] || 0;
+                let prize = (key === "5_1") ? jackpotForDraw : (prizeMapping[key] || 0);
                 if (document.getElementById("multichanceCheckbox").checked) {
                   prize *= multichanceRatio;
                 }
@@ -3148,7 +3166,9 @@ else if (mode === "quiz") {
           const winningMatchNumbers = countMatches(winningTicket.numbers, draw.numbers);
           const winningMatchStars = countMatches(winningTicket.stars, draw.stars);
           const winningKey = winningMatchNumbers + "_" + winningMatchStars;
-          let winningGain = prizeMapping[winningKey] || 0;
+          let winningGain = (winningKey === "5_1")
+                  ? jackpotForDraw
+                  : (prizeMapping[winningKey] || 0);
           if (document.getElementById("multichanceCheckbox").checked) {
             winningGain *= multichanceRatio;
           }
@@ -3463,7 +3483,7 @@ else if (mode === "quiz") {
     });
     document.getElementById("resetPrizesBtn").addEventListener("click", function () {
       const defaultPrizes = {
-        "5_1": 3000000,
+        "5_1": 0,
         "5_0": 100000,
         "4_1": 1000,
         "4_0": 500,
