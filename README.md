@@ -1,4 +1,4 @@
-# 🎲 Simulateurs de Loto, EuroMillions et EuroDreams
+# 🎲 Simulateurs de Loto, EuroMillions, EuroDreams, Keno et Crechendo
 
 ## 🧩 Description
 
@@ -113,4 +113,4 @@ Vous êtes libre de le modifier, réutiliser ou l’étendre, à condition de co
 
 > Ce projet est un outil de simulation **à but éducatif**.
 > Il ne permet **ni de jouer, ni de gagner**, et n’a **aucune valeur contractuelle ou financière**.
-> Les noms “Loto”, “EuroMillions” et “EuroDreams” sont des **marques déposées** appartenant à la **FDJ**.
+> Les noms “Loto”, “EuroMillions”, “EuroDreams”, “Keno” et “Crechendo” sont des **marques déposées** appartenant à la **FDJ**.

@@ -517,7 +517,7 @@
 							style="width: 50px; padding: 3px 6px; font-size: 1em;">
 						<button id="generateGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Générer</button>
 						<button id="clearCustomGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Clear</button>
-						<span id="customPriceDisplay" style="color: gray; font-weight: normal;">Prix : 0,00 €</span>
+						<span id="customPriceDisplay" style="color:gray; font-weight:normal; margin-left:6px;">Prix : -- €</span>
 					</div>
 				</div>
 				<div class="form-group" id="ticketsCountGroup" style="display: flex; align-items: center; gap: 12px;">
@@ -994,8 +994,15 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				const prixUnitaire = getTicketCost();
 				const total = nbGrilles * prixUnitaire;
 
-				document.getElementById("customPriceDisplay").textContent =
-					`Prix : ${total.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+				const span = document.getElementById("customPriceDisplay");
+				if (total === 0) {
+					span.textContent = "Prix : -- €";
+				} else {
+					span.textContent = `Prix : ${total.toLocaleString("fr-FR", {
+						minimumFractionDigits: 2,
+						maximumFractionDigits: 2
+					})} €`;
+				}
 			}
 
 			window.addEventListener("DOMContentLoaded", updatePrix);
@@ -3202,6 +3209,29 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				.addEventListener("change", updateCustomPriceDisplay);
 			document.getElementById("multiplierCheckbox")
 				.addEventListener("change", updateCustomPriceDisplay);
+				
+			const MAX_STOP = 10;
+			let prevTicketNumbers = +document.getElementById("ticketNumbersCount").value;
+
+			document.getElementById("ticketNumbersCount").addEventListener("input", function () {
+				const newVal = +this.value || 4;
+				const stopInput = document.getElementById("stopNumbers");
+
+				if (+stopInput.value === prevTicketNumbers) {
+					stopInput.value = Math.min(newVal, MAX_STOP);
+				}
+
+				stopInput.max = MAX_STOP;
+
+				updateChanceDisplay();
+				updatePrix();
+				prevTicketNumbers = newVal;
+			});
+			
+			document.getElementById("stopNumbers").addEventListener("input", function () {
+				if (+this.value > MAX_STOP) this.value = MAX_STOP;
+			});
+							
 		</script>
 </body>
 
