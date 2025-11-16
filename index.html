@@ -123,6 +123,37 @@
 		.counter-tooltip-container:hover .custom-tooltip {
 			display: block;
 		}
+
+		@media (max-width: 1080px) {
+			.tabs {
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.tabs>div:nth-child(2) {
+				order: 1;
+				width: 100%;
+				text-align: center;
+			}
+
+			.counter-tooltip-container {
+				order: 2;
+				position: static;
+				margin: 4px 0;
+			}
+
+			.tab-group {
+				order: 3;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 12px;
+			}
+
+			.counter-tooltip-container {
+				display: none;
+			}
+		}
 	</style>
 	<script>
 		function show(id) {
@@ -142,22 +173,25 @@
 			<button class="tab" id="tab-euro" onclick="show('euro')">Euro Millions</button>
 			<button class="tab" id="tab-dreams" onclick="show('dreams')">Euro Dreams</button>
 			<button class="tab" id="tab-keno" onclick="show('keno')">Keno</button>
+			<button class="tab" id="tab-crechendo" onclick="show('crechendo')">Crechendo</button>
 		</div>
 
 		<div style="flex: 1; display: flex; justify-content: center;">
 			<span style="font-size: 0.65rem; color: #666;">
 				Ce projet est une simulation indépendante, à but éducatif et statistique.<br>
 				Il n’est ni affilié, ni agréé, ni soutenu par la Française des Jeux (FDJ).<br>
-				<center style="display: flex; justify-content: center; align-items: center; gap: 12px; transform: translateX(-7px);">
-				  <a href="https://github.com/toutis/loto/archive/refs/heads/main.zip"
-					 style="color: #007bff; text-decoration: none; display: flex; align-items: center; gap: 6px;">
-					💾 Télécharger le simulateur
-				  </a>
+				<center
+					style="display: flex; justify-content: center; align-items: center; gap: 12px; transform: translateX(-7px);">
+					<a href="https://github.com/toutis/loto/archive/refs/heads/main.zip"
+						style="color: #007bff; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+						💾 Télécharger le simulateur
+					</a>
 
-				  <a href="https://github.com/toutis/loto/issues"
-					 style="color: #28a745; text-decoration: none; display: flex; align-items: center; gap: 6px;" target="_blank">
-					💡 Faire une suggestion
-				  </a>
+					<a href="https://github.com/toutis/loto/issues"
+						style="color: #28a745; text-decoration: none; display: flex; align-items: center; gap: 6px;"
+						target="_blank">
+						💡 Faire une suggestion
+					</a>
 				</center>
 			</span>
 		</div>
@@ -176,6 +210,7 @@
 	<iframe src="euromillions.html" id="view-euro" class="view" title="Simulateur EuroMillions"></iframe>
 	<iframe src="eurodreams.html" id="view-dreams" class="view" title="Simulateur EuroDreams"></iframe>
 	<iframe src="keno.html" id="view-keno" class="view" title="Simulateur Keno"></iframe>
+	<iframe src="crechendo.html" id="view-crechendo" class="view" title="Simulateur Crechendo"></iframe>
 </body>
 
 </html>
