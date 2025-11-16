@@ -7,6 +7,7 @@ Ce projet regroupe **trois simulateurs de loterie** :
 - **Euro Millions**
 - **Euro Dreams**
 - **Keno**
+- **Crechendo**
 
 Chaque simulateur permet de **jouer des grilles aléatoires ou personnalisées**, de **lancer des tirages virtuels**, et de **suivre les statistiques et gains potentiels**, **sans aucun enjeu réel**.
 
@@ -23,6 +24,7 @@ L’interface principale (fichier `index.html`) permet de naviguer entre les tro
 - **Euro Millions** → `euromillions.html`
 - **Euro Dreams** → `eurodreams.html`
 - **Keno** → `keno.html`
+- **Crechendo** → `crechendo.html`
 
 Chaque simulateur s’affiche dans un **iframe** intégré et propose une interface claire et responsive.
 
@@ -92,6 +94,7 @@ Aucune installation supplémentaire n’est requise (tout fonctionne localement 
 ├── euromillions.html   # Simulateur EuroMillions
 ├── eurodreams.html     # Simulateur EuroDreams
 ├── keno.html           # Simulateur Keno
+├── crechendo.html      # Simulateur Crechendo
 ├── favicon.ico         # Icône du site
 └── LICENSE             # Licence MIT
 ```
