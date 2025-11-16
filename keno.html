@@ -828,6 +828,15 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				"4_1": 0,
 				"4_0": 0
 			};
+			
+			function probExact(numCount, hitsWanted) {
+			  const TOTAL  = 56;
+			  const DRAWN  = 16;
+			  if (hitsWanted < 0 || hitsWanted > numCount || hitsWanted > DRAWN) return 0;
+			  return combination(numCount, hitsWanted) *
+					 combination(TOTAL - numCount, DRAWN - hitsWanted) /
+					 combination(TOTAL, DRAWN);
+			}
 
 			function rebuildPrizeForm(category = "10") {
 				const form = document.getElementById("prizesForm");
@@ -1758,7 +1767,7 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				return { numbers: ticketNumbers, stars: [] };
 			}
 			
-			const freqNum = Array(39).fill(0);
+			const freqNum = Array(57).fill(0);
 			const freqStar = [];
 			const MAX_RECENT_DRAWS = 70;
 			const recentDraws = [];
@@ -2157,12 +2166,12 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				let pGlobal = 0;
 
 				if (mode === "flash") {
-					const pTicket = probAtLeast(numCount, stopNumbers);
+					const pTicket = probExact(numCount, stopNumbers);
 					pGlobal = 1 - Math.pow(1 - pTicket, numTickets);
 				} else {
 					let probNone = 1;
 					grids.forEach(g => {
-						const pTicket = probAtLeast(g.numbers.length, stopNumbers);
+						const pTicket = probExact(g.numbers.length, stopNumbers);
 						probNone *= (1 - pTicket);
 					});
 					pGlobal = 1 - probNone;
@@ -2784,7 +2793,11 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 						const nbCoches = winningTicket.numbers.length;
 
 						const winningKey = `${nbCoches}_${winningMatchNumbers}`;
-						let winningGain = prizeMapping[winningKey] || 0;
+						const miseBase = getStakeAmount();
+						const winningGain = (prizeMapping[winningKey] || 0)
+										   * miseBase
+										   * multiplierCoeff
+										   * multichanceRatio; 
 						if (document.getElementById("multichanceCheckbox").checked) {
 							winningGain *= multichanceRatio;
 						}

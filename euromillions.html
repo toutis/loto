@@ -480,6 +480,9 @@
 							style="width: 50px; padding: 3px 6px; font-size: 1em;">
 						<button id="generateGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Générer</button>
 						<button id="clearCustomGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Clear</button>
+						<span id="customPriceDisplay" style="color:gray; font-weight:normal; margin-left:6px;">
+						  Prix&nbsp;: -- €
+						</span>
 					</div>
 				</div>
 				<div class="form-group" id="ticketsCountGroup" style="display: flex; align-items: center; gap: 12px;">
@@ -693,25 +696,26 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
        width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000;"></div>
 		<script>
 				
-		  function updatePrix() {
-			const n   = parseInt(document.getElementById("ticketNumbersCount").value) || 5;
-			const s   = parseInt(document.getElementById("ticketStarsCount").value) || 1;
-			const nbT = parseInt(document.getElementById("numTickets").value) || 1;
+		 function updatePrix() {
+		  const mode = document.getElementById("modeSelect")?.value || "flash";
+		  if (mode === "custom") {
+			const span   = document.getElementById("customPriceDisplay");
+			const txt    = document.getElementById("customGrids")?.value || "";
+			const tickets = parseCustomGrids(txt);
 
-			const ticketFictif = {
-			  numbers: Array(n).fill(0),
-			  stars:   Array(s).fill(0)
-			};
-			const prixUnitaire = costOfTicket(ticketFictif);
-			let prixTotal     = prixUnitaire * nbT;
+			if (!tickets.length) {
+			  if (span) span.textContent = "Prix : -- €";
+			  return;
+			}
 
-			const multichanceChecked = document.getElementById("multichanceCheckbox").checked;
-			if (multichanceChecked) {
+			let prixTotal = 0;
+			tickets.forEach(t => prixTotal += costOfTicket(t));
+
+			if (document.getElementById("multichanceCheckbox")?.checked) {
 			  const totalParts = parseInt(document.getElementById("totalParts").value) || 1;
 			  const yourParts  = parseInt(document.getElementById("yourParts").value)  || 0;
 			  if (yourParts > 0 && yourParts <= totalParts) {
-				const ratio = yourParts / totalParts;
-				prixTotal = prixTotal * ratio;
+				prixTotal *= yourParts / totalParts;
 			  }
 			}
 
@@ -719,8 +723,33 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			  minimumFractionDigits: 2,
 			  maximumFractionDigits: 2
 			});
-			document.getElementById("priceDisplay").textContent = `Prix : ${affichage} €`;
+			if (span) span.textContent = `Prix : ${affichage} €`;
+			return;
 		  }
+
+		  const n   = parseInt(document.getElementById("ticketNumbersCount").value) || 5;
+		  const s   = parseInt(document.getElementById("ticketStarsCount").value)   || 1;
+		  const nbT = parseInt(document.getElementById("numTickets").value)         || 1;
+
+		  const ticketFictif = { numbers: Array(n).fill(0), stars: Array(s).fill(0) };
+		  const prixUnitaire = costOfTicket(ticketFictif);
+		  let   prixTotal    = prixUnitaire * nbT;
+
+		  if (document.getElementById("multichanceCheckbox")?.checked) {
+			const totalParts = parseInt(document.getElementById("totalParts").value) || 1;
+			const yourParts  = parseInt(document.getElementById("yourParts").value)  || 0;
+			if (yourParts > 0 && yourParts <= totalParts) {
+			  prixTotal *= yourParts / totalParts;
+			}
+		  }
+
+		  const affichage = prixTotal.toLocaleString("fr-FR", {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		  });
+		  document.getElementById("priceDisplay").textContent = `Prix : ${affichage} €`;
+		}
+
 
 		  window.addEventListener("DOMContentLoaded", function() {
 			updatePrix();
@@ -1224,11 +1253,15 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				}
 				document.getElementById("customGrids").value = result.trim();
 				updateChanceDisplay();
+				updatePrix();
 			});
 			document.getElementById("clearCustomGridsBtn").addEventListener("click", () => {
 				document.getElementById("customGrids").value = "";
 				updateChanceDisplay();
+				updatePrix();
 			});
+			
+			document.getElementById("customGrids").addEventListener("input", updatePrix);
 
 			function initGainChart() {
 			  const ctx = document.getElementById("gainChart").getContext("2d");
@@ -1941,14 +1974,14 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				const stopStars = parseInt(document.getElementById("stopStars").value) ?? 2;
 
 				function computeChance(numCount, starCount, stopNumbers, stopStars) {
-					let probNum = 0;
-					for (let k = stopNumbers; k <= Math.min(numCount, 5); k++) {
-						probNum += combination(numCount, k) * combination(50 - numCount, 5 - k) / combination(50, 5);
-					}
-					let probStars = 0;
-					for (let l = stopStars; l <= Math.min(starCount, 2); l++) {
-						probStars += combination(starCount, l) * combination(12 - starCount, 2 - l) / combination(12, 2);
-					}
+					const probNum = combination(numCount, stopNumbers) *
+									combination(50 - numCount, 5 - stopNumbers) /
+									combination(50, 5);
+
+					const probStars = combination(starCount, stopStars) *
+									  combination(12 - starCount, 2 - stopStars) /
+									  combination(12, 2);
+
 					return probNum * probStars;
 				}
 

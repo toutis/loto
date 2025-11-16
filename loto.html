@@ -2481,16 +2481,16 @@ function generateOptimizedTicket(numCount = 5, starCount = 1) {
       const stopStars = parseInt(document.getElementById("stopStars").value) ?? 1;
 
       function computeChance(numCount, starCount, stopNumbers, stopStars) {
-        let probNum = 0;
-        for (let k = stopNumbers; k <= Math.min(numCount, 5); k++) {
-          probNum += combination(numCount, k) * combination(49 - numCount, 5 - k) / combination(49, 5);
-        }
-        let probStars = 0;
-        for (let l = stopStars; l <= Math.min(starCount, 1); l++) {
-          probStars += combination(starCount, l) * combination(10 - starCount, 1 - l) / combination(10, 1);
-        }
-        return probNum * probStars;
-      }
+					const probNum = combination(numCount, stopNumbers) *
+									combination(49 - numCount, 5 - stopNumbers) /
+									combination(49, 5);
+
+					const probStars = combination(starCount, stopStars) *
+									  combination(10 - starCount, 1 - stopStars) /
+									  combination(10, 1);
+
+					return probNum * probStars;
+				}
 
       let pGlobal = 0;
 

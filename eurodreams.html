@@ -495,6 +495,9 @@
 							style="width: 50px; padding: 3px 6px; font-size: 1em;">
 						<button id="generateGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Générer</button>
 						<button id="clearCustomGridsBtn" style="padding: 4px 10px; font-size: 0.9em;">Clear</button>
+						<span id="customPriceDisplay" style="color:gray; font-weight:normal; margin-left:6px;">
+						  Prix : -- €
+						</span>
 					</div>
 				</div>
 				<div class="form-group" id="ticketsCountGroup" style="display: flex; align-items: center; gap: 12px;">
@@ -861,25 +864,44 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			
 			
 		  function updatePrix() {
-			const n = parseInt(document.getElementById("ticketNumbersCount").value) || 5;
-			const s = parseInt(document.getElementById("ticketStarsCount").value) || 1;
-			const nbT = parseInt(document.getElementById("numTickets").value) || 1;
-			
-			const ticketFictif = {
-			  numbers: Array(n).fill(0),
-			  stars:   Array(s).fill(0)
-			};
+			  const mode = document.getElementById("modeSelect")?.value || "flash";
 
-			const prixUnitaire = costOfTicket(ticketFictif);
-			const prixTotal   = prixUnitaire * nbT;
+			  if (mode === "custom") {
+				const span = document.getElementById("customPriceDisplay");
+				const txt  = document.getElementById("customGrids")?.value || "";
+				const grids = parseCustomGrids(txt);
 
-			const affichage = prixTotal.toLocaleString("fr-FR", {
-			  minimumFractionDigits: 2,
-			  maximumFractionDigits: 2
-			});
-			document.getElementById("priceDisplay").textContent = `Prix : ${affichage} €`;
+				if (!grids.length) {
+				  if (span) span.textContent = "Prix : -- €";
+				  return;
+				}
 
-		  }
+				let total = 0;
+				grids.forEach(g => total += costOfTicket(g));
+
+				const affichage = total.toLocaleString("fr-FR", {
+				  minimumFractionDigits: 2,
+				  maximumFractionDigits: 2
+				});
+				if (span) span.textContent = `Prix : ${affichage} €`;
+				return;
+			  }
+
+			  const n   = parseInt(document.getElementById("ticketNumbersCount").value) || 6;
+			  const s   = parseInt(document.getElementById("ticketStarsCount").value)   || 1;
+			  const nbT = parseInt(document.getElementById("numTickets").value)         || 1;
+
+			  const ticketFictif  = { numbers: Array(n).fill(0), stars: Array(s).fill(0) };
+			  const prixUnitaire  = costOfTicket(ticketFictif);
+			  const prixTotal     = prixUnitaire * nbT;
+
+			  const affichage = prixTotal.toLocaleString("fr-FR", {
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2
+			  });
+			  document.getElementById("priceDisplay").textContent = `Prix : ${affichage} €`;
+			}
+
 
 		  window.addEventListener("DOMContentLoaded", function() {
 			updatePrix();
@@ -1236,11 +1258,15 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				}
 				document.getElementById("customGrids").value = result.trim();
 				updateChanceDisplay();
+				updatePrix();
 			});
 			document.getElementById("clearCustomGridsBtn").addEventListener("click", () => {
 				document.getElementById("customGrids").value = "";
 				updateChanceDisplay();
+				updatePrix();
 			});
+			
+			document.getElementById("customGrids").addEventListener("input", updatePrix);
 
 			function initGainChart() {
 			  const ctx = document.getElementById("gainChart").getContext("2d");
@@ -1723,40 +1749,40 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 			}
 
 			function parseCustomGrids(str) {
-				const lines = str.split('\n').filter(line => line.trim() !== '');
-				const tickets = [];
-				lines.forEach(line => {
-					const raw = line.trim();
+			  const tickets = [];
+			  str.split('\n').forEach(line => {
+				const raw = line.trim();
+				if (!raw) return;
 
-					if (/^\d+$/.test(raw)) {
-						const idx = parseInt(raw, 10);
-						const maxIndex = combination(40, 6) * 5;
-						if (idx >= 1 && idx <= maxIndex) {
-							const comb = combinationIndexToTicket(idx, 40, 5, 6, 1);
-							tickets.push(comb);
-							return;
-						}
-					}
+				if (/^\d+$/.test(raw)) {
+				  const idx = parseInt(raw, 10);
+				  const maxIndex = combination(40, 6) * 6;
+				  if (idx >= 1 && idx <= maxIndex) {
+					tickets.push(
+					  combinationIndexToTicket(idx, 40, 6, 6, 1)
+					);
+				  }
+				  return;
+				}
 
-					const parts = raw.split(';');
-					if (parts.length === 2) {
-						const numbers = parseCustomInput(parts[0]);
-						const stars = parseCustomInput(parts[1]);
+				const [numsPart, starsPart = ''] = raw.split(';');
+				const numbers = parseCustomInput(numsPart);
+				const stars   = parseCustomInput(starsPart);
 
-						if (
-							numbers.length === 6 &&
-							stars.length === 1 &&
-							numbers.every(n => Number.isInteger(n) && n >= 1 && n <= 40) &&
-							stars.every(s => Number.isInteger(s) && s >= 1 && s <= 5)
-						) {
-							tickets.push({
-								numbers: numbers.sort((a, b) => a - b),
-								stars: stars
-							});
-						}
-					}
-				});
-				return tickets;
+				const ok =
+				  numbers.length >= 6 && numbers.length <= 40 &&
+				  stars.length   >= 1 && stars.length   <= 6 &&
+				  numbers.every(n => n >= 1 && n <= 40) &&
+				  stars.every(s  => s >= 1 && s <= 6);
+
+				if (ok) {
+				  tickets.push({
+					numbers: [...new Set(numbers)].sort((a, b) => a - b),
+					stars  : [...new Set(stars)].sort((a, b) => a - b)
+				  });
+				}
+			  });
+			  return tickets;
 			}
 
 			function ballHTML(value, type) {
@@ -1969,16 +1995,17 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 				const stopStars = parseInt(document.getElementById("stopStars").value) ?? 1;
 
 				function computeChance(numCount, starCount, stopNumbers, stopStars) {
-					let probNum = 0;
-					for (let k = stopNumbers; k <= Math.min(numCount, 6); k++) {
-						probNum += combination(numCount, k) * combination(40 - numCount, 6 - k) / combination(40, 6);
-					}
-					let probStars = 0;
-					for (let l = stopStars; l <= Math.min(starCount, 1); l++) {
-						probStars += combination(starCount, l) * combination(5 - starCount, 1 - l) / combination(5, 1);
-					}
+					const probNum = combination(numCount, stopNumbers) *
+									combination(40 - numCount, 6 - stopNumbers) /
+									combination(40, 6);
+
+					const probStars = combination(starCount, stopStars) *
+									  combination(5 - starCount, 1 - stopStars) /
+									  combination(5, 1);
+
 					return probNum * probStars;
 				}
+
 
 				let pGlobal = 0;
 
@@ -2974,7 +3001,6 @@ Il n’y a pas de partage avec d’autres joueurs, ni de cumul de jackpots etc."
 		}
 		window.addEventListener('beforeunload', persistLastRun);
 		window.addEventListener('pagehide',     persistLastRun);
-
 					
 		</script>
 </body>

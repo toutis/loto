@@ -2,7 +2,7 @@
 
 ## 🧩 Description
 
-Ce projet regroupe **trois simulateurs de loterie** :
+Ce projet regroupe **cinq simulateurs de loterie** :
 - **Loto**
 - **Euro Millions**
 - **Euro Dreams**
@@ -89,12 +89,13 @@ Aucune installation supplémentaire n’est requise (tout fonctionne localement 
 ## 🧑‍💻 Structure du projet
 
 ```
-├── index.html          # Interface principale (onglets Loto / EuroMillions / EuroDreams)
+├── index.html          # Interface principale (onglets Loto / EuroMillions / EuroDreams / Keno / Crechendo)
 ├── loto.html           # Simulateur Loto
 ├── euromillions.html   # Simulateur EuroMillions
 ├── eurodreams.html     # Simulateur EuroDreams
 ├── keno.html           # Simulateur Keno
 ├── crechendo.html      # Simulateur Crechendo
+├── quiz-loto.js        # Banque de questions pédagogiques pour le quiz du Loto
 ├── favicon.ico         # Icône du site
 └── LICENSE             # Licence MIT
 ```
